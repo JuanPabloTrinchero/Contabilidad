@@ -1,0 +1,268 @@
+﻿@model Empleado;
+
+@{
+    ViewData["Title"] = "Empleados";
+    List<Empleado> Empleados = (List<Empleado>)ViewBag.Empleados;
+    string NombreEmpresa = (string)ViewBag.NombreEmpresa;
+    int IdEmpresa = (int)ViewBag.IdEmpresa;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<div>
+    <h1>Empleados de @NombreEmpresa (@IdEmpresa)</h1>
+</div>
+
+<div>
+    <a class="btn btn-primary" asp-controller="Empleados" asp-action="IndexNuevoEmpleado" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpresa="@IdEmpresa">Nuevo Empleado</a>
+</div>
+
+<div>
+    <table id="tablaEmpleados" class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th style="width: 30%">
+                    <div class="container-nombreApellido">
+                        <div class="vistaBotonBuscar">
+                            Nombre y Apellido
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarNombreApellido(this)">Buscar por Nombre/Apellido</a>
+                                </li>
+                            </ul> 
+                        </div>
+                        <div class="vistaBuscarPorNombreApellido mb-3" style="display: none">
+                            <div class="d-flex align-itmes-center">
+                                <input type="text" id="filtroNombreApellido" class="form-control" placeholder="Buscar por Nombre/Apellido..." onkeyup="filtrarTabla()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarNombreApellido(this)">X</a>
+                            </div> 
+                        </div>
+                    </div>
+                </th>
+                <th>Telefonos</th>
+                <th>Direcciones de Emails</th>
+                <th>Estado
+                    <button class="btn btn-light btn-sm" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('todos')">Todos</button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoEmpleado.Activo.ToString()')">Activos</button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoEmpleado.Inactivo.ToString()')">Inactivos</button>
+                            </li>
+                        </ul>
+                </th>
+                <th>Detalles</th>
+            </tr>
+        </thead>    
+        <tbody>
+            @if (Empleados != null && Empleados.Any())
+            {
+                foreach (Empleado e in Empleados)
+                {
+                    <tr class="fila-empleado @(e.Estado == EstadoEmpleado.Activo ? "fila-activo" : "fila-inactivo")">
+                        <td>@e.IdEmpleado</td>  
+                        <td class="col-nombreApellido">@(e.NombreEmpleado + " " + e.ApellidoEmpleado)</td>
+                        <td>
+                            @if(e.Telefonos != null && e.Telefonos.Any())
+                            {
+                                foreach (string telefono in e.Telefonos)
+                                {
+                                    <p>@telefono</p>
+                                }
+                            }
+                            else
+                            {
+                                <p>- Sin Telefonos -</p>
+                            }
+                        </td>
+                        <td>
+                            @if (e.Emails != null && e.Emails.Any())
+                            {
+                                foreach (string email in e.Emails)
+                                {
+                                    <div>
+                                        @email
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copiarEmail('@email')" title="Copiar CUIT">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p>- Sin Direcciones de Email -</p>
+                            }
+                        </td>
+
+                        @if (e.Estado == EstadoEmpleado.Activo)
+                        {
+                            <td class="col-estado" data-estado="@EstadoEmpleado.Activo.ToString().ToLower()">Activo</td>
+                        }
+                        else
+                        {
+                            <td class="col-estado" data-estado="@EstadoEmpleado.Inactivo.ToString().ToLower()">Inactivo</td>
+                        }   
+                        <td>
+                            <a class="btn btn-primary" asp-controller="Empleados" asp-action="IndexVerEmpleado" asp-route-idEmpresa="@IdEmpresa" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpleado="@e.IdEmpleado">Ver</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" style="text-align: center">- No hay Empleados guardados -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantEmpleados" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantEmpleados" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Empleados</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevEmpleados" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numEmpleados" class="mx-2"></span>
+            <button id="nextEmpleados" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+</div>
+
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+
+
+
+
+@section Scripts{
+    <script>
+        // COPIAR EMAIL
+        function copiarEmail(email) {
+            navigator.clipboard.writeText(email).then(()  => { })
+                    .catch(err => {
+                            console.error('Error al copiar: ', err);
+                    });
+        }
+
+        // FILTRAR POR NOMBRE
+        function filtrarTabla() {
+            let input = document.getElementById("filtroNombreApellido");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-empleado");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-nombreApellido");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantEmpleados');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRO DESCRIPCION
+        
+        function filtrarTablaEstados(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".fila-empleado");
+
+            filas.forEach(fila => {
+                let celdaEstado = fila.querySelector(".col-estado");
+
+                if (celdaEstado) {
+                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
+
+                    if (filter === 'todos' || estadoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+        }
+
+        Paginacion('tablaEmpleados', 'prevEmpleados', 'nextEmpleados', 'numEmpleados', 'cantEmpleados', 'fila-empleado');
+
+
+        // BUSCAR POR mostrarBuscarNombre Y APELLIDO
+        function mostrarBuscarNombreApellido(elemento) {
+            const contenedor = elemento.closest('.container-nombreApellido');
+
+            contenedor.querySelector('.vistaBotonBuscar').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarPorNombreApellido').style.display = 'block';
+        }
+        function ocultarBuscarNombreApellido(elemento) {
+            const contenedor = elemento.closest('.container-nombreApellido');
+
+            contenedor.querySelector('.vistaBotonBuscar').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarPorNombreApellido').style.display = 'none';
+        }
+
+
+
+    </script>
+}
+
+<style>
+    .fila-activo td {
+        background-color: #abffc1 !important;
+    }
+
+    .fila-inactivo td {
+        background-color: #d46971 !important;
+    }
+</style>

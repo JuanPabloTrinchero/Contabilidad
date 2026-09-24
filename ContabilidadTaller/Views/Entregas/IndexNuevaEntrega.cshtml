@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Nueva Entrega";
+
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    Pedido pedido = (Pedido)ViewBag.Pedido;
+
+    List<Remito> remitos = (List<Remito>)ViewBag.Remitos;
+    string descripcion = (string)ViewBag.Descripcion;
+
+    int entregadas = 0;
+    if (pedido.Entregas != null && pedido.Entregas.Any())
+    {
+        foreach (Entrega e in pedido.Entregas)
+        {
+            entregadas += e.cantidadEntrega;
+        }
+    }
+    int maximoEntrega = pedido.Cantidad - entregadas;
+}
+
+<h1>Nueva Entrega para @nombreEmpresa (@idEmpresa)</h1>
+<h3>Descripcion de Pedido: @descripcion</h3>
+
+<form asp-controller="Entregas" asp-action="GuardarNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" method="post">
+    <div>
+        <input type="date" name="fechaEntrega" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+    </div>
+    <div>
+        <input style="width: 300px" type="number" name="cantidadEntrega" max="@maximoEntrega" placeholder="Faltan entregar @maximoEntrega unidades" />
+    </div>
+
+    <button class="btn btn-success" type="submit" onclick="return confirm('Confirmar guardar nueva entrega')">Guardar Entrega</button>
+
+    <div style="text-align: center">
+        <a class="btn btn-secondary" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Atras</a>
+    </div>
+</form>

@@ -1,0 +1,964 @@
+﻿@{
+    ViewData["Title"] = "Nuevo Pedido";
+    List<Empleado> empleados = (List<Empleado>)ViewBag.Empleados;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    int cantidadPiezas = piezas.Count();
+
+    int idEmpleado = (int)ViewBag.Empleado;
+}
+
+<div class="text-center">
+    <h1>Nuevo Pedido para @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div class="container-pedido">
+    <h3>Opciones de Pedido:</h3>
+    <div class="opciones">
+        <button id="btnOp1" class="btn btn-success" onclick="mostrarPiezaNueva(this)">Pieza Nueva</button>
+        <button id="btnOp2" class="btn btn-primary" onclick="mostrarPiezaExistente(this)">Pieza Existente</button>
+        <button id="btnOp3" class="btn btn-danger" onclick="mostrarConjuntoExistente(this)">Conjunto Existente</button>
+        <button id="btnOp4" class="btn btn-secondary" onclick="cancelarOpciones(this)">Cancelar</button>
+    </div>
+    <div class="vistaPiezaNueva" style="display: none">
+        <h5>Pedido de Pieza Nueva</h5>
+        <form id="formPedidoPiezaNueva" class="form-control" asp-controller="Pedidos" asp-action="NuevoPedidoPiezaNueva" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="-1" method="post">
+                <div class="form-group">
+                    <h6>Fecha Encargo</h6>
+                    <input type="date" name="fechaEncargo" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="form-group">
+                    <h6>Cantidad</h6>
+                    <input type="number" id="cantidad" name="cantidad" min="0" placeholder="(Requerido)" required />
+                </div>
+
+                <h6>Descripcion</h6>
+                <input type="text" name="descripcion" placeholder="(Requerido)" style="width: 50%" required />
+
+                <div class="form-group">
+                    <h6>Precio Unitario ($)</h6>
+                    <input type="number" id="precioUnitario" name="precioUnitario" />
+                </div>
+
+                <div style="margin-top: 15px; font-weight: bold; font-size: 25px">
+                    Precio Total: $<span id="precioTotal">0.00</span>
+                </div>
+
+                <div class="form-group">
+                    <h6>Encargado por:</h6>
+                    <div class="dropdown">
+
+                        <input type="hidden" name="encargadoPor" id="idEmpleadoSeleccionado" value="">
+
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="btnEmpleado" data-bs-toggle="dropdown" aria-expanded="false">
+                            Seleccionar Empleado
+                        </button>
+                        <ul class="dropdown-menu">
+                            @{
+                                <li><a class="dropdown-item opcion-empleado" href="#" data-nombre="(Sin asignar)">...</a></li>
+                                if (empleados != null && empleados.Any())
+                                {
+                                    foreach (Empleado e in empleados)
+                                    {
+                                        string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                        <li>
+                                            <a class="dropdown-item opcion-empleado"
+                                                href="#"
+                                                data-id="@e.IdEmpleado"
+                                                data-nombre="@nombreApellido">
+                                                @nombreApellido
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="listaNotasPiezaNueva">
+                    <h6>Notas:</h6>
+                    <!-- Agregar Notas -->
+                    <button class=" btn btn-primary" type="button" onclick="agregarNuevaNotaPiezaNueva()">Agregar Nota</button>
+                </div>
+
+                <div id="listaArchivos">
+                    <h6>Archivos:</h6>
+                    <!-- Agregar Archivos -->
+                    <button class=" btn btn-primary" type="button" onclick="agregarNuevoArchivo()">Agregar Archivo</button>
+                </div>
+
+                <div class="form-group">
+                    <input type="hidden" name="estado" value="EstadoPedido.Pendiente" />
+                    <input type="hidden" name="idEmpresa" value="@idEmpresa" />
+                </div>
+
+                <button class="btn btn-success" type="submit" id="btnGuardarPPN" onclick="return confirm('¿Confirmar guardar pedido?')">Guardar Pedido</button>
+            </form>
+    </div>
+    <div class="vistaPiezasExistentes" style="display: none">
+        <h5>Pedido de Pieza Existente</h5>
+        <form id="formPedidoPiezaExistente" class="form-control" asp-controller="Pedidos" asp-action="NuevoPedidoPiezaExistente" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="-1" method="post">
+
+                <div class="form-group">
+                    <h6>Fecha Encargo</h6>
+                <input type="date" name="fechaEncargo" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="form-group">
+                    <h6>Cantidad</h6>
+                    <input type="number" id="cantidad2" name="cantidad" min="0" placeholder="(Requerido)" required />
+                </div>
+
+                @if (piezas != null && piezas.Any())
+                {
+                    <table id="tablaPiezas" class="table table-striped text-center">
+                        <thead>
+                            <tr>
+                                <th>AGREGAR?</th>
+                                <th>Id</th> 
+                                <th style="width: 35%">
+                                    <div class="container-tituloDescripcionPieza mb-3">
+                                        <div class="vistaBotonBuscarDescripcionPieza">
+                                            Descripcion
+                                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                                <li>
+                                                    <a class="dropdown-item" onclick="mostrarBuscarDescripcionPieza(this)">Buscar por Descripcion</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="vistaBuscarDescripcionPieza" style="display: none">
+                                            <div class="d-flex align-items-center">
+                                                <input type="text" id="filtroDescripcionPieza" class="form-control" placeholder="Buscar por Descripcion..." onkeyup="filtrarTablaDescripcionPieza()">
+                                                <a class="btn btn-danger" onclick="ocultarBuscarDescripcionPieza(this)">X</a>
+                                            </div> 
+                                        </div>   
+                                    </div>
+                                </th>
+                                <th style="width: 35%">
+                                    <div class="container-tituloCodigoPieza mb-3">
+                                        <div class="vistaBotonBuscarCodigoPieza">
+                                            Codigo
+                                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                                <li>
+                                                    <a class="dropdown-item" onclick="mostrarBuscarCodigoPieza(this)">Buscar por Codigo</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="vistaBuscarCodigoPieza" style="display: none">
+                                            <div class="d-flex align-items-center">
+                                                <input type="text" id="filtroCodigoPieza" class="form-control" placeholder="Buscar por Codigo..." onkeyup="filtrarTablaCodigoPieza()">
+                                                <a class="btn btn-danger" onclick="ocultarBuscarCodigoPieza(this)">X</a>
+                                            </div>  
+                                        </div>   
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Pieza p in piezas)
+                            {
+                                <tr class="claseFilaPieza">
+                                    <td>
+                                        <input type="radio" name="idPiezaExistente" value="@p.IdPieza" required />
+                                    </td>
+                                    <td>@p.IdPieza</td>
+                                    <td class="col-descripcionPieza">
+                                        @p.Descripcion
+                                        <input type="hidden" name="descripcion" value="" />
+                                    </td>
+                                    @if (p.Codigo != null)
+                                    {
+                                        <td class="col-codigoPieza">@p.Codigo</td>
+                                    }
+                                    else
+                                    {
+                                        <td class="col-codigoPieza">-</td>    
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="d-flex align-items-center">
+                            <label for="cantPiezas" class="me-2 mb-0">Mostrar de a</label>
+                            <select id="cantPiezas" class="form-select form-select-sm" style="width: auto;">
+                                <option value="3">3</option>
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                            <label>Piezas</label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="paginacion mt-3 d-flex align-items-center">
+                            <button id="prevPiezas" class="btn btn-sm btn-secondary">Anterior</button>
+                            <span id="numPiezas" class="mx-2"></span>
+                            <button id="nextPiezas" class="btn btn-sm btn-secondary">Siguiente</button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p>No hay piezas guardadas</p>  
+                }
+
+                <div class="form-group">
+                    <h6>Precio Unitario ($)</h6>
+                    <input type="number" id="precioUnitario2" name="precioUnitario" />
+                </div>
+
+                <div style="margin-top: 15px; font-weight: bold; font-size: 25px">
+                    Precio Total: $<span id="precioTotal2">0.00</span>
+                </div>
+
+                <div class="form-group">
+                    <h6>Encargado por:</h6>
+                    <div class="dropdown">
+
+                        <input type="hidden" name="encargadoPor" id="idEmpleadoSeleccionado2" value="">
+
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="btnEmpleado2" data-bs-toggle="dropdown" aria-expanded="false">
+                            Seleccionar Empleado
+                        </button>
+                        <ul class="dropdown-menu">
+                            @{
+                                <li><a class="dropdown-item opcion-empleado2" href="#" data-nombre="(Sin asignar)">...</a></li>
+                                if (empleados != null && empleados.Any())
+                                {
+                                    foreach (Empleado e in empleados)
+                                    {
+                                        string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                        <li>
+                                            <a class="dropdown-item opcion-empleado2"
+                                               href="#"
+                                               data-id2="@e.IdEmpleado"
+                                               data-nombre2="@nombreApellido">
+                                                @nombreApellido
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="listaNotasPiezaExistente">
+                    <!-- Agregar Notas -->
+                    <button class=" btn btn-primary" type="button" onclick="agregarNuevaNotaPiezaExistente()">Agregar Nota</button>
+                </div>
+
+                <div class="form-group">
+                    <input type="hidden" name="estado" value="EstadoPedido.Pendiente" />
+                    <input type="hidden" name="idEmpresa" value="@idEmpresa" />
+                </div>
+
+                <button class="btn btn-success" type="submit" id="btnGuardarPPE" onclick="return confirm('Confirmar guardar pedido?')" disabled>Guardar Pedido</button>
+            </form>
+    </div>
+    <div class="vistaConjuntosExistentes" style="display: none">
+        <h5>Pedido de Conjunto Existente</h5>
+        <form id="formPedidoConjunto" class="form-control" asp-controller="Pedidos" asp-action="NuevoPedidoConjuntoExistente" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="-1" method="post">
+                <div class="form-group">
+                    <h6>Fecha Encargo</h6>
+                    <input type="date" name="fechaEncargo" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="form-group">
+                    <h6>Cantidad</h6>
+                    <input type="number" id="cantidad3" name="cantidad" min="0" placeholder="(Requerido)" required />
+                </div>
+
+                @if (conjuntos != null && conjuntos.Any())
+                {
+                    <table id="tablaConjuntos" class="table table-striped text-center">
+                        <thead>
+                            <tr>
+                                <th>AGREGAR?</th>
+                                <th>Id</th>
+                                <th> 
+                                    <div class="container-tituloDescripcionConjunto mb-3">
+                                        <div class="vistaBotonBuscarDescripcionConjunto">
+                                            Descripcion
+                                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                                <li>
+                                                    <a class="dropdown-item" onclick="mostrarBuscarDescripcionConjunto(this)">Buscar por Descripcion</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="vistaBuscarDescripcionConjunto" style="display: none">
+                                            <div class="d-flex align-items-center">
+                                                <input type="text" id="filtroDescripcionConjunto" class="form-control" placeholder="Buscar por Descripcion..." onkeyup="filtrarTablaDescripcionConjunto()">
+                                                <a class="btn btn-danger" onclick="ocultarBuscarDescripcionConjunto(this)">X</a>
+                                            </div>
+                                        </div> 
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="container-tituloCodigoConjunto mb-3">
+                                        <div class="vistaBotonBuscarCodigoConjunto">
+                                            Codigo
+                                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                                <li>
+                                                    <a class="dropdown-item" onclick="mostrarBuscarCodigoConjunto(this)">Buscar por Codigo</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="vistaBuscarCodigoConjunto" style="display: none">
+                                            <div class="d-flex align-items-center">
+                                                <input type="text" id="filtroCodigoConjunto" class="form-control" placeholder="Buscar por Codigo..." onkeyup="filtrarTablaCodigoConjunto()">
+                                                <a class="btn btn-danger" onclick="ocultarBuscarCodigoConjunto(this)">X</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Conjunto c in conjuntos)
+                            {
+                                <tr class="claseFilaConjunto">
+                                    <td>
+                                        <input type="radio" name="idConjuntoExistente" value="@c.IdConjunto" />
+                                    </td>
+                                    <td>@c.IdConjunto</td>
+                                    <td class="col-descripcionConjunto">
+                                        @c.Descripcion
+                                    </td>
+                                    @if (c.Codigo != null)
+                                    {
+                                        <td class="col-codigoConjunto">@c.Codigo</td>
+                                    }
+                                    else
+                                    {
+                                        <td class="col-codigoConjunto">-</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="d-flex align-items-center">
+                            <label for="cantConjuntos" class="me-2 mb-0">Mostrar de a</label>
+                            <select id="cantConjuntos" class="form-select form-select-sm" style="width: auto;">
+                                <option value="3">3</option>
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                            <label>Conjuntos</label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="paginacion mt-3 d-flex align-items-center">
+                            <button type="button" id="prevConjuntos" class="btn btn-sm btn-secondary">Anterior</button>
+                            <span id="numConjuntos" class="mx-2"></span>
+                            <button type="button" id="nextConjuntos" class="btn btn-sm btn-secondary">Siguiente</button>
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <p>No hay conjuntos guardados</p>
+                }
+
+                <div class="form-group">
+                    <h6>Precio Unitario ($)</h6>
+                    <input type="number" id="precioUnitario3" name="precioUnitario" />
+                </div>
+
+                <div style="margin-top: 15px; font-weight: bold; font-size: 25px">
+                    Precio Total: $<span id="precioTotal3">0.00</span>
+                </div>
+
+                <div class="form-group">
+                    <h6>Encargado por:</h6>
+                    <div class="dropdown">
+
+                        <input type="hidden" name="encargadoPor" id="idEmpleadoSeleccionado3" value="">
+
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="btnEmpleado3" data-bs-toggle="dropdown" aria-expanded="false">
+                            Seleccionar Empleado
+                        </button>
+                        <ul class="dropdown-menu">
+                            @{
+                                <li><a class="dropdown-item opcion-empleado3" href="#" data-nombre="(Sin asignar)">...</a></li>
+                                if (empleados != null && empleados.Any())
+                                {
+                                    foreach (Empleado e in empleados)
+                                    {
+                                        string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                        <li>
+                                            <a class="dropdown-item opcion-empleado3"
+                                               href="#"
+                                               data-id3="@e.IdEmpleado"
+                                               data-nombre3="@nombreApellido">
+                                                @nombreApellido
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="listaNotasConjuntoExistente">
+                    <!-- Agregar Notas -->
+                    <button class=" btn btn-primary" type="button" onclick="agregarNuevaNotaConjuntoExistente()">Agregar Nota</button>
+                </div>
+
+                <div class="form-group">
+                    <input type="hidden" name="estado" value="EstadoPedido.Pendiente" />
+                    <input type="hidden" name="idEmpresa" value="@idEmpresa" />
+                </div>
+
+                <button class="btn btn-success" type="submit" id="btnGuardarPC" onclick="return confirm('¿Confirmar guardar pedido?')" disabled>Guardar Pedido</button>
+            </form>
+    </div>
+</div>                    
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="-1">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // PRECIO TOTAL PIEZA NUEVA
+        const inputCantidad = document.getElementById('cantidad');
+        const inputPrecio = document.getElementById('precioUnitario');
+        const displayTotal = document.getElementById('precioTotal');
+
+        function calcularTotal() {
+            const cant = parseFloat(inputCantidad.value) || 0;
+            const precio = parseFloat(inputPrecio.value) || 0;
+            const total = cant * precio;
+        
+            displayTotal.innerText = total.toFixed(2);
+        }
+
+        inputCantidad.addEventListener('input', calcularTotal);
+        inputPrecio.addEventListener('input', calcularTotal);
+
+        //-------------------------------------------------------------
+        // PRECIO TOTAL PIEZA EXISTENTE
+        const inputCantidad2 = document.getElementById('cantidad2');
+        const inputPrecio2 = document.getElementById('precioUnitario2');
+        const displayTotal2 = document.getElementById('precioTotal2');
+
+        function calcularTotal2() {
+            const cant2 = parseFloat(inputCantidad2.value) || 0;
+            const precio2 = parseFloat(inputPrecio2.value) || 0;
+            const total2 = cant2 * precio2;
+
+            displayTotal2.innerText = total2.toFixed(2);
+        }
+
+        inputCantidad2.addEventListener('input', calcularTotal2);
+        inputPrecio2.addEventListener('input', calcularTotal2);
+
+        //-------------------------------------------------------------
+        // PRECIO TOTAL CONJUNTO EXISTENTE
+        const inputCantidad3 = document.getElementById('cantidad3');
+        const inputPrecio3 = document.getElementById('precioUnitario3');
+        const displayTotal3 = document.getElementById('precioTotal3');
+
+        function calcularTotal3() {
+            const cant3 = parseFloat(inputCantidad3.value) || 0;
+            const precio3 = parseFloat(inputPrecio3.value) || 0;
+            const total3 = cant3 * precio3;
+
+            displayTotal3.innerText = total3.toFixed(2);
+        }
+
+        inputCantidad3.addEventListener('input', calcularTotal3);
+        inputPrecio3.addEventListener('input', calcularTotal3);
+
+        //-------------------------------------------------------------
+        // SELECCIONAR QUIEN HISO EN PEDIDO PIEZA NUEVA
+
+        document.querySelectorAll('.opcion-empleado').forEach(item => {
+        item.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+                const id = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+
+                document.getElementById('btnEmpleado').innerText = nombre;
+    
+                if (!id || id === "") {
+                    document.getElementById('idEmpleadoSeleccionado').value = "";
+                } else {
+                    document.getElementById('idEmpleadoSeleccionado').value = id;
+                }
+            });
+        });
+
+        // SELECCIONAR QUIEN HISO EN PEDIDO PIEZA EXISTENTE
+
+        document.querySelectorAll('.opcion-empleado2').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const id2 = this.getAttribute('data-id2');
+                const nombre2 = this.getAttribute('data-nombre2');
+
+                document.getElementById('btnEmpleado2').innerText = nombre2;
+
+                if (!id2 || id2 === "") {
+                    document.getElementById('idEmpleadoSeleccionado2').value = "";
+                } else {
+                    document.getElementById('idEmpleadoSeleccionado2').value = id2;
+                }
+            });
+        });
+
+        // SELECCIONAR QUIEN HISO EN PEDIDO CONJUNTO EXISTENTE
+
+        document.querySelectorAll('.opcion-empleado3').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const id3 = this.getAttribute('data-id3');
+                const nombre3 = this.getAttribute('data-nombre3');
+
+                document.getElementById('btnEmpleado3').innerText = nombre3;
+
+                if (!id3 || id3 === "") {
+                    document.getElementById('idEmpleadoSeleccionado3').value = "";
+                } else {
+                    document.getElementById('idEmpleadoSeleccionado3').value = id3;
+                }
+            });
+        });
+
+
+        //-------------------------------------------------------------------
+        // PIEZA NUEVA, EXISTENTE O CONJUNTO
+        function mostrarPiezaNueva(elemento) {
+            const contenedor = elemento.closest('.container-pedido');
+
+            contenedor.querySelector('.vistaPiezaNueva').style.display = 'block';
+            contenedor.querySelector('.vistaPiezasExistentes').style.display = 'none';
+            contenedor.querySelector('.vistaConjuntosExistentes').style.display = 'none';
+
+            contenedor.querySelector('#btnOp1').disabled = true;
+            contenedor.querySelector('#btnOp2').disabled = false;
+            contenedor.querySelector('#btnOp3').disabled = false;
+            contenedor.querySelector('#btnOp4').disabled = false;
+        }
+        function mostrarPiezaExistente(elemento) {
+            const contenedor = elemento.closest('.container-pedido');
+
+            contenedor.querySelector('.vistaPiezaNueva').style.display = 'none';
+            contenedor.querySelector('.vistaPiezasExistentes').style.display = 'block';
+            contenedor.querySelector('.vistaConjuntosExistentes').style.display = 'none';
+
+            contenedor.querySelector('#btnOp1').disabled = false;
+            contenedor.querySelector('#btnOp2').disabled = true;
+            contenedor.querySelector('#btnOp3').disabled = false;
+            contenedor.querySelector('#btnOp4').disabled = false;
+        }
+        function mostrarConjuntoExistente(elemento) {
+            const contenedor = elemento.closest('.container-pedido');
+
+            contenedor.querySelector('.vistaPiezaNueva').style.display = 'none';
+            contenedor.querySelector('.vistaPiezasExistentes').style.display = 'none';
+            contenedor.querySelector('.vistaConjuntosExistentes').style.display = 'block';
+
+            contenedor.querySelector('#btnOp1').disabled = false;
+            contenedor.querySelector('#btnOp2').disabled = false;
+            contenedor.querySelector('#btnOp3').disabled = true;
+            contenedor.querySelector('#btnOp4').disabled = false;
+        }
+        function cancelarOpciones(elemento) {
+            const contenedor = elemento.closest('.container-pedido');
+
+            contenedor.querySelector('.vistaPiezaNueva').style.display = 'none';
+            contenedor.querySelector('.vistaPiezasExistentes').style.display = 'none';
+            contenedor.querySelector('.vistaConjuntosExistentes').style.display = 'none';
+
+            contenedor.querySelector('#btnOp1').disabled = false;
+            contenedor.querySelector('#btnOp2').disabled = false;
+            contenedor.querySelector('#btnOp3').disabled = false;
+            contenedor.querySelector('#btnOp4').disabled = true;
+        }
+
+
+        // AGREGAR NUEVA NOTA PIEZA EXISTENTE
+        function agregarNuevaNotaPiezaExistente() {
+            const contenedor = document.getElementById('listaNotasPiezaExistente');
+
+            const fila = document.createElement('div');
+            fila.className = 'nota-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                        <textarea type="text" name="notas" class="form-control-sm" style="width: 50%; height: 100px" placeholder="Nueva nota..."></textarea>
+                        <button type="button" class="btn btn-danger btn-eliminarNotaNueva btn-sm px-3 text-nowrap">Quitar fila</button>
+                            `;
+
+            fila.querySelector('.btn-eliminarNotaNueva').addEventListener('click', function () {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // AGREGAR NUEVA NOTA PIEZA NUEVA
+        function agregarNuevaNotaPiezaNueva() {
+            const contenedor = document.getElementById('listaNotasPiezaNueva');
+
+            const fila = document.createElement('div');
+            fila.className = 'nota-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                                    <textarea type="text" name="notas" class="form-control-sm" style="width: 50%; height: 100px" placeholder="Nueva nota..."></textarea>
+                            <button type="button" class="btn btn-danger btn-eliminarNotaNueva btn-sm px-3 text-nowrap">Quitar fila</button>
+                                `;
+
+            fila.querySelector('.btn-eliminarNotaNueva').addEventListener('click', function () {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // AGREGAR NUEVA NOTA CONJUNTO EXISTENTE
+        function agregarNuevaNotaConjuntoExistente() {
+            const contenedor = document.getElementById('listaNotasConjuntoExistente');
+
+            const fila = document.createElement('div');
+            fila.className = 'nota-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                            <textarea type="text" name="notas" class="form-control-sm" style="width: 50%; height: 100px" placeholder="Nueva nota..."></textarea>
+                            <button type="button" class="btn btn-danger btn-eliminarNotaNueva btn-sm px-3 text-nowrap">Quitar fila</button>
+                            `;
+
+            fila.querySelector('.btn-eliminarNotaNueva').addEventListener('click', function() {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // FILTRAR POR DESCRIPCION PIEZA
+        function filtrarTablaDescripcionPieza() {
+            let input = document.getElementById("filtroDescripcionPieza");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFilaPieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcionPieza");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRAR POR CODIGO PIEZA
+        function filtrarTablaCodigoPieza() {
+            let input = document.getElementById("filtroCodigoPieza");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFilaPieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigoPieza");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPiezas', 'prevPiezas', 'nextPiezas', 'numPiezas', 'cantPiezas', 'claseFilaPieza');
+
+        // AGREGAR NUEVO ARCHIVO PIEZA NUEVA
+        function agregarNuevoArchivo() {
+            const contenedor = document.getElementById('listaArchivos');
+
+            const fila = document.createElement('div');
+            fila.className = 'archivo-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                                <input type="file" id="archivoCargado" name="archivos" class="form-control-sm">
+                                <button type="button" class="btn btn-warning btn-limpiar btn-sm px-3 text-nowrap">Limpiar archivo</button>
+                                <button type="button" class="btn btn-danger btn-eliminar btn-sm px-3 text-nowrap">Quitar fila</button>
+                            `;
+
+            fila.querySelector('.btn-limpiar').addEventListener('click', function () {
+                fila.querySelector('input[type="file"]').value = '';
+            });
+
+            fila.querySelector('.btn-eliminar').addEventListener('click', function () {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+
+        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
+        // PEDIDO PIEZA NUEVA
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formPedidoPiezaNueva");
+            const btnGuardar = document.getElementById("btnGuardarPPN");
+            const requiredFields = form.querySelectorAll("[required]");
+
+            function validarFormulario() {
+                let formValido = true;
+
+                requiredFields.forEach(function(field) {
+                    if (field.value.trim() === "") {
+                        formValido = false;
+                    }
+                });
+
+                btnGuardar.disabled = !formValido;
+            }
+
+            form.addEventListener("input", validarFormulario);
+            validarFormulario();
+        });
+
+        // PEDIDO PIEZA EXISTENTE
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formPedidoPiezaExistente");
+            const btnGuardar = document.getElementById("btnGuardarPPE");
+            const inputCantidad = document.getElementById("cantidad2");
+
+            function validarFormulario() {
+                const cantidadValida = inputCantidad.value.trim() !== "" && parseInt(inputCantidad.value) >= 0;
+
+                const radioSeleccionado = form.querySelector('input[name="idPiezaExistente"]:checked') !== null;
+
+                btnGuardar.disabled = !(cantidadValida && radioSeleccionado);
+            }
+
+            inputCantidad.addEventListener("input", validarFormulario);
+
+            let radioPrevio = null;
+
+            form.addEventListener("click", function(e) {
+                if (e.target.name === "idPiezaExistente") {
+                    if (radioPrevio === e.target) {
+                        e.target.checked = false;
+                        radioPrevio = null;
+                    } else {
+                        radioPrevio = e.target;
+                    }
+
+                    validarFormulario();
+                }
+            });
+        });
+
+
+        // PEDIDO CONJUNTO
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formPedidoConjunto");
+            const btnGuardar = document.getElementById("btnGuardarPC");
+            const inputCantidad = document.getElementById("cantidad3");
+
+            function validarFormulario() {
+                const cantidadValida = inputCantidad.value.trim() !== "" && parseInt(inputCantidad.value) >= 0;
+
+                const radioSeleccionado = form.querySelector('input[name="idConjuntoExistente"]:checked') !== null;
+
+                btnGuardar.disabled = !(cantidadValida && radioSeleccionado);
+            }
+
+            inputCantidad.addEventListener("input", validarFormulario);
+
+            let radioPrevio = null;
+
+            form.addEventListener("click", function(e) {
+                if (e.target.name === "idConjuntoExistente") {
+                    if (radioPrevio === e.target) {
+                        e.target.checked = false;
+                        radioPrevio = null;
+                    } else {
+                        radioPrevio = e.target;
+                    }
+
+                    validarFormulario();
+                }
+            });
+        });
+
+        // FILTRAR POR DESCRIPCION CONJUNTO
+        function filtrarTablaDescripcionConjunto() {
+            let input = document.getElementById("filtroDescripcionConjunto");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFilaConjunto");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcionConjunto");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantConjuntos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRAR POR CODIGO CONJUNTO
+        function filtrarTablaCodigoConjunto() {
+            let input = document.getElementById("filtroCodigoConjunto");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFilaConjunto");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigoConjunto");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantConjuntos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaConjuntos', 'prevConjuntos', 'nextConjuntos', 'numConjuntos', 'cantConjuntos', 'claseFilaConjunto');
+
+        // ALTERNAR BOTONES DE PREGUNTA
+        function activarBoton(boton) {
+            boton.parentElement.querySelectorAll('.btn').forEach(b => b.disabled = false);
+            boton.disabled = true;
+        }
+
+
+        // MOSTRAR BUSCAR DESCRIPCION PIEZA
+        function mostrarBuscarDescripcionPieza(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcionPieza');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcionPieza').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcionPieza').style.display = 'block';
+        }
+        function ocultarBuscarDescripcionPieza(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcionPieza');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcionPieza').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcionPieza').style.display = 'none';
+        }
+        // MOSTRAR BUSCAR CODIGO PIEZA
+        function mostrarBuscarCodigoPieza(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigoPieza');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigoPieza').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigoPieza').style.display = 'block';
+        }
+        function ocultarBuscarCodigoPieza(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigoPieza');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigoPieza').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigoPieza').style.display = 'none';
+        }
+
+        // MOSTRAR BUSCAR DESCRIPCION CONJUNTO
+        function mostrarBuscarDescripcionConjunto(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcionConjunto');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcionConjunto').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcionConjunto').style.display = 'block';
+        }
+        function ocultarBuscarDescripcionConjunto(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcionConjunto');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcionConjunto').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcionConjunto').style.display = 'none';
+        }
+        // MOSTRAR BUSCAR CODIGO CONJUNTO
+        function mostrarBuscarCodigoConjunto(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigoConjunto');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigoConjunto').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigoConjunto').style.display = 'block';
+        }
+        function ocultarBuscarCodigoConjunto(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigoConjunto');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigoConjunto').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigoConjunto').style.display = 'none';
+        }
+        
+
+    </script>
+}

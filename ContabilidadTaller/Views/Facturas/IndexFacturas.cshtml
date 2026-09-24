@@ -1,0 +1,475 @@
+﻿@{
+    ViewData["Title"] = "Facturas";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    List<Factura> facturas = (List<Factura>)ViewBag.Facturas;
+    List<NotaDeCredito> NotasDeCredito = (List<NotaDeCredito>)ViewBag.NotasDeCredito;
+
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Presupuesto> presupuestos = (List<Presupuesto>)ViewBag.Presupuestos;
+    List<OrdenDeCompra> odcs = (List<OrdenDeCompra>)ViewBag.OrdenesDeCompra;
+
+    List<Recepcion> recepciones = (List<Recepcion>)ViewBag.Recepciones;
+
+    List<RelacionODCFactura> relacionesODCsF = (List<RelacionODCFactura>)ViewBag.RelacionesODCsFacturas;
+
+    @if (TempData["MensajeExito"] != null)
+    {
+        <div class="alert alert-success">@TempData["MensajeExito"]</div>
+    }
+    @if (TempData["MensajeError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["MensajeError"]</div>
+    }
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<div>
+    <h1>Facturas de @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexNuevaFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">+ Nueva Factura</a>
+</div>
+
+<div>
+    <table id="tablaFacturas" class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>
+                    <div>
+                        Fecha
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li><a class="dropdown-item" asp-controller="Facturas" asp-action="IndexFacturas" asp-route-nombreEmpresa="@nombreEmpresa">Todas</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Facturas" asp-action="IndexFacturas" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="des">Mas recientes</a></li>
+
+                            <li><a class="dropdown-item" asp-controller="Facturas" asp-action="IndexFacturas" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="asc">Mas antiguas</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarPorIntervalo(this)">Desde - Hasta</a></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarFechaEspecifica(this)">Buscar fecha especifica</a></li>
+                        </ul>
+
+                        <div class="container-fecha">
+                            <form asp-controller="Facturas" asp-action="IndexFacturas" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">
+                                <div class="vistaBuscarFechaIntervalo" style="display: none">
+                                    <div>
+                                        <label>Desde:</label>
+                                        <input type="date" name="desde" />
+                                    </div>
+                                    <div>
+                                        <label>Hasta:</label>
+                                        <input type="date" name="hasta" />
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Buscar</button>
+                                    <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                                </div>
+                                <div class="vistaBuscarFechaEspecifica" style="display: none">
+                                    <div>
+                                        <label>Buscar fecha especifica</label>
+                                    </div>
+                                    <div>
+                                        <input type="date" name="fechaEspecifica" />
+                                        <button type="submit" class="btn btn-primary">Buscar</button>
+                                        <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </th>
+                <th>
+                    <div class="container-tituloCodigo">
+                        <div class="vistaBotonBuscarCodigo">
+                            Codigo
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarCodigo(this)">Buscar por Codigo</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarCodigo mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroCodigo" class="form-control" placeholder="Buscar por Codigo..." onkeyup="filtrarTabla()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarCodigo(this)">X</a>
+                            </div>
+                        </div>
+                    </div> 
+                </th>
+                <th>Contenido</th>
+                <th>Monto</th>
+                <th>Estado
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('todos')">Todas</button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoFactura.Impaga.ToString()')">Impagas</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoFactura.Pagada.ToString()')">Pagadas</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoFactura.Anulada.ToString()')">Anuladas</button>
+                        </li>
+                    </ul>
+                </th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (facturas != null && facturas.Any())
+            {
+                foreach (Factura f in facturas)
+                {
+                    <tr class="fila-factura">
+                        <td>@f.IdFactura</td>
+                        <td>@f.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td class="col-codigo">@f.Codigo.Puesto-@f.Codigo.Numero</td>
+                        @{
+                            switch (f.Contiene)
+                            {
+                                case Contiene.SinDefinir:
+                                <td>Sin Documentos</td>
+                                @if (f.MontoManual != null)
+                                {
+                                    <td>@f.MontoManual?.ToString("C2")</td>
+                                }
+                                else
+                                {
+                                    <td>- Sin monto -</td>
+                                }
+                                    
+                                    break;
+                                case Contiene.Pedidos:
+                                   
+                                    double montoTotalPedidos = 0;
+                                    int cantidadPedidos = 0;
+
+                                    foreach (Pedido pedido in pedidos)
+                                    {
+                                        if (pedido.FacturaFK == f.IdFactura && pedido.PrecioUnitario != 0 && pedido.PrecioUnitario != null)
+                                        {
+                                            cantidadPedidos++;
+                                            montoTotalPedidos += (double)(pedido.Cantidad * pedido.PrecioUnitario);  
+                                        }
+                                    }
+                                    <td>Pedidos (@cantidadPedidos)</td>
+
+                                    <td>@montoTotalPedidos.ToString("C2")</td>
+                                break;
+                                case Contiene.Presupuestos:
+                                    double montoTotalPresupuestos = 0;
+                                    int cantidadPresupuestos = 0;
+
+                                    foreach (Presupuesto presupuesto in presupuestos)
+                                    {
+                                        if (presupuesto.FacturaFK == f.IdFactura)
+                                        {
+                                            cantidadPresupuestos++;
+                                            foreach (Pedido pedido in pedidos)
+                                            {
+                                                if (pedido.PresupuestoFK == presupuesto.IdPresupuesto && pedido.PrecioUnitario != 0 && pedido.PrecioUnitario != null)
+                                                {
+                                                    montoTotalPresupuestos += (double)(pedido.Cantidad * pedido.PrecioUnitario);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    <td>Presupuestos (@cantidadPresupuestos)</td>
+                                    <td>@montoTotalPresupuestos.ToString("C2")</td>
+                                break;
+                                case Contiene.OrdenesDeCompra:
+
+                                    int cantidadOrdenesDeCompra = 0;
+                                    double? montoTotalOrdenesDeCompra = 0;
+
+                                    if (relacionesODCsF != null && relacionesODCsF.Any())
+                                    {
+                                        foreach (RelacionODCFactura rodcf in relacionesODCsF)
+                                        {
+                                            if (rodcf.IdFacturaFK == f.IdFactura)
+                                            {
+                                                cantidadOrdenesDeCompra++;
+                                                foreach (OrdenDeCompra odc in odcs)
+                                                {
+                                                    if (odc.IdOC == rodcf.IdOdcFK)
+                                                    {
+                                                        if (odc.Relacion == Relacion.SinRecepcion)
+                                                        {
+                                                            if (presupuestos != null && presupuestos.Any())
+                                                            {
+                                                                foreach (Presupuesto pr in presupuestos)
+                                                                {
+                                                                    if (pr.OrdenDeCompraFK == odc.IdOC)
+                                                                    {
+                                                                        if (pedidos != null && pedidos.Any())
+                                                                        {
+                                                                            foreach (Pedido pe in pedidos)
+                                                                            {
+                                                                                if (pe.PresupuestoFK == pr.IdPresupuesto)
+                                                                                {
+                                                                                    montoTotalOrdenesDeCompra += (pe.Cantidad * pe.PrecioUnitario);
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (recepciones != null && recepciones.Any())
+                                                            {
+                                                                foreach (Recepcion r in recepciones)
+                                                                {
+                                                                    if (r.IdOdCFK == odc.IdOC && r.IdFacturaFK == f.IdFactura)
+                                                                    {
+                                                                        montoTotalOrdenesDeCompra += r.Monto;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    <td>Ordenes de Compra (@cantidadOrdenesDeCompra)</td>
+                                    <td>@montoTotalOrdenesDeCompra?.ToString("C2")</td>
+                                break;
+                            }
+                        }
+                        @{
+                                switch (f.Estado)
+                                {
+                                    case EstadoFactura.Impaga:
+                                        <td class="col-estado" style="background-color: yellow" data-estado="@EstadoFactura.Impaga.ToString().ToLower()">Impaga</td>
+                                        break;
+                                    case EstadoFactura.Pagada:
+                                        <td class="col-estado" style="background-color: green; color: white" data-estado="@EstadoFactura.Pagada.ToString().ToLower()">Pagada</td>
+                                        break;
+                                    case EstadoFactura.Anulada:
+                                        <td class="col-estado" style="background-color: red; color: white" data-estado="@EstadoFactura.Anulada.ToString().ToLower()">Anulada
+                                        @if (f.NotaDeCredito != null)
+                                        {
+                                            <a class="btn btn-primary" asp-controller="NotasDeCredito" asp-action="IndexVerNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@f.NotaDeCredito" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver Nota de Credito</a>
+                                        }
+                                        else
+                                        {
+                                            <p>- Sin Nota de Credito -</p>
+                                        }
+                                        </td>
+                                        break;
+                                }
+                            }
+                        <td>
+                            <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idFactura="@f.IdFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Ver</a>
+                        </td>
+                    </tr>
+                }
+            }else
+            {
+                <tr>
+                    <td colspan="7" style="text-allin: center">- No hay facturas guardadas -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantFacturas" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantFacturas" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Facturas</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevFacturas" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numFacturas" class="mx-2"></span>
+            <button id="nextFacturas" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // FILTRAR POR CODIGO
+        function filtrarTabla() {
+            let input = document.getElementById("filtroCodigo");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-factura");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigo");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantFacturas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaFacturas', 'prevFacturas', 'nextFacturas', 'numFacturas', 'cantFacturas', 'fila-factura');
+
+        //FILTROS DE FECHAS
+        function mostrarBuscarPorIntervalo(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+        function mostrarBuscarFechaEspecifica(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'block';
+        }
+        function ocultarFiltrosDeFechas(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+
+        // FILTRO POR ESTADO
+        function filtrarTablaEstados(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".fila-factura");
+
+            const mensajePrevio = document.getElementById("fila-sin-datos");
+            if (mensajePrevio) {
+                mensajePrevio.remove();
+            }
+
+            let filasVisibles = 0;
+
+            filas.forEach(fila => {
+                let celdaEstado = fila.querySelector(".col-estado");
+
+                if (celdaEstado) {
+                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
+
+                    if (filter === 'todos' || estadoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                        filasVisibles++;
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+        
+            let mensaje = -'';
+            switch(filter)
+            {
+                case 'impaga':
+                    mensaje = '- No hay Facturas Impagas -';
+                break;
+                case 'pagada':
+                    mensaje = '- No hay Facturas Pagadas -';
+                break;
+                case 'anulada':
+                    mensaje = '- No hay Facturas Anuladas -';
+                break;
+            }
+
+            if (filasVisibles === 0 && filas.length > 0) {
+                const padreTabla = filas[0].parentNode;
+        
+                const totalColumnas = filas[0].children.length; 
+
+                const filaVacia = document.createElement("tr");
+                filaVacia.id = "fila-sin-datos";
+
+                //filaVacia.innerHTML = `<td colspan="${totalColumnas}" style="text-align: center; padding: 20px;">No hay facturas ${filter}s</td>`;
+                filaVacia.innerHTML = `<td colspan="${totalColumnas}" style="text-align: center; padding: 20px;">${mensaje}</td>`;
+        
+                padreTabla.appendChild(filaVacia);
+            }
+
+            const selectCant = document.getElementById('cantPresupuestos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // MOSTRAR BUSCAR POR CODIGO
+        function mostrarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'block';
+        }
+        function ocultarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'none';
+        }
+
+    </script>
+}

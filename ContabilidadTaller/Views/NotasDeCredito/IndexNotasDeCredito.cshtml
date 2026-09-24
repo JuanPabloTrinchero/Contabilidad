@@ -1,0 +1,321 @@
+﻿@{
+    ViewData["Title"] = "Notas de Credito";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    List<NotaDeCredito> NotasDeCredito = (List<NotaDeCredito>)ViewBag.NotasDeCredito;
+    List<Factura> Facturas = (List<Factura>)ViewBag.Facturas;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<div>
+    <h1>Notas de Credito de @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <a class="btn btn-primary" asp-controller="NotasDeCredito" asp-action="IndexNuevaNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">+ Nueva Nota de Credito</a>
+</div>
+
+<div>
+    <table id="tablaNotasDeCredito" class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>
+                    <div>
+                        Fecha
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li><a class="dropdown-item" asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-nombreEmpresa="@nombreEmpresa">Todas</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="des">Mas recientes</a></li>
+
+                            <li><a class="dropdown-item" asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="asc">Mas antiguas</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarPorIntervalo(this)">Desde - Hasta</a></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarFechaEspecifica(this)">Buscar fecha especifica</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="container-fecha">
+                        <form asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">
+                            <div class="vistaBuscarFechaIntervalo" style="display: none">
+                                <div>
+                                    <label>Desde:</label>
+                                    <input type="date" name="desde" />
+                                </div>
+                                <div>
+                                    <label>Hasta:</label>
+                                    <input type="date" name="hasta" />
+                                </div>
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                            </div>
+                            <div class="vistaBuscarFechaEspecifica" style="display: none">
+                                <div>
+                                    <label>Buscar fecha especifica</label>
+                                </div>
+                                <div>
+                                    <input type="date" name="fechaEspecifica" />
+                                    <button type="submit" class="btn btn-primary">Buscar</button>
+                                    <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>  
+                </th>
+                <th>
+                    <div class="container-tituloCodigo">
+                        <div class="vistaBotonBuscarCodigo">
+                            Codigo
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarCodigo(this)">Buscar por Codigo</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarCodigo mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroCodigo" class="form-control" placeholder="Buscar por Codigo..." onkeyup="filtrarTabla()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarCodigo(this)">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th>Estado
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('todos')">Todas</button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoNotaDeCredito.Activa.ToString()')">Activas</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoNotaDeCredito.Confirmada.ToString()')">Confirmadas</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoNotaDeCredito.Anulada.ToString()')">Anuladas</button>
+                        </li>
+                    </ul>
+                </th>
+                <th>Facturas Asociadas</th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (NotasDeCredito != null && NotasDeCredito.Any())
+            {
+                foreach (NotaDeCredito ndc in NotasDeCredito)
+                {
+                    <tr class="fila-notaDeCredito">
+                        <td>@ndc.IdNotaCredito</td>
+                        <td>@ndc.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td class="col-codigo">@long.Parse(ndc.Codigo.GetCodigoNDC()).ToString(@"0000\-00000000")</td>
+                        @switch (ndc.Estado)
+                        {
+                            case EstadoNotaDeCredito.Activa:
+                            <td class="col-estado" data-estado="@EstadoNotaDeCredito.Activa.ToString().ToLower()" style="background-color: yellow">Activa</td>
+                                break;
+                            case EstadoNotaDeCredito.Confirmada:
+                                <td class="col-estado" data-estado="@EstadoNotaDeCredito.Confirmada.ToString().ToLower()" style="background-color: green; color: white">Confirmada</td>
+                                break;
+                            case EstadoNotaDeCredito.Anulada:
+                                <td class="col-estado" data-estado="@EstadoNotaDeCredito.Anulada.ToString().ToLower()" style="background-color: red; color: white">Anulada</td>
+                                break;
+                        }
+                        <td>
+                            @if (Facturas != null && Facturas.Any())
+                            {
+                                int cantFacturas = 0;
+                                foreach (Factura f in Facturas)
+                                {
+                                    if (f.NotaDeCredito == ndc.IdNotaCredito)
+                                    {
+                                        cantFacturas++;
+                                        <p>@long.Parse(f.Codigo.GetCodigo()).ToString(@"0000\-00000000")</p>
+                                        <p>@f.Fecha.ToString("dd/MM/yyyy")</p>
+                                        <a class="btn btn-primary">Ver Factura</a>
+                                    }
+                                }
+                                if (cantFacturas == 0)
+                                {
+                                    <p>- Sin Facturas -</p>
+                                }
+                            }
+                            else
+                            {
+                                <p>No hay facturas y esto no tiene sentido porque si no hay facturas no deberia haber notas de credito</p>
+                            }
+                        </td>
+                        <td>
+                            <a class=" btn btn-primary" asp-controller="NotasDeCredito" asp-action="IndexVerNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@ndc.IdNotaCredito">Ver</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" style="text-align: center">- No hay Notas de Credito guardadas -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantNotasDeCredito" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantNotasDeCredito" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Notas de Credito</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevNotasDeCredito" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numNotasDeCredito" class="mx-2"></span>
+            <button id="nextNotasDeCredito" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // FILTRAR POR CODIGO
+        function filtrarTabla() {
+            let input = document.getElementById("filtroCodigo");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-notaDeCredito");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigo");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantNotasDeCredito');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        Paginacion('tablaNotasDeCredito', 'prevNotasDeCredito', 'nextNotasDeCredito', 'numNotasDeCredito', 'cantNotasDeCredito', 'fila-notaDeCredito');
+
+        //FILTROS DE FECHAS
+        function mostrarBuscarPorIntervalo(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+        function mostrarBuscarFechaEspecifica(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'block';
+        }
+        function ocultarFiltrosDeFechas(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+
+        // FILTRO POR ESTADO
+        function filtrarTablaEstados(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".fila-notaDeCredito");
+
+            filas.forEach(fila => {
+                let celdaEstado = fila.querySelector(".col-estado");
+
+                if (celdaEstado) {
+                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
+
+                    if (filter === 'todos' || estadoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPresupuestos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // MOSTRAR BUSCAR POR CODIGO
+        function mostrarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'block';
+        }
+        function ocultarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'none';
+        }
+
+    </script>
+}

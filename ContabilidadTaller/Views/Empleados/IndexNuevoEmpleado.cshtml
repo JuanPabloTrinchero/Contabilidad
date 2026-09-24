@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Nuevo Empleado";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+}
+
+<div>
+    <h1>Nuevo Empleado para @nombreEmpresa (@(idEmpresa))</h1>
+</div>
+
+<div>
+    <form id="formNuevoEmpleado" asp-controller="Empleados" asp-action="NuevoEmpleado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post">
+        <div class="form-group">
+            <h6>Nombre/s</h6>
+            <input type="text" class="form-control" name="nombres" style="width: 50%" placeholder="(Requerido)" required />
+        </div>
+        <div class="form-group">
+            <h6>Apellido</h6>
+            <input type="text" class="form-control" name="apellido" style="width: 50%" placeholder="(Opcional)"/>
+        </div>
+        <div class="form-group">
+            <h6>Telefono</h6>
+            <input type="text" class="form-control" name="telefono" style="width: 50%" />
+        </div>
+        <div class="form-group">
+            <h6>Email</h6>
+            <input type="email" class="form-control" name="email" style="width: 50%" placeholder="ejemplo@dominio.com" />
+        </div>
+        <div id="listaNotas">
+            <h6>Notas</h6>
+            <!-- Agregar Notas -->
+            <button class=" btn btn-primary" type="button" onclick="agregarNuevaNota()">Agregar Nota</button>
+        </div>
+        <button id="btnGuardar" class="btn btn-success" type="submit" onclick="return confirm('¿Estás seguro de que deseas guardar los datos?')">Guardar Nuevo Empleado</button>
+    </form>
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empleados" asp-action="IndexEmpleados" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+</div>
+
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // AGREGAR NUEVA NOTA
+        function agregarNuevaNota() {
+            const contenedor = document.getElementById('listaNotas');
+
+            const fila = document.createElement('div');
+            fila.className = 'nota-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                        <textarea type="text" id="archivoCargado" name="notas" style="width: 50%; height: 100px" placeholder="Nueva nota..." /></textarea>
+
+                        <button type="button" class="btn btn-danger btn-eliminarNotaNueva btn-sm px-3 text-nowrap">Quitar fila</button>
+                            `;
+
+            fila.querySelector('.btn-eliminarNotaNueva').addEventListener('click', function () {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // HABILITAR BOTON GUARDADO
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formNuevoEmpleado");
+            const btnGuardar = document.getElementById("btnGuardar");
+            const requiredFields = form.querySelectorAll("[required]");
+
+            function validarFormulario() {
+                let formValido = true;
+                requiredFields.forEach(function(field) {
+                    if (field.value.trim() === "") {
+                        formValido = false;
+                    }
+                    if (field.name === "cuit" && field.value.trim().length !== 11) {
+                        formValido = false;
+                    }
+                });
+                btnGuardar.disabled = !formValido;
+            }
+            form.addEventListener("input", validarFormulario);
+            validarFormulario();
+        });
+    </script>
+}

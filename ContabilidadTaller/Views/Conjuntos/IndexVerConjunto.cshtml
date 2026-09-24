@@ -1,0 +1,799 @@
+﻿@{
+    ViewData["Title"] = "Ver Conjunto";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+
+    Conjunto conjunto = (Conjunto)ViewBag.Conjunto;
+    List<Pieza> piezasDeConjunto = (List<Pieza>)ViewBag.PiezasDeConjunto;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Socio> socios = (List<Socio>)ViewBag.Socios;
+
+    RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+            var mensaje = "@Html.Raw(TempData["Mensaje"])";
+            if (mensaje) {
+                alert(mensaje);
+            }
+            };
+        </script>
+    }
+}
+
+<h1>Ver Conjunto de @nombreEmpresa (@idEmpresa)</h1>
+
+<h3>Id: @conjunto.IdConjunto</h3>
+
+<div class="container-descripcion">
+    <div class="vistaDescripcion">
+        <h3>Descripcion: @conjunto.Descripcion</h3>
+        <a class="btn btn-primary" onclick="mostrarModificarDescripcion(this)">Modificar Descripcion</a>
+    </div>
+    <div class="vistaModificarDescripcion" style="display: none">
+        <form asp-controller="Conjuntos" asp-action="Conjunto_ModificarDescripcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" method="post">
+            <h5>Nueva Descripcion:</h5>
+            <input style="width: 600px" type="text" name="nuevaDescripcion" placeholder="@conjunto.Descripcion" required/>
+            ``
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva descripcion?')">Guardar</button>
+            QuitarCodigoConjunto
+            <a class="btn btn-secondary" onclick="ocultarModificarDescripcion(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-codigo">
+    <div class="vistaCodigo">
+        @if (conjunto.Codigo != null)
+        {
+            <h3>Codigo: @conjunto.Codigo</h3>
+        }
+        else
+        {
+            <h3>Codigo: - Sin Codigo -</h3>
+        }
+        <a class="btn btn-primary" onclick="mostrarModificarCodigo(this)">Modificar Codigo</a>
+    </div>
+    <div class="vistaModificarCodigo" style="display: none">
+        <form asp-controller="Conjuntos" asp-action="Conjunto_ModificarCodigo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" method="post">
+            @{
+                string codigo = "- Sin Codigo -";
+                if(conjunto.Codigo != null){
+                    codigo = conjunto.Codigo;
+                }
+                <h5>Nuevo Codigo:</h5>
+                <input type="text" name="nuevoCodigo" placeholder="@codigo" required/>
+            }
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo codigo?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarCodigo(this)">Cancelar</a>
+        </form>
+        @if (conjunto.Codigo != null)
+            {
+            <form asp-controller="Conjuntos" asp-action="Conjunto_QuitarCodigo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" method="post">
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar quitar codigo?')">Sin Codigo</button>
+            </form>
+            }
+    </div>
+</div>
+
+<div class="container-piezasDeConjunto">
+    <h3>Piezas de Conjunto</h3>
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Descripcion</th>
+                <th>Codigo</th>
+                <th>Detalles</th>
+                <th>Quitar de Conjunto</th>
+                <th>Borrar Pieza</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (piezasDeConjunto != null && piezasDeConjunto.Any())
+            {
+                @foreach (Pieza p in piezasDeConjunto)
+                {
+                    <tr>
+                        <td>@p.IdPieza</td>
+                        <td>@p.Descripcion</td>
+                        @if (p.Codigo != null)
+                        {
+                            <td>@p.Codigo</td>
+                        }
+                        else
+                        {
+                            <td>-</td>
+                        }
+                        <td>
+                            <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPieza="@p.IdPieza">Ver</a>
+                        </td>
+                        <td>
+                            <form asp-controller="Conjuntos" asp-action="Conjunto_QuitarPiezaDeConjunto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" asp-route-idPiezaQuitar="@p.IdPieza" method="post">
+                                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar quitar pieza de conjunto?')">Quitar</button>
+                            </form>
+                        </td>
+                        <td>
+                            @{
+                                bool borrar = true;
+                                foreach (Pedido pe in pedidos)
+                                {
+                                    if (pe.PiezaExistenteFK == p.IdPieza)
+                                    {
+                                        borrar = false;
+                                    }
+                                }
+
+                                if (borrar == true)
+                                {
+                                    <form asp-controller="Conjuntos" asp-action="Conjunto_BorrarPiezaDesdeConjunto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" asp-route-idPiezaBorrar="@p.IdPieza" method="post">
+                                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar pieza definitivamente?')">Borrar</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span title="No puedes borrar esta pieza porque esta asignada a algun pedido">
+                                        <button class="btn btn-danger" disabled>Borrar</button>
+                                    </span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" style="text-align: center">- Conjunto sin Piezas -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="container-nuevaPiezaDeConjunto">
+    <div class="vistaBotonNuevaPiezaConjunto">
+        <a class="btn btn-primary" onclick="mostrarAgregarPiezaExistente(this)">+ Agregar Pieza Existente</a>
+        <a class="btn btn-primary" onclick="mostrarAgregarPiezaNueva(this)">+ Agregar Pieza Nueva</a>
+    </div>
+    <div class="vistaAgregarPiezaExistente" style="display: none">
+        <h3>Piezas sin Conjunto</h3>
+        <form id="formAgregarPiezaExistente" asp-controller="Conjuntos" asp-action="Conjunto_AgregarPiezasAConjunto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" method="post">
+            <table id="tablaPiezasExistentes" class="table table-striped text-center">
+                <thead>
+                    <tr>
+                        <th>AGREGAR?</th>
+                        <th>Id</th>
+                        <th>Descripcion
+                            <div class="container-tituloDescripcion mb-3">
+                                <div class="vistaBotonBuscarDescripcion">
+                                    <a class="btn btn-primary" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
+                                </div>
+                                <div class="vistaBuscarDescripcion" style="display: none">
+                                    <input type="text" id="filtroDescripcion" class="form-control" placeholder="Filtrar por descripcion..." onkeyup="filtrarTablaDescripcion()">
+                                    <a class="btn btn-secondary" onclick="ocultarBuscarDescripcion(this)">Cancelar</a>
+                                </div>
+                            </div>
+                        </th>
+                        <th>Codigo
+                            <div class="container-tituloCodigo mb-3">
+                                <div class="vistaBotonBuscarCodigo">
+                                    <a class="btn btn-primary" onclick="mostrarBuscarCodigo(this)">Buscar por Codigo</a>
+                                </div>
+                                <div class="vistaBuscarCodigo" style="display: none">
+                                    <input type="text" id="filtroCodigo" class="form-control" placeholder="Filtrar por codigo..." onkeyup="filtrarTablaCodigo()">
+                                    <a class="btn btn-secondary" onclick="ocultarBuscarCodigo(this)">Cancelar</a>
+                                </div>
+                            </div>
+                        </th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (piezas != null && piezas.Any())
+                    {
+                        foreach (Pieza pi in piezas)
+                        {
+                            if (pi.ConjuntoFK == null)
+                            {
+                                <tr class="claseFilaPieza">
+                                    <td>
+                                        <input type="checkbox" name="idsPiezas" value="@pi.IdPieza" />
+                                    </td>
+                                    <td>@pi.IdPieza</td>
+                                    <td class="col-descripcion">@pi.Descripcion</td>
+                                    @if (pi.Codigo != null)
+                                    {
+                                        <td class="col-codigo">@pi.Codigo</td>
+                                    }
+                                    else
+                                    {
+                                        <td class="col-codigo">-</td>
+                                    }
+                                    <td>
+                                        <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPieza="@pi.IdPieza" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" style="text-align: center">No hay piezas guardadas</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="d-flex align-items-center">
+                    <label for="cantPiezas" class="me-2 mb-0">Mostrar de a</label>
+                    <select id="cantPiezas" class="form-select form-select-sm" style="width: auto;">
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                    <label>Piezas</label>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="paginacion mt-3 d-flex align-items-center">
+                    <button id="prevPiezas" class="btn btn-sm btn-secondary">Anterior</button>
+                    <span id="numPiezas" class="mx-2"></span>
+                    <button id="nextPiezas" class="btn btn-sm btn-secondary">Siguiente</button>
+                </div>
+            </div>
+
+            <button id="btnGuardarPiezaExistente" class="btn btn-success" type="submit" onclick="return confirm('Confirmar agregar piezas a conjunto?')" disabled >Agregar Piezas</button>
+            <a class="btn btn-secondary" onclick="mostrarBotonesAgregarPieza(this)">Cancelar</a>
+        </form>
+
+    </div>
+    <div class="vistaAgregarPiezaNueva" style="display: none">
+        <form id="formAgregarPiezaNueva" asp-controller="Conjuntos" asp-action="Conjunto_CrearPiezaEnConjunto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" enctype="multipart/form-data">
+            <h5>Crear Nueva Pieza para Conjunto</h5>
+            <div>
+                <h6>Descripcion</h6>
+                <input id="inputDescripcion" type="text" placeholder="(Requerida)" name="descripcion" style="width: 50%" required />
+            </div>
+            <div>
+                <h6>Codigo</h6>
+                <input type="text" placeholder="(Opcional)" name="codigo" style="width: 50%" />
+            </div>
+            <div>
+                <div id="listaNotas">
+                    <h6>Notas:</h6>
+                    <!-- Agregar Notas -->
+                    <button class=" btn btn-primary" type="button" onclick="agregarNuevaNota()">Agregar Nota</button>
+                </div>
+                <div id="listaArchivos">
+                    <!-- Agregar Archivos -->
+                    <button class=" btn btn-primary" type="button" onclick="agregarNuevoArchivo()">Agregar Archivo</button>
+                </div>
+            </div>
+
+            <button id="btnGuardarPiezaNueva" class="btn btn-success" type="submit" onclick="return confirm('Confirmar nueva pieza de conjunto?')" disabled >Guardar Nueva Pieza</button>
+            <a class="btn btn-secondary" onclick="mostrarBotonesAgregarPieza(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-notas">
+    <h3>Notas</h3>
+    <div class="vistaNotas">
+        @if (conjunto.Notas != null && conjunto.Notas.Any())
+        {
+            int indexNota = 0;
+            foreach (string nota in conjunto.Notas)
+            {
+                indexNota++;
+                <div class="vistaNota-@indexNota">
+                    <h6>@nota</h6>
+                    <a class="btn btn-primary" onclick="mostrarModificarNota(this, @indexNota)">Modificar Nota</a>
+                    <form asp-controller="Conjuntos" asp-action="Conjunto_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" asp-route-notaBorrar="@nota" method="post">
+                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar esta nota?')">Borrar Nota</button>
+                    </form>
+                </div>
+                <div class="vistaModificarNota-@indexNota" style="display: none">
+                    <form asp-controller="Conjuntos" asp-action="Conjunto_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" asp-route-notaAModificar="@nota" method="post">
+                        <h6>Modificar Nota:</h6>
+                        <textarea type="text" placeholder="@nota" name="notaModificada" style="width: 50%; height: 100px" required></textarea>
+
+                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar nota?')">Guardar cambios</button>
+                        <a class="btn btn-secondary" onclick="ocultarModificarNota(this, @indexNota)">Cancelar</a>
+                    </form>
+                </div>  
+            }
+        }
+        else
+        {
+            <h6>- No hay notas guardadas -</h6>
+        }
+    </div>
+    <div class="vistaBotonAgregarNota">
+        <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
+    </div>
+    <div class="vistaAgregarNota" style="display: none">
+        <form asp-controller="Conjuntos" asp-action="Conjunto_AgregarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" method="post">
+            <textarea type="text" placeholder="Nueva nota..." name="nuevaNota" style="width: 50%; height: 100px" required/></textarea>
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nueva nota?')">Guardar Nota</button>
+            <a class="btn btn-secondary" onclick="ocultarAgregarNota(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-archivos">
+    <h3>Archivos:</h3>
+    <div class="vistaArchivos">
+        @if(conjunto.Archivos != null && conjunto.Archivos.Any())
+        {
+            <table class="table text-center">
+            <tr>
+                @{
+                    int contador = 0;
+                }
+                @{
+                    int contadorArchivos = 1;
+                }
+                @foreach (string arch in conjunto.Archivos)
+                {
+                    if (contador > 0 && contador % 3 == 0)
+                    {
+                        @:</tr><tr>
+                    }
+
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+
+                            @{
+                                string nombre = System.IO.Path.GetFileName(arch);
+                                string extension = arch.Substring(arch.Length - 4);
+                                string archCoregido = arch.Replace(@"\\", @"/");
+
+                                if (extension == ".jpg" || extension == ".png" || extension == ".ico")
+                                {
+                                    <h6>@nombre</h6>
+                                    <img src="@archCoregido" alt="not found" style="max-width: 100px;" />
+                                }
+                                else
+                                {
+                                    <h6>@nombre</h6>
+                                    <img src="\iconoArchivoGenerico.png" alt="not found" style="max-width: 50px;" />
+                                }
+                            }
+                            <!--
+                                <a href="@arch" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Ver</a>
+                                -->
+                            <a class="btn btn-primary" asp-controller="Conjuntos" asp-action="Conjunto_AbrirArchivoEnUbicacion" asp-route-archivo="@arch">Abrir en Ubicacion</a>
+                            <form asp-controller="Conjuntos" asp-action="Conjunto_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" asp-route-archivo="@arch" method="post">
+
+                                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
+                            </form>
+                        </div>
+                    </td>
+                    contadorArchivos++;
+                    contador++;
+                }
+            </tr>
+        </table>
+        }else
+        {
+            <h6>- No hay archivos subido -</h6>
+        }
+    </div>
+
+    <div class="vistaBotonAgregarArchivo">
+        <a class="btn btn-primary" onclick="mostrarSubirArchivo(this)">+ Cargar Archivo</a>
+    </div>
+    <div class="vistaAgregarArchivo" style="display: none">
+        <form id="formAgregarArchivo" asp-controller="Conjuntos" asp-action="Conjunto_SubirArchivo" enctype="multipart/form-data" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@conjunto.IdConjunto" >
+            <h5>Seleccionar archivo:</h5>
+            <input id="fileConjunto" type="file" name="archivos">
+
+            <button type="button" class="btn btn-warning btn-limpiar btn-sm px-3 text-nowrap" onclick="LimpiarArchivo()">Limpiar archivo</button>
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar subir archivo?')">Guardar Archivo</button>
+            <a class="btn btn-secondary" onclick="ocultarSubirArchivo(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-borrarConjunto mt-4">
+    @{
+        if (sePuedeBorrar.SePuede == true)
+        {
+            <h5>@sePuedeBorrar.Mensajes[0]</h5>
+            <div class="vistaBotonBorrarConjunto">
+                <a class="btn btn-danger" onclick="mostrarBorrarConjunto(this)">Borrar Conjunto</a>
+            </div>
+
+            <div class="vistaBorrarConjunto" style="display: none">
+                <form asp-controller="Conjuntos" asp-action="Conjunto_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjuntoEliminar="@conjunto.IdConjunto" method="post">
+
+                    <label>Socio:</label>
+                    <div class="dropdown">
+                        <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
+
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                            Seleccionar Socio
+                        </button>
+                        <ul class="dropdown-menu">
+                            @{
+                                <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                                if (socios != null && socios.Any())
+                                {
+                                    foreach (Socio s in socios)
+                                    {
+                                        string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                        <li>
+                                            <a class="dropdown-item opcion-socio"
+                                               href="#"
+                                               data-id="@s.IdSocio"
+                                               data-nombre="@nombreApellido">
+                                                @nombreApellido
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+
+                    <label>Contraseña:</label>
+                    <div>
+                        <input type="password" name="contraseñaSocio" id="passSocio" required />
+                        <button class="btn btn-outline-primary" type="button" onclick="togglePassword()">
+                            <i id="iconoOjo" class="bi bi-eye"></i>
+                        </button>
+                    </div>
+
+                    <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido?')">Borrar Conjunto</button>
+                    <a class="btn btn-secondary" onclick="ocultarBorrarConjunto(this)">Cancelar</a>
+                </form>
+            </div>
+        }
+        else
+        {
+            <button class="btn btn-danger" title="No se puede borrar este conjunto porque esta asignado a algun pedido" disabled>Borrar Conjunto</button>
+            <h5>No se puede borrar este conjunto ya que:</h5>
+            <ul>
+                @foreach(string mensaje in sePuedeBorrar.Mensajes){
+                    <li>@mensaje</li>
+                }
+            </ul>
+        }
+
+    } 
+</div>
+
+<div class="text-center">
+    <a class="btn btn-secondary" asp-controller="Conjuntos" asp-action="IndexConjuntos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+</div>
+
+
+
+@section Scripts{
+    <script>
+        // MODIFICAR DESCRIPCION
+        function mostrarModificarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-descripcion');
+
+            contenedor.querySelector('.vistaDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'block';
+        }
+        function ocultarModificarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-descripcion');
+
+            contenedor.querySelector('.vistaDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'none';
+        }
+
+        // MODIFICAR CODIGO
+        function mostrarModificarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-codigo');
+
+            contenedor.querySelector('.vistaCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaModificarCodigo').style.display = 'block';
+        }
+        function ocultarModificarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-codigo');
+
+            contenedor.querySelector('.vistaCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaModificarCodigo').style.display = 'none';
+        }
+
+        // AGREGRA PIEZAS A CONJUNTO
+        function mostrarBotonesAgregarPieza(elemento) {
+            const contenedor = elemento.closest('.container-nuevaPiezaDeConjunto');
+
+            contenedor.querySelector('.vistaBotonNuevaPiezaConjunto').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarPiezaExistente').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarPiezaNueva').style.display = 'none';
+        }
+        function mostrarAgregarPiezaExistente(elemento) {
+            const contenedor = elemento.closest('.container-nuevaPiezaDeConjunto');
+
+            contenedor.querySelector('.vistaBotonNuevaPiezaConjunto').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarPiezaExistente').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarPiezaNueva').style.display = 'none';
+        }
+        function mostrarAgregarPiezaNueva(elemento) {
+            const contenedor = elemento.closest('.container-nuevaPiezaDeConjunto');
+
+            contenedor.querySelector('.vistaBotonNuevaPiezaConjunto').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarPiezaExistente').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarPiezaNueva').style.display = 'block';
+        }
+
+        // FILTRAR POR DESCRIPCION
+        function filtrarTablaDescripcion() {
+            let input = document.getElementById("filtroDescripcion");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFilaPieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcion");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRAR POR CODIGO
+        function filtrarTablaCodigo() {
+            let input = document.getElementById("filtroCodigo");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFilaPieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigo");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPiezasExistentes', 'prevPiezas', 'nextPiezas', 'numPiezas', 'cantPiezas', 'claseFilaPieza');
+
+        // AGREGAR NUEVA NOTA
+        function agregarNuevaNota() {
+            const contenedor = document.getElementById('listaNotas');
+
+            const fila = document.createElement('div');
+            fila.className = 'nota-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                        <textarea type="text" id="archivoCargado" name="notas" class="form-control-sm" style="width: 50%; height: 100px"></textarea>
+                        <button type="button" class="btn btn-danger btn-eliminarNotaNueva btn-sm px-3 text-nowrap">Quitar fila</button>
+                            `;
+
+            fila.querySelector('.btn-eliminarNotaNueva').addEventListener('click', function () {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // AGREGAR NUEVO ARCHIVO
+        function agregarNuevoArchivo() {
+            const contenedor = document.getElementById('listaArchivos');
+
+            const fila = document.createElement('div');
+            fila.className = 'archivo-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                        <input type="file" id="archivoCargado" name="archivos" class="form-control-sm">
+                        <button type="button" class="btn btn-warning btn-limpiar btn-sm px-3 text-nowrap">Limpiar archivo</button>
+                        <button type="button" class="btn btn-danger btn-eliminar btn-sm px-3 text-nowrap">Quitar fila</button>
+                    `;
+
+             fila.querySelector('.btn-limpiar').addEventListener('click', function() {
+             fila.querySelector('input[type="file"]').value = '';
+            });
+
+            fila.querySelector('.btn-eliminar').addEventListener('click', function() {
+            fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // BORRAR CONJUNTO
+        function mostrarBorrarConjunto(elemento) {
+            const contenedor = elemento.closest('.container-borrarConjunto');
+
+            contenedor.querySelector('.vistaBotonBorrarConjunto').style.display = 'none';
+            contenedor.querySelector('.vistaBorrarConjunto').style.display = 'block';
+        }
+        function ocultarBorrarConjunto(elemento) {
+            const contenedor = elemento.closest('.container-borrarConjunto');
+
+            contenedor.querySelector('.vistaBotonBorrarConjunto').style.display = 'block';
+            contenedor.querySelector('.vistaBorrarConjunto').style.display = 'none';
+        }
+
+        // SELECCIONAR SOCIO
+        document.querySelectorAll('.opcion-socio').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const id = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+
+                document.getElementById('btnSocio').innerText = nombre;
+
+                document.getElementById('idSocioSeleccionado').value = id;
+            });
+        });
+
+        // VER/OCULTAR CONTRASEñA
+        function togglePassword() {
+            var input = document.getElementById("passSocio");
+            const icono = document.getElementById('iconoOjo');
+
+            if (input.type === "password") {
+                input.type = "text";
+
+                icono.classList.remove('bi-eye');
+                icono.classList.add('bi-eye-slash');
+            } else {
+                input.type = "password";
+
+                icono.classList.remove('bi-eye-slash');
+                icono.classList.add('bi-eye');
+            }
+        }
+
+        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS AGREGAR PIEZA EXISTENTE
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formAgregarPiezaExistente");
+            const btnGuardar = document.getElementById("btnGuardarPiezaExistente");
+
+            function validarFormulario() {
+
+                const checkboxes = form.querySelectorAll('input[name="idsPiezas"]:checked');
+                const pedidoSeleccionado = checkboxes.length > 0;
+
+                btnGuardar.disabled = !(pedidoSeleccionado);
+            }
+
+            form.addEventListener("change", function(e) {
+                if (e.target.name === "idsPiezas") {
+                    validarFormulario();
+                }
+            });
+
+            validarFormulario();
+        });
+
+        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS AGREGAR PIEZA NUEVA
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formAgregarPiezaNueva");
+            const btnGuardar = document.getElementById("btnGuardarPiezaNueva");
+
+            const inputDescripcion = document.querySelector('input[id="inputDescripcion"]');
+
+            function validarFormulario() {
+                const descripcionValida = inputDescripcion.value.trim() !== "";
+
+                btnGuardar.disabled = !(descripcionValida);
+            }
+
+            if (inputDescripcion) {
+                inputDescripcion.addEventListener("input", validarFormulario);
+            }
+
+            validarFormulario();
+        });
+       
+        // AGREGAR NOTA
+        function mostrarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
+        }
+        function ocultarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
+        }
+
+        // MODIFICAR NOTA
+        function mostrarModificarNota(elemento, index) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector(`.vistaNota-${index}`).style.display = 'none';
+            contenedor.querySelector(`.vistaModificarNota-${index}`).style.display = 'block';
+        }
+        function ocultarModificarNota(elemento, index) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector(`.vistaNota-${index}`).style.display = 'block';
+            contenedor.querySelector(`.vistaModificarNota-${index}`).style.display = 'none';
+        }
+
+        // SUBIR ARCHIVO
+        function mostrarSubirArchivo(elemento) {
+            const contenedor = elemento.closest('.container-archivos');
+
+            contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'block';
+        }
+        function ocultarSubirArchivo(elemento) {
+            const contenedor = elemento.closest('.container-archivos');
+
+            contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'none';
+        }
+
+        // MOSTRAR BUSCAR POR DESCRIPCION
+        function mostrarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'block';
+        }
+        function ocultarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'none';
+        }
+
+        // MOSTRAR BUSCAR POR CODIGO
+        function mostrarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'block';
+        }
+        function ocultarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'none';
+        }
+
+        function LimpiarArchivo(){
+            const form = document.getElementById('formAgregarArchivo');
+
+                    form.querySelector('input[id="fileConjunto"]').value = '';
+        }
+
+    </script>
+}

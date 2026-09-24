@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "Ver Costo";
+
+    Empresa empresa = (Empresa)ViewBag.Empresa;
+    Pedido pedido = (Pedido)ViewBag.Pedido;
+    string descripcion = (string)ViewBag.Descripcion;
+
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    Costo costo = (Costo)ViewBag.Costo;
+    int idEmpleado = (int)ViewBag.IdEmpleado;
+}
+
+<h1>Ver Costos de Pedido: (@pedido.IdPedido) - "@descripcion" de @empresa.NombreEmpresa</h1>
+
+<h5>Id: @costo.IdCosto</h5>
+
+<div class="container-descripcion">
+    <div class="vistaDescripcion">
+        <h5>Descripcion: @costo.Descripcion</h5>
+        <a class="btn btn-primary" onclick="mostrarModificarDescripcion(this)">Modificar Descripcion</a>
+    </div>
+    <div class="vistaModificarDescripcion" style="display: none">
+        <form asp-controller="Costos" asp-action="Costo_ModificarDescripcion" asp-route-empresa="@empresa" asp-route-idEmpleado="@idEmpleado" asp-route-idCosto="@costo.IdCosto" asp-route-idPedido="@pedido.IdPedido" method="post">
+            <label>Nueva Descripcion:</label>
+            <input type="text" placeholder="@costo.Descripcion" name="nuevaDescripcion" required>
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva descripcion?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarDescripcion(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-precio">
+    <div class="vistaPrecio">
+        <h5 style="color: red">Precio: (- @costo.Precio?.ToString("C2"))</h5>
+        <a class="btn btn-primary" onclick="mostrarModificarPrecio(this)">Modificar Precio</a>
+    </div>
+    <div class="vistaModificarPrecio" style="display: none">
+        <form asp-controller="Costos" asp-action="Costo_ModificarPrecio" asp-route-empresa="@empresa" asp-route-idEmpleado="@idEmpleado" asp-route-idCosto="@costo.IdCosto" asp-route-idPedido="@pedido.IdPedido" method="post">
+            <label>Nuevo Precio:</label>
+            <input type="number" placeholder="@costo.Precio?.ToString("C2")" name="nuevoPrecio" required> 
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo precio?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarPrecio(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado">Atras</a>
+</div>
+
+
+
+@section Scripts{
+    <script>
+        // MODIFICAR DESCRIPCION
+        function mostrarModificarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-descripcion');
+
+            contenedor.querySelector('.vistaDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'block';
+        }
+        function ocultarModificarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-descripcion');
+
+            contenedor.querySelector('.vistaDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'none';
+        }
+
+        // MODIFICAR PRECIO
+        function mostrarModificarPrecio(elemento) {
+            const contenedor = elemento.closest('.container-precio');
+
+            contenedor.querySelector('.vistaPrecio').style.display = 'none';
+            contenedor.querySelector('.vistaModificarPrecio').style.display = 'block';
+        }
+        function ocultarModificarPrecio(elemento) {
+            const contenedor = elemento.closest('.container-precio');
+
+            contenedor.querySelector('.vistaPrecio').style.display = 'block';
+            contenedor.querySelector('.vistaModificarPrecio').style.display = 'none';
+        }
+
+
+    </script>
+}

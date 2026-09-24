@@ -1,0 +1,14 @@
+[
+  {
+    "IdNotaCredito": 0,
+    "Fecha": "2026-09-20",
+    "Codigo": {
+      "PuestoNDC": "4274",
+      "NumeroNDC": "75372244"
+    },
+    "Notas": [],
+    "UbicacionArchivo": null,
+    "Estado": 0,
+    "FacturasRespaldo": []
+  }
+]

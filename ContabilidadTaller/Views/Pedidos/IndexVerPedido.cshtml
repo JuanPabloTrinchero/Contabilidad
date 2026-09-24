@@ -1,0 +1,1107 @@
+﻿@{
+    ViewData["Title"] = "Ver Pedido";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    Pedido pedido = (Pedido)ViewBag.Pedido;
+    Empleado empleado = (Empleado)ViewBag.Empleado;
+    List<Empleado> empleados = (List<Empleado>)ViewBag.Empleados;
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Socio> socios = (List<Socio>)ViewBag.Socios;
+    List<Costo> costos = (List<Costo>)ViewBag.CostosDePedido;
+
+    Pieza piezaDePedido = (Pieza)ViewBag.PiezaDePedido;
+    Conjunto conjuntoDePedido = (Conjunto)ViewBag.ConjuntoDePedido;
+    List<Pieza> piezasDeConjunto = (List<Pieza>)ViewBag.PiezasDeConjunto;
+
+    Presupuesto presupuesto = (Presupuesto)ViewBag.PresupuestoDePedido;
+
+    Factura factura = (Factura)ViewBag.FacturaDePedido;
+
+    List<Remito> remitos = (List<Remito>)ViewBag.Remitos;
+
+    RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
+
+    double? subtotal = (double)(pedido.Cantidad * pedido.PrecioUnitario);
+    double? costosTotales = 0;
+    foreach (Costo c in costos)
+    {
+        costosTotales += c.Precio;
+    }
+
+    double? gananciaTotal = subtotal - costosTotales;
+
+    string nombreEmpleado = "-";
+    int? idEmpleado;
+    if(empleado.IdEmpleado > -1)
+    {
+        nombreEmpleado = empleado.NombreEmpleado + ". " + empleado.ApellidoEmpleado;
+        idEmpleado = empleado.IdEmpleado;
+    }
+    else
+    {
+        nombreEmpleado = "-";
+        idEmpleado = -1;
+    }
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+
+}
+
+<h1>Ver Pedido de @nombreEmpresa (@idEmpresa)</h1>
+
+<div class="container-pedido" style="display: flex; width: 100%">
+    <div style="width: 50%">
+        <table id="tabla-verPedido">
+            <tr>
+                <td>Id:</td>
+                <td>@pedido.IdPedido</td>
+            </tr>
+            <tr>
+                <td>Fecha Encargo:</td>
+                <td>
+                    <div class="container-fechaEncargo">
+                        <div class="vistaFechaEncargo">
+                            @pedido.FechaEncargo.ToString("dd/MM/yyyy")
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li><a class="dropdown-item" onclick="mostrarModificarFechaEncargo(this)">Modificar Fecha Encargo</a></li>
+                            </ul>
+                        </div>
+                        <div class="vistaModificarFechaEncargo" style="display: none">
+                            <form asp-controller="Pedidos" asp-action="Pedido_ModificarFechaEncargo" method="post">
+                                <input type="text"
+                                       name="nuevaFecha"
+                                       placeholder="@pedido.FechaEncargo"
+                                       onfocus="(this.type='date')"
+                                       onblur="if(!this.value) this.type='text'">
+                                <input type="hidden" name="idEmpresa" value="@idEmpresa" />
+                                <input type="hidden" name="nombreEmpresa" value="@nombreEmpresa" />
+                                <input type="hidden" name="idPedido" value="@pedido.IdPedido" />
+                                @{
+                                    if (empleado != null)
+                                    {
+                                        <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                    }
+                                    else
+                                    {
+                                        <input type="hidden" name="idEmpleado" value="@null" />
+                                    }
+                                }
+
+                                <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva fecha?')">Confirmar</button>
+                                <a class="btn btn-secondary" onclick="mostrarFechaEncargo(this)">Cancelar</a>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Cantidad:</td>
+                <td>
+                    <div class="container-cantidad">
+                        <div class="vistaCantidad">
+                            @pedido.Cantidad
+                                @if ((pedido.Estado == EstadoPedido.Pendiente) || (pedido.Estado == EstadoPedido.EntregadoParcial))
+                                {       
+                                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li><a class="dropdown-item" onclick="mostrarModificarCantidad(this)">Modificar Cantidad</a></li>
+                                </ul>
+                                }
+                        </div>
+                        <div class="vistaModificarCantidad" style="display: none">
+                            <form asp-controller="Pedidos" asp-action="Pedido_ModificarCantidad" method="post">
+                                    @{
+                                        int cantidadEntregadasALaFecha = 0;
+                                        if (pedido.Entregas != null && pedido.Entregas.Any())
+                                        {
+                                            
+                                            foreach (Entrega e in pedido.Entregas)
+                                            {
+                                                cantidadEntregadasALaFecha += e.cantidadEntrega;
+                                            }
+                                        }
+                                    <input type="number" name="nuevaCantidad" placeholder="@cantidadEntregadasALaFecha" min="@cantidadEntregadasALaFecha" />
+                                    }
+                                <input type="hidden" name="idEmpresa" value="@idEmpresa" />
+                                <input type="hidden" name="nombreEmpresa" value="@nombreEmpresa" />
+                                <input type="hidden" name="idPedido" value="@pedido.IdPedido" />
+                                @{
+                                    if (empleado != null)
+                                    {
+                                        <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                    }
+                                    else
+                                    {
+                                        <input type="hidden" name="idEmpleado" value="@null" />
+                                    }
+                                }
+                                <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva cantidad?')">Confirmar</button>
+                                <a class="btn btn-secondary" onclick="mostrarCantidad(this)">Cancelar</a>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Descripcion:</td>
+                <td>
+                    <div class="container-descripcion">
+                        <div class="vistaDescripcion">
+                            @if (piezaDePedido.IdPieza > -1)
+                            {
+                                @piezaDePedido.Descripcion
+                            }
+                            else if (conjuntoDePedido.IdConjunto > -1)
+                            {
+                                @conjuntoDePedido.Descripcion
+                            }else
+                            {
+                                @pedido.Descripcion
+                                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li><a class="dropdown-item" onclick="mostrarModificarDescripcion(this)">Modificar Descripcion</a></li>
+                                </ul>
+                            }
+                        </div>
+                        <div class="vistaModificarDescripcion" style="display: none">
+                            <form asp-controller="Pedidos" asp-action="Pedido_ModificarDescripcion" method="post">
+                                <input type="text" name="nuevaDescripcion" placeholder="@pedido.Descripcion" />
+                                <input type="hidden" name="idEmpresa" value="@idEmpresa" />
+                                <input type="hidden" name="nombreEmpresa" value="@nombreEmpresa" />
+                                <input type="hidden" name="idPedido" value="@pedido.IdPedido" />
+                                @{
+                                    if (empleado != null)
+                                    {
+                                        <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                    }
+                                    else
+                                    {
+                                        <input type="hidden" name="idEmpleado" value="@null" />
+                                    }
+                                }
+                                <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva descripcion?')">Confirmar</button>
+                                <a class="btn btn-secondary" onclick="mostrarDescripcion(this)">Cancelar</a>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            @if (piezaDePedido.IdPieza > -1)
+            {
+                <tr>
+                    <td>Pieza Existente</td>
+                    <td>
+                        <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idPieza="@piezaDePedido.IdPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver Pieza</a>
+                    </td>
+                </tr>
+            }
+            @if (conjuntoDePedido.IdConjunto > -1)
+            {
+                <tr>
+                    <td>Conjunto Existente</td>
+                    <td>
+                        <a class="btn btn-primary" asp-controller="Conjuntos" asp-action="IndexVerConjunto" asp-route-idConjunto="@conjuntoDePedido.IdConjunto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver Conjunto</a>
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td>Precio Unitario:</td>
+                <td>
+                    <div class="container-precioUnitario">
+                        <div class="vistaPrecioUnitario">
+                            @pedido.PrecioUnitario?.ToString("C2")
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li><a class="dropdown-item" onclick="mostrarModificarPrecioUnitario(this)">Modificar Precio Unitario</a></li>
+                            </ul>
+                        </div>
+                        <div class="vistaModificarPrecioUnitario" style="display: none">
+                            <form asp-controller="Pedidos" asp-action="Pedido_ModificarPrecioUnitario" method="post" asp-route-idEmpresa="@idEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-nombreEmpresa="@nombreEmpresa">
+                                <div>
+                                    <input type="number" class="form-control" placeholder="@pedido.PrecioUnitario?.ToString("C2")" name="nuevoPrecio" />
+                                    @{
+                                        if (empleado != null)
+                                        {
+                                            <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                        }
+                                        else
+                                        {
+                                            <input type="hidden" name="idEmpleado" value="@null" />
+                                        }
+                                    }
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmar nuevo precio unitario?')">Confirmar</button>
+                                    <a type="button" class="btn btn-secondary" onclick="mostrarPrecioUnitario(this)">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Sub-Total:</td>
+                <td>@subtotal?.ToString("C2")</td>
+            </tr>
+            <tr class="container-costos">
+                <td>
+                    Costos:
+                    <div>
+                        <a class="btn btn-primary" asp-controller="Costos" asp-action="IndexNuevoCosto" asp-route-idEmpresa="@idEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">+ Agregar Costo</a>
+                    </div>
+                </td>
+                <td>
+                    <div class="vistaBotonVerCostos">
+                        <a class="btn btn-primary" onclick="mostrarCostos(this)">Ver Costos</a>
+                    </div>
+                    <div class="vistaCostos" style="display: none">
+                        @{
+                            if (costos != null && costos.Any())
+                            {
+                                int contadorCostos = 1;
+                                foreach (Costo costo in costos)
+                                {
+                                    <p style="color: red">(- @costo.Precio?.ToString("C2")) <a class="btn btn-primary" asp-controller="Costos" asp-action="IndexVerCosto" asp-route-idEmpresa="@idEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado" asp-route-idCosto="@costo.IdCosto">Ver</a></p>
+                                    
+                                    if (contadorCostos < costos.Count)
+                                    {
+                                        <hr />
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <p>- Sin costos -</p>
+                            }
+                        }
+                        <a class="btn btn-secondary" onclick="ocultarCostos(this)">Ocultar Costos</a>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Ganancias:</td>
+                <td>@gananciaTotal?.ToString("C2")</td>
+            </tr>
+            <tr>
+                <td>Encargado por:</td>
+                <td>
+                    <div class="container-encargado">
+                        <div class="vistaEncargado">
+                            @nombreEmpleado
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li><a class="dropdown-item" onclick="mostrarModificarEncargado(this)">Modificar Encargado</a></li>
+                            </ul>
+                        </div>
+                        <div class="vistaModificarEncargado" style="display: none">
+                            <form asp-controller="Pedidos" asp-action="Pedido_ModificarEncargado" method="post" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">
+                                <div class="dropdown">
+
+                                    <input type="hidden" name="idEmpleado" id="idEmpleadoSeleccionado" value="">
+
+                                    <button class="btn dropdown-toggle" type="button" id="btnEmpleado" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Seleccionar Empleado
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @{
+                                            <li><a class="dropdown-item opcion-empleado" href="#" data-nombre="(Sin asignar)">...</a></li>
+                                            if (empleados != null && empleados.Any())
+                                            {
+                                                foreach (Empleado e in empleados)
+                                                {
+                                                    if (e.Estado == EstadoEmpleado.Activo)
+                                                    {
+                                                        string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                                        <li>
+                                                            <a class="dropdown-item opcion-empleado"
+                                                               href="#"
+                                                               data-id="@e.IdEmpleado"
+                                                               data-nombre="@nombreApellido">
+                                                                @nombreApellido
+                                                            </a>
+                                                        </li>
+                                                    }
+                                                    /*
+                                                    else
+                                                    {
+                                                        string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                                        <li>
+                                                            <button class="dropdown-item opcion-empleado"
+                                                               href="#"
+                                                               data-id="@e.IdEmpleado"
+                                                               data-nombre="@nombreApellido"
+                                                                disabled >
+                                                                @nombreApellido
+                                                            </button>
+                                                        </li>
+                                                    } 
+                                                    */
+                                                }
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                                <button class="btn btn-primary" type="submit" onclick="return confirm('¿Estás seguro de que deseas guardar los datos?')">Confirmar</button>
+                                <a class="btn btn-secondary" onclick="mostrarEncargado(this)">Cancelar</a>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Estado:</td>
+                @{
+                    switch (pedido.Estado)
+                    {
+                        case EstadoPedido.Pendiente:
+                            <td style="color:white; background-color: red;">
+                                Pendiente de entrega
+                                <button class="btn btn-danger" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado">Hacer Entrega</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Cancelar</a></li>
+                                </ul>
+                            </td>
+                            break;
+                        case EstadoPedido.EntregadoParcial:
+                            int cantidadEntregadas = 0;
+                            if (pedido.Entregas != null && pedido.Entregas.Any())
+                            {
+                                foreach (Entrega e in pedido.Entregas)
+                                {
+                                    cantidadEntregadas += e.cantidadEntrega;
+                                }
+                            }
+                            <td style="color:Black; background-color: #C6C600;">
+                                Entregado Parcial (@cantidadEntregadas/@pedido.Cantidad)
+                                <button class="btn btn-warning" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado">Hacer Entrega</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Ver Entregas</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Cancelar</a></li>
+                                </ul>
+                            </td>
+                            break;
+                        case EstadoPedido.Entregado:
+                            <td style="color:white; background-color: green;">
+                                Entregado
+                                <button class="btn" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Ver Entregas</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Cancelar</a></li>
+                                </ul>
+                            </td>
+                            break;
+                        case EstadoPedido.Cancelado:
+                            <td style="color:white; background-color: black;">
+                                Cancelado
+                                <button class="btn" style="color: white" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Ver Entregas</a></li>
+                                    <li><a class="btn" asp-controller="Pedidos" asp-action="Pedido_Reactivar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Reactivar</a></li>
+                                </ul>
+                            </td>
+                            break;
+                    }
+                }
+            </tr>
+            <tr class="container-notas">
+                <td>
+                    Notas:
+                    <div class="vistaBotonAgregarNota">
+                        <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
+                    </div>
+                </td>
+                <td>
+                    <div class="vistaBotonVerNotas">
+                        <a class="botonVerNotas btn btn-primary" onclick="mostrarNotas(this)">Ver Notas</a>
+                    </div>
+                    <div class="vistaNotas" style="display: none">
+                        @{
+                            if (pedido.Notas != null && pedido.Notas.Any())
+                            {
+                                int contadorNotas = 1;
+                                foreach (string nota in pedido.Notas)
+                                {
+                                    <div class="container-nota">
+                                        <div class="vistaNota">
+                                            <label>
+                                                @contadorNotas: @nota
+                                                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                                    <li><a class="dropdown-item" onclick="mostrarModificarNota(this)">Modificar</a></li>
+                                                    <li>
+                                                        <form asp-controller="Pedidos" asp-action="Pedido_BorrarNota" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado" asp-route-notaBorrar="@nota">
+                                                            <button class="dropdown-item" type="submit">Eliminar</button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </label>
+                                        </div>
+
+                                        <div class="vistaModificarNota" style="display: none">
+                                            <form asp-controller="Pedidos" asp-action="Pedido_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado" asp-route-notaVieja="@nota" method="post">
+                                                <textarea typeof="text" name="notaModificada" placeholder="@nota"></textarea>
+                                                <div>
+                                                    <button class="btn btn-primary" type="submit">Guardar</button>
+                                                    <a class="btn btn-secondary" onclick="ocultarModificarNota(this)">Cancelar</a>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    if (contadorNotas < pedido.Notas.Count)
+                                    {
+                                        <hr />
+                                    }
+                                    contadorNotas++;
+                                }
+                            }
+                            else
+                            {
+                                <p>- Sin notas -</p>
+                            }
+                        }
+                        <a class="botonOcultarNotas btn btn-secondary" onclick="ocultarNotas(this)">Ocultar Notas</a>
+                        <div class="vistaAgregarNota" style="display: none">
+                            <hr />
+                            <form asp-controller="Pedidos" asp-action="Pedido_AgregarNota" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+                                <textarea typeof="text" name="notaNueva"></textarea>
+                                <div>
+                                    <button class="btn btn-primary" type="submit">Guardar Nota</button>
+                                    <a class="btn btn-secondary" onclick="ocultarAgregarNota(this)">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="width: 50%">
+        <div id="carruselArchivos" class="carousel slide" data-bs-ride="carousel" style="background-color: #384D4D">
+            <div class="text-center">
+                @{
+                    List<string>? archivos = new List<string>();
+                    @if (piezaDePedido.IdPieza > -1)
+                    {
+                        archivos = piezaDePedido.Archivos;
+                    }
+                    else if (conjuntoDePedido.IdConjunto > -1)
+                    {
+                        if (piezasDeConjunto != null && piezasDeConjunto.Any())
+                        {
+                            foreach (Pieza p in piezasDeConjunto)
+                            {
+                                if (p.Archivos != null && p.Archivos.Any())
+                                {
+                                    foreach (string arch in p.Archivos)
+                                    {
+                                        archivos.Add(arch);
+                                    }
+                                }
+                            }
+                        }
+                    }else
+                    {
+                        archivos = pedido.Archivos;
+                    }
+
+                    int contadorArchivos = 0;
+                    if (archivos != null && archivos.Any())
+                    {
+                        foreach (string arch in archivos)
+                        {
+                            contadorArchivos++;
+                        }
+                    }
+                }
+                <h3 style="color: white">Vista previa de archivos (@contadorArchivos archivos)</h3>
+            </div>
+            @{
+                @if (archivos != null && archivos.Any())
+                {
+                    <!--
+                <div class="carousel-indicators">
+                    @for (int i = 0; i < archivos.Count; i++)
+                    {
+                        <button type="button"
+                                data-bs-target="#carruselMvc"
+                                data-bs-slide-to="@i"
+                                class="@(i == 0 ? "active" : "")"
+                                aria-current="@(i == 0 ? "true" : "false")"
+                                aria-label="Slide @(i + 1)">
+                        </button>
+                    }
+                </div>
+                -->
+                    <div class="carousel-inner">
+
+                        @{
+                            int index = 0;
+                            int numeroArchivo = index + 1;
+
+                            foreach (string archivo in archivos)
+                            {
+                                string extension = archivo.Substring(archivo.Length - 4);
+                                string archCoregido = archivo.Replace(@"\\", @"/");
+                                string nombreArchivo = System.IO.Path.GetFileNameWithoutExtension(archivo);
+
+                                <div class="carousel-item @(index == 0 ? "active" : "")" style="height: 450px;">
+                                    @if (extension == ".jpg" || extension == ".png" || extension == ".ico")
+                                    {
+                                        <img src="@archCoregido" class="d-block w-100" alt="@nombreArchivo" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+                                    }
+                                    else if (extension == ".dwg")
+                                    {
+                                        <img src="/Pedidos/vistaPreviaCad_AsporeCAD?rutaArchivo=@archCoregido" alt="not found" style="width: 100%; height: 100%; object-fit: contain; object-position: center;" />
+                                        <p>@archCoregido</p>
+                                    }
+                                    else
+                                    {
+                                        <img src="\iconoArchivoGenerico.png" alt="not found" style="width: 100%; height: 100%; object-fit: contain; object-position: center;" />
+                                    }
+                                    @if (!string.IsNullOrEmpty(nombreArchivo))
+                                    {
+                                        <div class="carousel-caption d-none d-md-block">
+
+                                            <label style="background-color: black; font-size: 20px">< @nombreArchivo@extension (@numeroArchivo) ></></label>
+
+                                            <div>
+                                                <a class="btn btn-primary" asp-controller="Pedidos" asp-action="AbrirArchivoPedidoEnSuUbicacion" asp-route-archivo="@archivo">Abrir en Ubicacion </a>
+                                                @if (piezaDePedido.IdPieza > -1)
+                                                {
+                                                    <form asp-controller="Pedidos" asp-action="EliminarArchivoDePiezaDesdePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-rutaArchivo="@archivo" asp-route-idPieza="@piezaDePedido.IdPieza">
+                                                        <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este archivo?')">Borrar Archivo de Pieza</button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-controller="Pedidos" asp-action="EliminarArchivoDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-rutaArchivo="@archivo">
+                                                        <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este archivo?')">Borrar Archivo de Pedido</button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                index++;
+                                numeroArchivo++;
+                            }
+                        }
+                    </div>
+
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carruselArchivos" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carruselArchivos" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
+                }
+                else
+                {
+                    <div class="text-center" style="height: 450px">
+                        <h5 style="color: white">- No hay archivos guardados -</h5>
+                    </div>
+                }
+            }
+        </div>
+        <div class="container-agregarArchivo mt-4">
+            @{
+                if (piezaDePedido.IdPieza > -1)
+                {
+                    <div class="vistaBotonAgregarArchivoAPieza">
+                        <a class="btn btn-primary" onclick="mostrarAgregarArchivoAPieza(this)">+ Agregar Archivo a Pieza</a>
+                    </div>
+                    <div class="vistaAgregarArchivoAPieza" style="display: none">
+                        <form asp-controller="Piezas" asp-action="SubirArchivoPieza" asp-route-idEmpresa="@idEmpresa" asp-route-idPieza="@piezaDePedido.IdPieza" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-desdePedido="@true" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado" enctype="multipart/form-data">
+                            <input type="file" name="archivo" class="form-control mb-3" />
+                            <div>
+                                <button class="btn btn-primary" type="submit">Guardar</button>
+                                <button type="button" class="btn btn-warning btn-limpiar" onclick="limpiarArchivoPieza(this)">Limpiar archivo</button>
+                                <a class="btn btn-secondary" onclick="ocultarAgregarArchivoAPieza(this)">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                }
+                else if (conjuntoDePedido.IdConjunto > -1)
+                {
+                    <h5>Lista de Piezas de Cionjunto</h5>
+                    if(piezasDeConjunto != null && piezasDeConjunto.Any()){
+                        int cant = 1;
+                        @foreach (Pieza p in piezasDeConjunto)
+                        {
+                            <div>
+                                <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idPieza="@p.IdPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">(@cant) @p.Descripcion</a>
+                            </div>
+                            cant++;
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="vistaBotonAgregarArchivoAPedido">
+                        <a class="btn btn-primary" onclick="mostrarAgregarArchivoAPedido(this)">+ Agregar Archivo a Pedido</a>
+                    </div>
+                    <div class="vistaAgregarArchivoAPedido" style="display: none">
+                        <form asp-controller="Pedidos" asp-action="Pedido_AgregarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@empleado.IdEmpleado" method="post" enctype="multipart/form-data">
+                            <input type="file" name="archivo" class="form-control mb-3" />
+                            <div>
+                                <button class="btn btn-primary" type="submit">Guardar</button>
+                                <button type="button" class="btn btn-warning btn-limpiar" onclick="limpiarArchivoPedido(this)">Limpiar archivo</button>
+                                <a class="btn btn-secondary" onclick="ocultarAgregarArchivoAPedido(this)">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<h2 class="mt-3">Documentos Asociados</h2>
+<div class="container-documentos">
+    <table id="tabla-docuemtosPedido" style="width: 100%;">
+        <tr>
+            <td>
+                <div class="text-center">
+                    <h4>Remitos</h4>
+                </div>
+            </td>
+            <td>
+                <div class="text-center">
+                    <h4>Presupuesto</h4>
+                </div>
+            </td>
+            <td>
+                <div class="text-center">
+                    <h4>Factura</h4>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center">
+                @{
+                    int cantRemitos = 0;
+                    if (remitos != null && remitos.Any())
+                    {
+                        foreach(Remito r in remitos)
+                        {
+                            if (pedido.Entregas != null && pedido.Entregas.Any())
+                            {
+                                foreach (Entrega e in pedido.Entregas)
+                                {
+                                    if (e.idRemitoFK == r.IdRemito)
+                                    {
+                                        cantRemitos++;
+                                        <div>
+                                            <a class="btn btn-primary" asp-controller="Remitos" asp-action="IndexVerRemito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idRemito="@r.IdRemito" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Numero: @r.NumeroRemito - @r.FechaEntrega.ToString("dd/MM/yyyy")</a>
+                                        </div>
+
+                                    }
+                                }
+                            }
+                        }
+                        if(cantRemitos == 0){
+                            <label>- Pedido sin remitir -</label>
+                        }
+                    }
+                } 
+            </td>
+            <td style="text-align: center">
+                @{
+                    if (presupuesto.IdPresupuesto > -1)
+                    {
+                        <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Numero: @presupuesto.Numero - @presupuesto.Fecha.ToString("dd/MM/yyyy")</a>
+                    }
+                    else
+                    {
+                        <label>- Sin Presupuestar -</label>
+                    }
+                }
+            </td>
+            <td style="text-align: center">
+                @{
+                    if (factura.IdFactura > -1)
+                    {
+                        <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Codigo: @factura.Codigo.Puesto-@factura.Codigo.Numero - @factura.Fecha.ToString("dd/MM/yyyy")</a>
+                    }
+                    else
+                    {
+                        <label>Sin Facturar</label>
+                    }
+                }
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<!-- -------------------------------------------------------------------------------------------- -->
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<div class="container-borrar mt-4">
+    @if (sePuedeBorrar.SePuede == true)
+    {
+        <h5>@sePuedeBorrar.Mensajes[0]</h5>
+        <div class="vistaBotonBorrarPedido">
+            <a class="btn btn-danger" onclick="mostrarBorrarPedido(this)">Borrar Pedido</a>
+        </div>
+
+        <div class="vistaBorrarPedido" style="display: none">
+            <form asp-controller="Pedidos" asp-action="Pedido_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedidoEliminar="@pedido.IdPedido" asp-route-idEmpleado="-1" method="post">
+
+                <label>Socio:</label>
+                <div class="dropdown">
+                    <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
+
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                        Seleccionar Socio
+                    </button>
+                    <ul class="dropdown-menu">
+                        @{
+                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                            if (socios != null && socios.Any())
+                            {
+                                foreach (Socio s in socios)
+                                {
+                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                    <li>
+                                        <a class="dropdown-item opcion-socio"
+                                           href="#"
+                                           data-id="@s.IdSocio"
+                                           data-nombre="@nombreApellido">
+                                            @nombreApellido
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        }
+                    </ul>
+                </div>
+
+                <label>Contraseña:</label>
+                <div>
+                    <input type="password" name="contraseñaSocio" id="passSocio" />
+                    <button class="btn btn-outline-primary" type="button" onclick="togglePassword()">
+                        <i id="iconoOjo" class="bi bi-eye"></i>
+                    </button>
+                </div>
+
+                <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido?')">Eliminar Pedido</button>
+                <a class="btn btn-secondary" onclick="ocultarBorrarPedido(this)">Cancelar</a>
+            </form>
+        </div>
+    }
+    else
+    {
+        <button class="btn btn-danger" disabled>Borrar Pedido</button>
+        <h5>No se puede borrar este pedido ya que:</h5>
+        <ul>
+            @foreach(string mensaje in sePuedeBorrar.Mensajes)
+            {
+                <li>@mensaje</li>
+            }
+        </ul>
+    }  
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="-1">Atras</a>
+</div>
+
+@section Scripts {
+    <script>
+        // Modificar FechaEncargo
+        function mostrarFechaEncargo(elemento) {
+        const contenedor = elemento.closest('.container-fechaEncargo');
+
+        contenedor.querySelector('.vistaFechaEncargo').style.display = 'block';
+        contenedor.querySelector('.vistaModificarFechaEncargo').style.display = 'none';
+        }
+        function mostrarModificarFechaEncargo(elemento) {
+            const contenedor = elemento.closest('.container-fechaEncargo');
+
+            contenedor.querySelector('.vistaFechaEncargo').style.display = 'none';
+            contenedor.querySelector('.vistaModificarFechaEncargo').style.display = 'block';
+        }
+
+        // Modificar Cantidad
+        function mostrarCantidad(elemento) {
+        const contenedor = elemento.closest('.container-cantidad');
+
+        contenedor.querySelector('.vistaCantidad').style.display = 'block';
+        contenedor.querySelector('.vistaModificarCantidad').style.display = 'none';
+        }
+        function mostrarModificarCantidad(elemento) {
+            const contenedor = elemento.closest('.container-cantidad');
+
+            contenedor.querySelector('.vistaCantidad').style.display = 'none';
+            contenedor.querySelector('.vistaModificarCantidad').style.display = 'block';
+        }
+
+        // Modificar Descripcion
+        function mostrarDescripcion(elemento) {
+        const contenedor = elemento.closest('.container-descripcion');
+
+        contenedor.querySelector('.vistaDescripcion').style.display = 'block';
+        contenedor.querySelector('.vistaModificarDescripcion').style.display = 'none';
+        }
+        function mostrarModificarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-descripcion');
+
+            contenedor.querySelector('.vistaDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'block';
+        }
+
+        // Modificar Precio Unitario
+        function mostrarPrecioUnitario(elemento) {
+        const contenedor = elemento.closest('.container-precioUnitario');
+
+        contenedor.querySelector('.vistaPrecioUnitario').style.display = 'block';
+        contenedor.querySelector('.vistaModificarPrecioUnitario').style.display = 'none';
+        }
+        function mostrarModificarPrecioUnitario(elemento) {
+            const contenedor = elemento.closest('.container-precioUnitario');
+
+            contenedor.querySelector('.vistaPrecioUnitario').style.display = 'none';
+            contenedor.querySelector('.vistaModificarPrecioUnitario').style.display = 'block';
+        }
+
+        //MOSTRAR COSTOS
+        function mostrarCostos(elemento) {
+            const contenedor = elemento.closest('.container-costos');
+
+            contenedor.querySelector('.vistaBotonVerCostos').style.display = 'none';
+            contenedor.querySelector('.vistaCostos').style.display = 'block';
+        }
+        function ocultarCostos(elemento) {
+            const contenedor = elemento.closest('.container-costos');
+
+            contenedor.querySelector('.vistaBotonVerCostos').style.display = 'block';
+            contenedor.querySelector('.vistaCostos').style.display = 'none';
+        }
+
+        // Modificar Encargado
+        function mostrarEncargado(elemento) {
+        const contenedor = elemento.closest('.container-encargado');
+
+        contenedor.querySelector('.vistaEncargado').style.display = 'block';
+        contenedor.querySelector('.vistaModificarEncargado').style.display = 'none';
+        }
+        function mostrarModificarEncargado(elemento) {
+            const contenedor = elemento.closest('.container-encargado');
+
+            contenedor.querySelector('.vistaEncargado').style.display = 'none';
+            contenedor.querySelector('.vistaModificarEncargado').style.display = 'block';
+        }
+
+        // Subir Archivo a Pedido
+        function mostrarAgregarArchivoAPedido(elemento) {
+            const contenedor = elemento.closest('.container-agregarArchivo');
+
+            contenedor.querySelector('.vistaBotonAgregarArchivoAPedido').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarArchivoAPedido').style.display = 'block';
+        }
+        function ocultarAgregarArchivoAPedido(elemento) {
+            const contenedor = elemento.closest('.container-agregarArchivo');
+
+            contenedor.querySelector('.vistaBotonAgregarArchivoAPedido').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarArchivoAPedido').style.display = 'none';
+        }
+
+        // Subir Archivo a Pieza
+        function mostrarAgregarArchivoAPieza(elemento) {
+            const contenedor = elemento.closest('.container-agregarArchivo');
+
+            contenedor.querySelector('.vistaBotonAgregarArchivoAPieza').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarArchivoAPieza').style.display = 'block';
+        }
+        function ocultarAgregarArchivoAPieza(elemento) {
+            const contenedor = elemento.closest('.container-agregarArchivo');
+
+            contenedor.querySelector('.vistaBotonAgregarArchivoAPieza').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarArchivoAPieza').style.display = 'none';
+        }
+
+        // Limpiar Archivo Seleccionado
+        function limpiarArchivoPedido(elemento) {
+            const contenedor = elemento.closest('.container-agregarArchivo');
+
+            const vista = contenedor.querySelector('.vistaAgregarArchivoAPedido');
+
+            const input = vista.querySelector('input[type="file"]');
+            input.value = '';
+        }
+
+        // Limpiar Archivo Seleccionado
+        function limpiarArchivoPieza(elemento) {
+            const contenedor = elemento.closest('.container-agregarArchivo');
+
+            const vista = contenedor.querySelector('.vistaAgregarArchivoAPieza');
+
+            const input = vista.querySelector('input[type="file"]');
+            input.value = '';
+        }
+
+        // AGREGAR NOTA
+        function mostrarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
+            contenedor.querySelector('.vistaNotas').style.display = 'block';
+            contenedor.querySelector('.botonOcultarNotas').style.display = 'none';
+            contenedor.querySelector('.botonVerNotas').style.display = 'none';
+            
+
+        }
+        function ocultarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
+
+
+            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'block';
+            contenedor.querySelector('.vistaNotas').style.display = 'none';
+            contenedor.querySelector('.botonOcultarNotas').style.display = 'block';
+            contenedor.querySelector('.botonVerNotas').style.display = 'block';
+        }
+
+
+        // MOSTRAR NOTAS
+        function mostrarNotas(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'none';
+            contenedor.querySelector('.vistaNotas').style.display = 'block';
+        }
+        function ocultarNotas(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'block';
+            contenedor.querySelector('.vistaNotas').style.display = 'none';
+        }
+
+        // MODIFICAR NOTA
+        function mostrarModificarNota(elemento) {
+            const contenedor = elemento.closest('.container-nota');
+
+            contenedor.querySelector('.vistaNota').style.display = 'none';
+            contenedor.querySelector('.vistaModificarNota').style.display = 'block';
+        }
+        function ocultarModificarNota(elemento) {
+            const contenedor = elemento.closest('.container-nota');
+
+            contenedor.querySelector('.vistaNota').style.display = 'block';
+            contenedor.querySelector('.vistaModificarNota').style.display = 'none';
+        }
+
+        // SELECCIONAR QUIEN HISO EN PEDIDO
+        document.querySelectorAll('.opcion-empleado').forEach(item => {
+        item.addEventListener('click', function (e) {
+        e.preventDefault();
+
+                const id = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+
+                document.getElementById('btnEmpleado').innerText = nombre;
+
+                if (!id || id === "") {
+                    document.getElementById('idEmpleadoSeleccionado').value = "";
+                } else {
+                    document.getElementById('idEmpleadoSeleccionado').value = id;
+                }
+            });
+        });
+
+        // BORRAR PEDIDO
+        function mostrarBorrarPedido(elemento) {
+            const contenedor = elemento.closest('.container-borrar');
+
+            contenedor.querySelector('.vistaBotonBorrarPedido').style.display = 'none';
+            contenedor.querySelector('.vistaBorrarPedido').style.display = 'block';
+        }
+        function ocultarBorrarPedido(elemento) {
+            const contenedor = elemento.closest('.container-borrar');
+
+            contenedor.querySelector('.vistaBotonBorrarPedido').style.display = 'block';
+            contenedor.querySelector('.vistaBorrarPedido').style.display = 'none';
+        }
+
+        // SELECCIONAR SOCIO
+        document.querySelectorAll('.opcion-socio').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const id = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+
+                document.getElementById('btnSocio').innerText = nombre;
+
+                document.getElementById('idSocioSeleccionado').value = id;
+            });
+        });
+
+        // VER/OCULTAR CONTRASEñA
+        function togglePassword() {
+            var input = document.getElementById("passSocio");
+            const icono = document.getElementById('iconoOjo');
+
+            if (input.type === "password") {
+                input.type = "text";
+
+                icono.classList.remove('bi-eye');
+                icono.classList.add('bi-eye-slash');
+            } else {
+                input.type = "password";
+
+                icono.classList.remove('bi-eye-slash');
+                icono.classList.add('bi-eye');
+            }
+        }
+
+    </script>
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/css/estilosPedidos.css" asp-append-version="true" />
+}
+    

@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Remito Generado";
+
+    Layout = null; // Usar null si quieres una página limpia sin el menú de navegación del sitio
+
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+
+    Remito remito = (Remito)ViewBag.Remito;
+    List<Pedido> pedidosEnRemito = (List<Pedido>)ViewBag.PedidosDeRemito;
+}
+
+<h1>[@remito.IdRemito] Remito Generado para @nombreEmpresa (@idEmpresa)</h1>
+
+
+
+
+
+
+
+
+
+<div class="no-imprimir" style="margin-bottom: 20px;">
+    <button onclick="window.print();" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+        🖨️ Imprimir esta página
+    </button>
+</div>
+
+
+

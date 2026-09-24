@@ -1,0 +1,169 @@
+﻿@{
+    ViewData["Title"] = "Ver Entregas de Pedido";
+
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    Pedido pedido = (Pedido)ViewBag.Pedido;
+
+    List<Remito> remitos = (List<Remito>)ViewBag.Remitos;
+
+    string descripcion = (string)ViewBag.Descripcion;
+}
+
+<h1>Entregas de Pedido de N: @pedido.IdPedido - @nombreEmpresa (@idEmpresa)</h1>
+<h3>Descripcion de Pedido: @descripcion</h3>
+<a class="btn btn-primary" asp-controller="Entregas" asp-action="IndexNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">+ Hacer Entrega</a>
+
+@{
+    int cantidadPedidas = pedido.Cantidad;
+    int cantidadEntregadas = 0;
+
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Cantidad Entregadas</th>
+                <th>Remito</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (pedido.Entregas != null && pedido.Entregas.Any())
+                foreach (Entrega e in pedido.Entregas)
+                {
+                    cantidadEntregadas += e.cantidadEntrega;
+                    <tr>
+                        <td>@e.fechaEntrega.ToString("dd/MM/yyyy")</td>
+                        <td>@e.cantidadEntrega</td>
+                        @if (e.idRemitoFK != null)
+                        {
+                            foreach (Remito r in remitos)
+                            {
+                                if (r.IdRemito == e.idRemitoFK)
+                                {
+                                    <td>
+                                        <a class="btn btn-primary" asp-controller="Remitos" asp-action="IndexVerRemito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idRemito="@r.IdRemito" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Numero: @r.NumeroRemito - @r.FechaEntrega.ToString("dd/MM/yyyy")</a>
+                                    </td>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <td>
+                                <div class="container-asignarRemito">
+                                    <div class="vistaBotonAsignarRemito">
+                                        <a class="btn btn-primary" onclick="mostrarAsignarRemito(this)">Asignar Remito</a>
+                                    </div>
+                                    <div class="vistaAsignarRemito" style="display: none">
+                                        <form asp-controller="Entregas" asp-action="AsignarRemitoAEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEntrega="@e.idEntrega" method="post">
+                                            <table class="table table-striped text-center">
+                                                <thead>
+                                                    <tr>
+                                                        <th>AGREGAR</th>
+                                                        <th>Id</th>
+                                                        <th>Fecha</th>
+                                                        <th>Numero</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (remitos != null && remitos.Any())
+                                                    {
+                                                        foreach (Remito r in remitos)
+                                                        {
+                                                            if (r.Estado == EstadoRemito.Borrador)
+                                                            {
+                                                                <tr>
+                                                                    <td>
+                                                                        <input type="radio" name="idRemito" value="@r.IdRemito" />
+                                                                    </td>
+                                                                    <td>@r.IdRemito</td>
+                                                                    <td>@r.FechaEntrega.ToString("dd/MM/yyyy")</td>
+                                                                    <td>@r.NumeroRemito</td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar asignar remito a entrega?')">Guardar</button>
+                                            <a class="btn btn-secondary" onclick="ocultarAsignarRemito(this)">Cancelar</a>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        }
+                        <td>
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                @if (e.idRemitoFK != null)
+                                {
+                                    <li><a class="dropdown-item" onclick="">Cambiar Remito</a></li>
+                                }
+                                <li>
+                                    <form asp-controller="Entregas" asp-action="Entrega_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEntrega="@e.idEntrega" method="post">
+                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar entrega?')">Borrar Entrega</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                }
+        </tbody>
+        <tr>
+            @{
+                string estado = "";
+                string color = "";
+                string letra = "";
+                switch (pedido.Estado)
+                {
+                    case EstadoPedido.Pendiente:
+                        estado = "Pendiente";
+                        color = "red";
+                        letra = "white";
+                        break;
+                    case EstadoPedido.EntregadoParcial:
+                        estado = "Entrega Parcial";
+                        color = "yellow";
+                        letra = "black";
+                        break;
+                    case EstadoPedido.Entregado:
+                        estado = "Entregado";
+                        color = "green";
+                        letra = "white";
+                        break;
+                    case EstadoPedido.Cancelado:
+                        estado = "Cancelado";
+                        color = "black";
+                        letra = "white";
+                        break;
+                }
+            
+            }
+            <th colspan="4" style="text-align: center; background-color: @color; color: @letra">Cantidad Entregadas: @cantidadEntregadas / @cantidadPedidas (@estado)</th>
+        </tr>
+    </table>
+}
+
+<a class="btn btn-secondary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Atras</a>
+
+
+@section Scripts{
+    <script>
+        // ASIGNAR REMITO
+        function mostrarAsignarRemito(elemento) {
+            const contenedor = elemento.closest('.container-asignarRemito');
+            
+            contenedor.querySelector('.vistaBotonAsignarRemito').style.display = 'none';
+            contenedor.querySelector('.vistaAsignarRemito').style.display = 'block';
+        }
+        function ocultarAsignarRemito(elemento) {
+            const contenedor = elemento.closest('.container-asignarRemito');
+
+            contenedor.querySelector('.vistaBotonAsignarRemito').style.display = 'block';
+            contenedor.querySelector('.vistaAsignarRemito').style.display = 'none';
+        }
+
+    </script>
+} 

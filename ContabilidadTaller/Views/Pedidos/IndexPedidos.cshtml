@@ -1,0 +1,593 @@
+﻿@{
+    ViewData["Title"] = "Pedidos";
+    List<Pedido> Pedidos = (List<Pedido>)ViewBag.Pedidos;
+
+    string NombreEmpresa = (string)ViewBag.NombreEmpresa;
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+
+    List<Empleado> empleados = (List<Empleado>)ViewBag.Empleados;
+    List<Costo> costos = (List<Costo>)ViewBag.Costos;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    Empleado empleado = new Empleado() { IdEmpleado = -1};
+
+    int PedidosGuardados = (int)ViewBag.PedidosGuardados;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<div class="text-center">
+    <h1>Pedidos de @NombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <a class="btn btn-primary" asp-controller="Pedidos" asp-action="IndexNuevoPedido" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado">+ Nuevo Pedido</a>
+</div>
+
+<div>
+    <table class="table table-striped text-center" id="tablaPedidos">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>
+                    <div class="container-fecha">
+                        Fecha Encargo
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpresa="@idEmpresa"des">Todos</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="des">Mas recientes</a></li>
+
+                            <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="asc">Mas antigua</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarPorIntervalo(this)">Desde - Hasta</a></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarFechaEspecifica(this)">Buscar fecha especifica</a></li>
+                        </ul>
+                    </div>
+                    <form asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@NombreEmpresa" >
+                        <div class="vistaBuscarFechaIntervalo" style="display: none">
+                            <div>
+                                <label>Desde:</label>
+                                <input type="date" name="desde"/>
+                            </div>
+                            <div>
+                                <label>Hasta:</label>
+                                <input type="date" name="hasta"/>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Buscar</button>
+                            <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                        </div>
+                        <div class="vistaBuscarFechaEspecifica" style="display: none">
+                            <div>
+                                <label>Buscar fecha especifica</label>
+                            </div>
+                            <div>
+                                <input type="date" name="fechaEspecifica" />
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                            </div>
+                        </div>
+                    </form>
+                </th>
+                <th style="width: 30%">
+                    <div class="container-tituloDescripcion">
+                        <div class="vistaBotonBuscarDescripcion">
+                            Descripcion
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarDescripcion mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroDescripcion" class="form-control" placeholder="Buscar por Descripcion..." onkeyup="filtrarTablaDescripcion()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarDescripcion(this)">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Sub-Total</th>
+                <th>
+                    Encargado por
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        @if (empleados != null && empleados.Any())
+                        {
+                            <li><a class="dropdown-item opcion-empleado" href="#" data-nombre="(Sin filtro)" onclick="filtrarPorNombreEmpleado(event)">...</a></li>
+                            foreach (Empleado e in empleados)
+                            {
+                                string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                <li>
+                                    <a class="dropdown-item opcion-empleado"
+                                       href="#"
+                                       data-id="@e.IdEmpleado"
+                                       data-nombre="@nombreApellido"
+                                       onclick="filtrarPorNombreEmpleado(event)">
+                                        @nombreApellido
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </th>
+                <th>
+                    <div>
+                        Estado
+                        <button class="btn btn-light btn-sm" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('todos')">Todos</button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.Entregado.ToString()')">Entregados</button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.EntregadoParcial.ToString()')">Entrega Parcial</button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.Pendiente.ToString()')">Pendientes</button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.Cancelado.ToString()')">Cancelados</button>
+                            </li>
+                        </ul>
+                    </div>  
+                </th>
+
+                <!--
+                <th>
+                    <div>
+                        Presupuesto
+                        <button class="btn btn-light btn-sm" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaPresupuesto('todos')">Todos</button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaPresupuesto('Sin Presupuestar')">Sin Presupuestar</button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item" onclick="filtrarTablaPresupuesto('Presupuestado')">Presupuestados</button>
+                            </li>
+                        </ul>
+                    </div>
+                </th>
+                -->
+
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody> 
+            @{
+                if (Pedidos != null && Pedidos.Any())
+                {
+                    foreach (Pedido p in Pedidos)
+                    {
+                        <tr class="claseFila">
+                            <td>@p.IdPedido</td>
+                            <td>@p.FechaEncargo.ToString("dd/MM/yyyy")</td>
+                            <td class="col-descripcion">
+                                @if (p.PiezaExistenteFK != null)
+                                {
+                                    string descripcion = "";
+                                    foreach (Pieza pieza in piezas)
+                                    {
+                                        if (pieza.IdPieza == p.PiezaExistenteFK)
+                                        {
+                                            descripcion = @pieza.Descripcion;
+                                        }
+                                    }
+                                    <a class="btn btn-success" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idPieza="@p.PiezaExistenteFK" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@NombreEmpresa"   >Pieza: @descripcion</a>
+                                }
+                                else if (p.ConjuntoExistenteFK != null)
+                                {
+                                    string descripcion = "";
+                                    foreach (Conjunto conjunto in conjuntos)
+                                    {
+                                        if (conjunto.IdConjunto == p.ConjuntoExistenteFK)
+                                        {
+                                            descripcion = conjunto.Descripcion;
+                                        }
+                                    }
+                                    <a class="btn btn-primary" asp-controller="Conjuntos" asp-action="IndexVerConjunto" asp-route-idConjunto="@p.ConjuntoExistenteFK" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@NombreEmpresa">Conjunto: @descripcion</a>
+                                }else
+                                {
+                                    @p.Descripcion
+                                }
+                            </td>
+                            <td>@p.Cantidad</td>
+                            <td>
+                                <div class="container-precio">
+                                    <div class="vistaPrecio">
+                                        <div>
+                                            @if(p.PrecioUnitario != 0)
+                                            {
+                                                @p.PrecioUnitario?.ToString("C2")
+                                                ;
+                                            }
+                                            else
+                                            {
+                                                <p>Aun sin precio</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (p.PrecioUnitario != 0)
+                                {
+                                    @(((decimal)(p.PrecioUnitario * p.Cantidad)).ToString("C2"))
+                                }
+                                else
+                                {
+                                    <p>Calculo pendiente...</p>
+                                }
+                            </td>
+                            <td class="col-empleado">
+                                @{
+                                    string nombreApellido = "";
+
+                                    @foreach (Empleado e in empleados)
+                                    {
+                                        if (e.IdEmpleado == p.EncargadoPorFK)
+                                        {
+                                            nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                            break;
+                                        }
+                                    }
+                                    if (nombreApellido != "")
+                                    {
+                                        <p>@nombreApellido</p>
+                                    }
+                                    else
+                                    {
+                                        <div>
+                                            <p>-</p>
+                                        </div>
+                                    }
+                                }
+                            </td>
+                            @{
+                                switch (p.Estado)
+                                {
+                                    case EstadoPedido.Entregado:
+                                        <td class="col-estado" data-estado="@EstadoPedido.Entregado.ToString().ToLower()" style="background-color: #28a745 !important;
+                                            color: white !important;">
+                                            Entregado
+                                        </td>
+                                        break;
+                                    case EstadoPedido.Pendiente:
+                                        <td class="col-estado" data-estado="@EstadoPedido.Pendiente.ToString().ToLower()" style="background-color: #cb4652 !important;
+                                            color: white !important;">
+                                            Pendiente
+                                        </td>
+                                        break;
+                                    case EstadoPedido.EntregadoParcial:
+                                        int cantidadEntregadas = 0;
+                                        if (p.Entregas != null && p.Entregas.Any())
+                                        {
+                                            foreach (Entrega e in p.Entregas)
+                                            {
+                                                cantidadEntregadas += e.cantidadEntrega;
+                                            }
+                                        }
+                                        <td class="col-estado" data-estado="@EstadoPedido.EntregadoParcial.ToString().ToLower()" style="background-color: #969600!important;
+                                            color: white !important;">
+                                            Entrega Parcial (@cantidadEntregadas / @p.Cantidad)
+                                        </td>
+                                        break;
+                                    case EstadoPedido.Cancelado:
+                                        <td class="col-estado" data-estado="@EstadoPedido.Cancelado.ToString().ToLower()" style="background-color: #262222 !important;
+                                            color: white !important;">
+                                            Cancelado
+                                        </td>
+                                        break;
+                                }
+                            }
+
+                            <!--
+                            @{
+                                if (p.PresupuestoFK == null)
+                                {
+                                    <td class="col-presupuestado" style="background-color: #cb4652 !important;
+                                        color: white !important;">
+                                        Sin Presupuestar
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="col-presupuestado" style="background-color: #28a745 !important;
+                                        color: white !important;">
+                                        Presupuestado
+                                    </td>
+                                }
+                            }
+                            -->
+
+                            <td>
+                                @{
+                                    int idEmpleado = -1;
+
+                                    foreach (Empleado e in empleados)
+                                    {
+                                        if (e.IdEmpleado == p.EncargadoPorFK)
+                                        {
+                                            idEmpleado = e.IdEmpleado;
+                                        }
+                                    }
+
+                                    <a class="btn btn-primary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idPedido="@p.IdPedido" asp-route-idEmpleado="@empleado.IdEmpleado">Ver</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div>
+                                - No hay pedidos guardados -
+                            </div>
+                            <!--
+                            <a asp-action="IndexPedidos" class="btn btn-secondary btn-sm" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@NombreEmpresa">Ver todos</a>
+                            -->
+                        </td>
+                    </tr>
+                }
+
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantPedidos" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantPedidos" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Pedidos</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevPedidos" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numPedidos" class="mx-2"></span>
+            <button id="nextPedidos" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+
+</div>
+
+@if (empleado.IdEmpleado > -1)
+{
+    <div class="d-flex justify-content-center">
+        <a class="btn btn-secondary" href="javascript:history.back()">Volver a Empleados</a>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-center">
+        <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        //Modificar Precio Unitario SIN USAR
+        function mostrarPrecioUnitario(elemento) {
+            const contenedor = elemento.closest('.container-precio');
+
+            contenedor.querySelector('.vistaPrecio').style.display = 'block';
+            contenedor.querySelector('.vistaModificarPrecio').style.display = 'none';
+        }
+        function mostrarModificarPrecioUnitario(elemento) {
+            const contenedor = elemento.closest('.container-precio');
+
+            contenedor.querySelector('.vistaPrecio').style.display = 'none';
+            contenedor.querySelector('.vistaModificarPrecio').style.display = 'block';
+        }
+
+        //FILTROS DE FECHAS
+        function mostrarBuscarPorIntervalo(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+        function mostrarBuscarFechaEspecifica(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'block';
+        }
+        function ocultarFiltrosDeFechas(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+
+        // FILTRAR POR DESCRIPCION
+        function filtrarTablaDescripcion() {
+            let input = document.getElementById("filtroDescripcion");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFila");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcion");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRO POR EMPLEADO
+        function filtrarPorNombreEmpleado(event) {
+            event.preventDefault();
+            const nombreSeleccionado = event.currentTarget.getAttribute('data-nombre');
+
+            const filas = document.querySelectorAll(".claseFila");
+
+            filas.forEach(fila => {
+                let celdaEmpleado = fila.querySelector(".col-empleado");
+
+                if (celdaEmpleado) {
+                    let textoCelda = celdaEmpleado.textContent.trim();
+
+                    // Si es "(Sin filtro)" o el texto coincide exactamente, muestra la fila
+                    if (nombreSeleccionado === "(Sin filtro)" || textoCelda === nombreSeleccionado) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            // Actualiza el select de cantidad si existe
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+
+        // FILTRO POR ESTADO
+        function filtrarTablaEstados(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".claseFila");
+
+            filas.forEach(fila => {
+                let celdaEstado = fila.querySelector(".col-estado");
+
+                if (celdaEstado) {
+                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
+
+                    if (filter === 'todos' || estadoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRO POR SI ESTA PRESUPUESTADO
+        function filtrarTablaPresupuesto(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".claseFila");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-presupuestado");
+
+                if (celdaDescripcion) {
+                    let textoCelda = (celdaDescripcion.textContent || celdaDescripcion.innerText).trim().toLowerCase();
+
+                    if (filter === 'todos' || textoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPedidos', 'prevPedidos', 'nextPedidos', 'numPedidos', 'cantPedidos', 'claseFila');
+
+        // MOSTRAR BUSCAR POR DESCRIPCION
+        function mostrarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'block';
+        }
+        function ocultarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'none';
+        }
+
+
+
+
+
+
+
+
+    </script>
+
+}
+

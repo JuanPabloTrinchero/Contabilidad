@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Presupuesto Generado";
+
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+
+    Presupuesto prespuesto = (Presupuesto)ViewBag.Presupuesto;
+}
+
+<div class="text-center">
+    <h1>Presupuesto Generado</h1>
+</div>
+
+
+
+
+
+
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+</div>

@@ -1,0 +1,1076 @@
+﻿@{
+    ViewData["Title"] = "Ver Orden de Compra";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    OrdenDeCompra odc = (OrdenDeCompra)ViewBag.OrdenDeCompra;
+
+    List<Presupuesto> presupuestosOC = (List<Presupuesto>)ViewBag.PresupuestosDeOC;
+    List<Presupuesto> presupuestosSinAsignar = (List<Presupuesto>)ViewBag.PresupuestosSinAsignar;
+    List<Presupuesto> presupuestos = (List<Presupuesto>)ViewBag.Presupuestos;
+
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+
+    List<Recepcion> recepciones = (List<Recepcion>)ViewBag.Recepciones;
+
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    List<RelacionODCFactura> relacionesOCF = (List<RelacionODCFactura>)ViewBag.RelacionesOCF;
+    List<Factura> facturas = (List<Factura>)ViewBag.Facturas;
+
+    List<Socio> socios = (List<Socio>)ViewBag.Socios;
+
+    RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
+    bool sePuedeReactivar = (bool)ViewBag.SePuedeReactivar;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<h1>Ver Orden de Compra de @nombreEmpresa (@idEmpresa)</h1>
+
+<h3>Id: @odc.IdOC</h3>
+
+<div class="container-codigo">
+    <div class="vistaCodigo">
+        <h3>Codigo: @odc.Codigo</h3>
+        @if (odc.Estado != EstadoOC.Facturada)
+        {
+            <a class="btn btn-primary" onclick="mostrarModificarCodigo(this)">Modificar Codigo</a>
+        }
+    </div>
+    <div class="vistaModificarCodigo" style="display: none">
+        <form asp-controller="OrdenesDeCompra" asp-action="OC_ModificarCodigo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
+            <input type="text" placeholder="@odc.Codigo" name="nuevoCodigo" />
+            <button class="btn btn-primary" onclick="return confirm('Confirmar nuevo codigo?')">Confirmar Nuevo Codigo</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarCodigo(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-fecha">
+    <div class="vistaFecha">
+        <h3>Fecha: @odc.Fecha.ToString("dd/MM/yyyy")</h3>
+        @if (odc.Estado != EstadoOC.Facturada)
+        {
+            <a class="btn btn-primary" onclick="mostrarModificarFecha(this)">Modificar Fecha</a>
+        }
+    </div>
+    <div class="vistaModificarFecha" style="display: none">
+        <h3 style="color:#C1C1C1">Fecha Anterior: @odc.Fecha.ToString("dd/MM/yyyy")</h3>
+        <form asp-controller="OrdenesDeCompra" asp-action="OC_ModificarFecha" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
+            <input type="date" name="nuevaFecha" value="@odc.Fecha.ToString("yyyy-MM-dd")" />
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva fecha?')">Confirmar nueva fecha</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarFecha(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@if (odc.Relacion == Relacion.ConRecepcion)
+{
+    <h5>ODC con Recepciones</h5>
+}
+else
+{
+    <h5>ODC sin Recepciones</h5>
+}
+
+<h3>Presupuestos</h3>
+<div>
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Numero</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Detalles</th>
+                @if (odc.Estado == EstadoOC.Anulada)
+                {
+                    <th>Reasignado?</th>
+                }
+                else if(odc.Estado == EstadoOC.Activa)
+                {
+                    <th>Quitar</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                if (odc.Estado == EstadoOC.Anulada)
+                {
+                    if (odc.ItemsRespaldo != null && odc.ItemsRespaldo.Any())
+                    {
+                        foreach (int i in odc.ItemsRespaldo)
+                        {
+                            if (presupuestos != null && presupuestos.Any())
+                            {
+                                foreach (Presupuesto pr in presupuestos)
+                                {
+                                    if (pr.IdPresupuesto == i)
+                                    {
+                                        <tr>
+                                            <td>@pr.IdPresupuesto</td>
+                                            <td>@pr.Numero</td>
+                                            <td>@pr.Fecha.ToString("dd/MM/yyyy")</td>
+                                            @{
+                                                double? monto = 0;
+                                                foreach (Pedido pedido in pedidos)
+                                                {
+                                                    if (pedido.PresupuestoFK == pr.IdPresupuesto)
+                                                    {
+                                                        monto += (pedido.Cantidad * pedido.PrecioUnitario);
+                                                    }
+                                                }
+                                                <td>@monto?.ToString("C2")</td>
+                                                <td>
+                                                    <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@pr.IdPresupuesto" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                                                </td>
+                                                if (presupuestos != null && presupuestos.Any())
+                                                {
+                                                    foreach (Presupuesto pre in presupuestos)
+                                                    {
+                                                        if (pre.IdPresupuesto == i)
+                                                        {
+                                                            if (pre.OrdenDeCompraFK != null && pre.OrdenDeCompraFK != odc.IdOC)
+                                                            {
+                                                                <td style="background-color: red; color: white">Reasignado</td>
+                                                            }
+                                                            else
+                                                            {
+                                                                <td style="background-color: green; color: white">Sin reasignar</td>
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        </tr>
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    
+                }
+
+
+
+                double? montoTotal = 0;
+                int cantPresupuestos = presupuestosOC.Count();
+                if (presupuestosOC != null && presupuestosOC.Any())
+                {  
+                    foreach (Presupuesto p in presupuestosOC)
+                    {
+                        if (p.OrdenDeCompraFK == odc.IdOC)
+                        {
+                            <tr>
+                                <td>@p.IdPresupuesto</td>
+                                <td>@p.Numero</td>
+                                <td>@p.Fecha.ToString("dd/MM/yyyy")</td>
+                                @{
+                                    double? monto = 0;
+                                    foreach (Pedido pedido in pedidos)
+                                    {
+                                        if (pedido.PresupuestoFK == p.IdPresupuesto)
+                                        {
+                                            monto += (pedido.Cantidad * pedido.PrecioUnitario);
+                                            montoTotal += (pedido.Cantidad * pedido.PrecioUnitario);
+                                        }
+                                    }
+                                    <td>@monto?.ToString("C2")</td>
+                                }
+                                <td>
+                                    <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@p.IdPresupuesto" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                                </td>
+                                <td>
+                                    @if (odc.Estado != EstadoOC.Facturada)
+                                    {
+                                        <form asp-controller="OrdenesDeCompra" asp-action="OC_QuitarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idPresupuestoQuitar="@p.IdPresupuesto" method="post">
+                                            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar quitar este presupuesto?')">X</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" style="text-align: center">ODC sin presupuestos</td>
+                    </tr>
+                }
+                <tr>
+                    <th colspan="6" style="font-size: 20px; text-align: center">Monto TOTAL: @montoTotal?.ToString("C2")</th>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="container-agregarPresupuesto">
+    <div class="vistaBotonAgregarPresupuesto">
+        @if (odc.Estado == EstadoOC.Activa)
+        {
+            <a class="btn btn-primary" onclick="mostrarAgregraPresupuesto(this)">+ Agregar Presupuesto/s</a>
+        }
+        else
+        {
+            <button class="btn btn-primary" disabled>+ Agregar Presupuesto/s</button>
+        }
+    </div>
+    <div class="vistaAgregarPresupuesto" style="display: none">
+        <form id="formAgregarPresupuestos" asp-controller="OrdenesDeCompra" asp-action="OC_AgregarPresupuestos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
+            <table id="tablaAgregarPresupuestos" class="table table-striped text-center">
+                <thead>
+                    <h3>Presupuestos Confirmados y Sin OC</h3>
+                    <tr>
+                        <th>AGREGAR?</th>
+                        <th>Id</th>
+                        <th>
+                            <div class="container-tituloNumeroPresupuesto">
+                                <div class="vistaBotonBuscarNumero">
+                                    Numero
+                                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                        <li>
+                                            <a class="dropdown-item" onclick="mostrarBuscarNumero(this)">Buscar por Numero</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="vistaBuscarNumero" style="display: none">
+                                    <div class="d-flex align-items-center">
+                                        <input type="text" id="filtroNumeroPresupuesto" class="form-control" placeholder="Buscar por Numero..." onkeyup="filtrarTablaNumeroPresupuesto()">
+                                        <a class="btn btn-danger" onclick="ocultarBuscarNumero(this)">X</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+                        <th>Fecha</th>
+                        <th>Items</th>
+                        <th>Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (presupuestosSinAsignar != null && presupuestosSinAsignar.Any())
+                    {
+                        int cantConfirmados = 0;
+                        foreach (Presupuesto p in presupuestosSinAsignar)
+                        {
+                            if (p.Estado == EstadoPresupuesto.Confirmado)
+                            {
+                                cantConfirmados++;
+                                <tr class="fila-presupuesto">
+                                    <td><input id="presupuestoSeleccion" type="checkbox" name="items" value="@p.IdPresupuesto" /></td>
+                                    <td>@p.IdPresupuesto</td>
+                                    <td class="col-numero">@p.Numero</td>
+                                    <td>@p.Fecha</td>
+                                    <td>
+                                        <div class="container-itemsPresupuesto">
+                                            <div class="vistaBotonVerItemsPresupuesto">
+                                                <a class="btn btn-primary" onclick="mostrarItemsPresupuesto(this)">Ver</a>
+                                            </div>
+                                            <div class="vistaItemsPresupuesto" style="display: none">
+                                                <table class="table table-striped tetx-center">
+                                                    <h6>Pedidos</h6>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Id</th>
+                                                            <th>Fecha</th>
+                                                            <th>Descripcion</th>
+                                                            <th>Cantidad</th>
+                                                            <th>Precio</th>
+                                                            <th>Sub-Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                            @if (pedidos != null && pedidos.Any())
+                                                            {
+                                                                int cantPedidos = 0;
+                                                                foreach (Pedido pe in pedidos)
+                                                                {
+                                                                    if (pe.PresupuestoFK == p.IdPresupuesto)
+                                                                    {
+                                                                        cantPedidos++;
+                                                                        <tr>
+                                                                            <td>@pe.IdPedido</td>
+                                                                            <td>@pe.FechaEncargo.ToString("dd/MM/yyyy")</td>
+                                                                            @{
+                                                                                string descripcion = "-";
+                                                                                if (pe.PiezaExistenteFK != null)
+                                                                                {
+                                                                                    if (piezas != null && piezas.Any())
+                                                                                    {
+                                                                                        foreach (Pieza pi in piezas)
+                                                                                        {
+                                                                                            if (pe.PiezaExistenteFK == pi.IdPieza)
+                                                                                            {
+                                                                                                descripcion = pi.Descripcion;
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                else if (pe.ConjuntoExistenteFK != null)
+                                                                                {
+                                                                                    if (conjuntos != null && conjuntos.Any())
+                                                                                    {
+                                                                                        foreach (Conjunto c in conjuntos)
+                                                                                        {
+                                                                                            if (pe.ConjuntoExistenteFK == c.IdConjunto)
+                                                                                            {
+                                                                                                descripcion = c.Descripcion;
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    if (pe.Descripcion != null)
+                                                                                    {
+                                                                                        descripcion = pe.Descripcion;
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        descripcion = "- Sin Descripcion -";
+                                                                                    }
+                                                                                }
+                                                                            <td>@descripcion</td>
+                                                                            }
+                                                                            <td>@pe.Cantidad</td>
+                                                                            <td>@pe.PrecioUnitario?.ToString("C2")</td>
+                                                                            @{
+                                                                                double? subTotal = 0;
+                                                                                subTotal = (pe.Cantidad * pe.PrecioUnitario);
+                                                                                <td>@subTotal?.ToString("C2")</td>
+                                                                            }
+                                                                        </tr>
+                                                                    }
+                                                                }
+                                                                if (cantPedidos == 0)
+                                                                {
+                                                                    <tr>
+                                                                        <td colspan="6" style="text-align: center">- Presupuesto sin Pedidos -</td>
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                    </tbody>
+                                                </table>
+                                                <a class="btn btn-secondary" onclick="ocultarItemsPresupuesto(this)">Ocultar</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            double? total1 = 0;
+                                            if (pedidos != null && pedidos.Any())
+                                            {
+                                                foreach (Pedido pedido in pedidos)
+                                                {
+                                                    if (pedido.PresupuestoFK == p.IdPresupuesto)
+                                                    {
+                                                        total1 += (pedido.Cantidad * pedido.PrecioUnitario);
+                                                    }
+                                                }
+                                            }
+                                            <p>@total1?.ToString("C2")</p>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        if (cantConfirmados == 0)
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center">- No hay presupuestos confirmados y sin asignar -</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" style="text-align: center"> No hay presupuestos sin asignar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="d-flex align-items-center">
+                    <label for="cantPresupuestos" class="me-2 mb-0">Mostrar de a</label>
+                    <select id="cantPresupuestos" class="form-select form-select-sm" style="width: auto;">
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                    <label>Presupuestos</label>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="paginacion mt-3 d-flex align-items-center">
+                    <button type="button" id="prevPresupuestos" class="btn btn-sm btn-secondary">Anterior</button>
+                    <span id="numPresupuestos" class="mx-2"></span>
+                    <button type="button" id="nextPresupuestos" class="btn btn-sm btn-secondary">Siguiente</button>
+                </div>
+            </div>
+
+            <button id="btnGuardarAgregarPresupuestos" class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar presupuestos en OC?')">Guardar Presupuestos en OC</button>
+            <a class="btn btn-secondary" onclick="ocultarAgregraPresupuesto(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@if (odc.Relacion == Relacion.ConRecepcion)
+{
+    <div class="container-recepciones">
+        <h3>Recepciones</h3>
+        @if (recepciones != null && recepciones.Any())
+        {
+            int contRecep = 0;
+            <table class="table table-striped text-center" style="width: 40%">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Numero Recepcion</th>
+                        <th>Estado</th>
+                        <th>Monto</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (Recepcion r in recepciones)
+                    {
+                        if (r.IdOdCFK == odc.IdOC)
+                        {
+                            contRecep++;
+                            string fondo = "";
+                            string letra = "";
+                            switch (r.Estado)
+                            {
+                                case EstadoRecepcion.Activa:
+                                    fondo = "yellow";
+                                    letra = "black";
+                                break;
+                                case EstadoRecepcion.Anulada:
+                                    fondo = "red";
+                                    letra = "white";
+                                break;
+                                case EstadoRecepcion.Facturada:
+                                    fondo = "green";
+                                    letra = "white";
+                                break;
+                            }
+
+                            <tr>
+                                <td style="background-color: @fondo; color: @letra">@r.IdRecepcion</td>
+                                <td style="background-color: @fondo; color: @letra">@r.NumeroRecepcion</td>
+                                <td style="background-color: @fondo; color: @letra">@r.Estado</td>
+                                @if (r.Estado == EstadoRecepcion.Facturada)
+                                {
+                                    <td style="background-color: @fondo; color: @letra">@r.Monto?.ToString("C2")</td>
+                                }
+                                else
+                                {
+                                    <td style="background-color: @fondo; color: @letra">-</td>
+                                }
+
+                                <td style="background-color: @fondo">
+                                    @if (r.Estado != EstadoRecepcion.Facturada)
+                                    {
+                                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: @fondo">
+                                        <i class="bi bi-three-dots-vertical" style="color: @letra"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                        @switch (r.Estado)
+                                        {
+                                            case EstadoRecepcion.Activa:
+                                                <li>
+                                                    <form asp-controller="OrdenesDeCompra" asp-action="CambiarEstadoRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcion="@r.IdRecepcion" asp-route-nuevoEstado="@EstadoRecepcion.Anulada" method="post">
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar anular recepcion?')">Anular</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form asp-controller="OrdenesDeCompra" asp-action="EliminarRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcionBorrar="@r.IdRecepcion" method="post">
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar recepcion?')">Borrar</button>
+                                                    </form>
+                                                </li>
+                                                break;
+                                            case EstadoRecepcion.Anulada:
+                                                <li>
+                                                    <form asp-controller="OrdenesDeCompra" asp-action="CambiarEstadoRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcion="@r.IdRecepcion" asp-route-nuevoEstado="@EstadoRecepcion.Activa" method="post">
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar activar recepcion anulada?')">Reactivar</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form asp-controller="OrdenesDeCompra" asp-action="EliminarRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcionBorrar="@r.IdRecepcion" method="post">
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar recepcion?')">Borrar</button>
+                                                    </form>
+                                                </li>
+                                                break;
+                                        }
+                                    </ul>
+                                    } 
+                                </td>
+                            </tr>
+                        }
+                    }
+                    @if (contRecep == 0)
+                    {
+                        <tr>
+                            <td colspan="5" style="text-align: center">
+                                ODC Sin Recepciones
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No hay recepciones guardadas</p>
+        }
+        <div class="vistaBotonAgregarRecepcion">
+
+            <a class="btn btn-primary" onclick="mostrarAgregarRecepcion(this)">+ Agregar Recepcion</a>
+
+            <!-- 
+            @if(odc.Estado != EstadoOC.Facturada){
+                <a class="btn btn-primary" onclick="mostrarAgregarRecepcion(this)">+ Agregar Recepcion</a>
+            }
+            else
+            {
+                <button class="btn btn-primary" disabled>+ Agregar Recepcion</button>
+            }
+            -->
+        </div>
+        <div class="vistaAgregarRecepcion" style="display: none">
+            <form asp-controller="OrdenesDeCompra" asp-action="AgregarNuevaRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
+                <input type="text" name="numeroRecepcion" required/>
+                <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nueva recepcion?')">Guardar Recepcion</button>
+                <a class="btn btn-secondary" onclick="ocultarAgregarRecepcion(this)">Cancelar</a>
+            </form>
+        </div>
+    </div>
+}
+
+<div>
+    @{
+        switch (odc.Estado)
+        {
+            case EstadoOC.Activa:
+                <h3 style="background: yellow">Estado OC: Activa</h3>
+                break;
+            case EstadoOC.Facturada:
+                <h3 style="background: green">Estado OC: Facturada</h3>
+                break;
+            case EstadoOC.Anulada:
+                <h3 style="background: red">Estado OC: Anulada</h3>
+                break;
+        }
+
+        if (odc.Relacion == Relacion.SinRecepcion)
+        {
+            switch (odc.Estado)
+            {
+                case EstadoOC.Activa:
+                    <form asp-controller="OrdenesDeCompra" asp-action="OC_CambiarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-estadoNuevo="@EstadoRecepcion.Anulada">
+                        <button class="btn btn-danger" type="submit" onclick="return confirm('Seguro que desea anular esta OC?')">Anular</button>
+                    </form>
+                    break;
+                case EstadoOC.Anulada:
+                    if (sePuedeReactivar == true)
+                    {
+                        <form asp-controller="OrdenesDeCompra" asp-action="OC_CambiarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-estadoNuevo="@EstadoRecepcion.Activa">
+                            <button class="btn btn-primary" type="submit" onclick="return confirm('Seguro que desea corregir esta OC?')">Reactivar</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" disabled>Reactivar</button>
+                        <label>No se puede reactivar ya que algunos itesm fueron reasignados</label>
+                    } 
+                    break;
+            }
+        }
+        else
+        {
+            switch (odc.Estado)
+            {
+                case EstadoOC.Activa:
+                    break;
+                case EstadoOC.Anulada:
+                    break;
+                case EstadoOC.Facturada:
+                    break;
+            }
+        }
+    }
+</div>
+
+<div class="container-notas">
+    <h3>Notas:</h3>
+    @if (odc.Notas != null && odc.Notas.Any())
+    {
+        int index = 0;
+        foreach (string n in odc.Notas)
+        {
+            index++;
+            <div class="vistaNota-@index">
+                <h5>@n</h5>
+                <a class="btn btn-primary" onclick="mostrarModificarNota(this, @index)">Modificar Nota</a>
+                <form asp-controller="OrdenesDeCompra" asp-action="OC_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-notaBorrar="@n" method="post">
+
+                    <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
+                </form>
+            </div>
+            <div class="vistaModificarNota-@index" style="display: none">
+                <form asp-controller="OrdenesDeCompra" asp-action="OC_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-notaModificar="@n" method="post">
+                    <input type="text" placeholder="@n" name="notaModificada" required/>
+
+                    <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar nota?')">Guardar</button>
+                    <a class="btn btn-secondary" onclick="ocultarModificarNota(this, @index)">Cancelar</a>
+                </form>
+            </div>
+        }
+    }
+    else
+    {
+        <h5>No hay Notas</h5>
+    }
+    <div class="vistaBotonAgregarNota">
+        <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
+    </div>
+    <div class="vistaAgregarNota" style="display: none">
+        <form asp-controller="OrdenesDeCompra" asp-action="OC_AgregarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
+            <textarea type="text" name="nuevaNota" placeholder="Nueva nota..." style="width: 50%; height: 100px" required></textarea>
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar agregar nueva nota?')">Guardar Nota</button>
+            <a class="btn btn-secondary" onclick="ocultarAgregarNota(this)">Cancelar</a>
+        </form>
+    </div>  
+</div>
+
+<div>
+    <h3>Archivo:</h3>
+    @if (odc.UbicacionArchivo != null)
+    {
+        string nombre = System.IO.Path.GetFileName(odc.UbicacionArchivo);
+        string extension = odc.UbicacionArchivo.Substring(odc.UbicacionArchivo.Length - 4);
+        string archCoregido = odc.UbicacionArchivo.Replace(@"\\", @"/");
+
+        if (extension == ".jpg" || extension == ".png" || extension == ".ico")
+        {
+            <h6>@nombre</h6>
+            <img src="@archCoregido" alt="not found" style="max-width: 100px;" />
+        }
+        else
+        {
+            <h6>@nombre</h6>
+            <img src="\iconoArchivoGenerico.png" alt="not found" style="max-width: 50px;" />
+        }
+        <a class="btn btn-primary" asp-controller="OrdenesDeCompra" asp-action="OC_AbrirArchivoEnUbicacion" asp-route-ruta="@odc.UbicacionArchivo">Abrir en ubicacion</a>
+
+        <form asp-controller="OrdenesDeCompra" asp-action="OC_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-ruta="@odc.UbicacionArchivo" method="post" >
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
+        </form>
+    }
+    else
+    {
+        <div class="container-cargarArchivo">
+            <div class="vistaBotonCargarArchivo">
+                <h6>- Sin archivo -</h6>
+                <a class="btn btn-primary" onclick="mostrarCargarArchivo(this)">Cargar Archivo</a>
+            </div>
+            <div class="vistaAgregarArchivo" style="display: none">
+                <label>Cargar Archivo</label>
+                <form asp-controller="OrdenesDeCompra" asp-action="SubirArchivoOCExistente" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOC="@odc.IdOC" enctype="multipart/form-data">
+                    <input id="cargarArchivo" type="file" name="archivo" />
+                    <button type="button" id="btnLimpiarArchivo" class="btn btn-warning">Limpiar Archivo</button>
+
+                    <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar cargar archivo?')">Guardar</button>
+                    <a class="btn btn-secondary" onclick="ocultarCargarArchivo(this)">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="container-seguimiento">
+    <h3>Seguimiento DESARROLLAR</h3>
+    @{
+
+        int cantPresupuestosAsociados = 0;
+        if (presupuestos != null && presupuestos.Any())
+        {
+            foreach (Presupuesto pr in presupuestos)
+            {
+                if (pr.OrdenDeCompraFK == odc.IdOC)
+                {
+                    cantPresupuestosAsociados++;
+                }
+            }
+        }
+
+        // AQUI 
+
+        int cantidadFacturasAsociadas = 0;
+        if (relacionesOCF != null && relacionesOCF.Any())
+        {
+            foreach (RelacionODCFactura rocf in relacionesOCF)
+            {
+                if (rocf.IdOdcFK == odc.IdOC)
+                {
+                    if (facturas != null && facturas.Any())
+                    {
+                        foreach (Factura f in facturas)
+                        {
+                            if (f.IdFactura == rocf.IdFacturaFK)
+                            {
+                                cantidadFacturasAsociadas++;
+                                <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura">@f.Fecha.ToString("dd/MMyyyy"): @f.Codigo.Puesto-@f.Codigo.Numero</a>
+                            }
+                        }
+                    }
+                }
+            } 
+        }
+    }
+</div>
+
+<div class="container-borrar">
+    @if (sePuedeBorrar.SePuede == true)
+    {
+        <div class="vistaBotonBorrarOC">
+            <h5>@sePuedeBorrar.Mensajes[0]</h5>
+            <a class="btn btn-danger" onclick="mostrarBorrarOC(this)">Borrar OC</a>
+        </div>
+        <div class="vistaBorrarOC" style="display: none">
+            <form asp-controller="OrdenesDeCompra" asp-action="OC_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOcBorrar="@odc.IdOC" method="post">
+
+                <label>Socio:</label>
+                <div class="dropdown">
+                    <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
+
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                        Seleccionar Socio
+                    </button>
+                    <ul class="dropdown-menu">
+                        @{
+                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                            if (socios != null && socios.Any())
+                            {
+                                foreach (Socio s in socios)
+                                {
+                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                    <li>
+                                        <a class="dropdown-item opcion-socio"
+                                               href="#"
+                                               data-id="@s.IdSocio"
+                                               data-nombre="@nombreApellido">
+                                            @nombreApellido
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        }
+                    </ul>
+                </div>
+
+                <label>Contraseña:</label>
+                <div>
+                    <input type="password" name="contraseñaSocio" id="passSocio" />
+                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+                </div>
+
+                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar orden de compra?')">Borrar OC</button>
+                <a class="btn btn-secondary" onclick="ocultarBorrarOC(this)">Cancelar</a>
+            </form>
+        </div>
+    }
+    else
+    {
+        <button class="btn btn-danger" disabled>Borrar OC</button>
+        <label>No se puede borrar OC ya que:</label>
+        <ul>
+            @foreach (string mensaje in sePuedeBorrar.Mensajes)
+            {
+                <li>@mensaje</li>
+            }
+        </ul>
+    }
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="OrdenesDeCompra" asp-action="IndexOrdenesDeCompra" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+
+@section Scripts{
+    <script>
+        // MODIFICAR CODIGO
+        function mostrarModificarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-codigo');
+
+            contenedor.querySelector('.vistaCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaModificarCodigo').style.display = 'block';
+        }
+
+        function ocultarModificarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-codigo');
+
+            contenedor.querySelector('.vistaCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaModificarCodigo').style.display = 'none';
+        }
+
+        // MODIFICAR FECHA
+        function mostrarModificarFecha(elemento) {
+            const contenedor = elemento.closest('.container-fecha');
+
+            contenedor.querySelector('.vistaFecha').style.display = 'none';
+            contenedor.querySelector('.vistaModificarFecha').style.display = 'block';
+        }
+
+        function ocultarModificarFecha(elemento) {
+            const contenedor = elemento.closest('.container-fecha');
+
+            contenedor.querySelector('.vistaFecha').style.display = 'block';
+            contenedor.querySelector('.vistaModificarFecha').style.display = 'none';
+        }
+
+        // AGREGAR RECEPCION
+        function mostrarAgregarRecepcion(elemento){
+            const contenedor = elemento.closest('.container-recepciones');
+
+            contenedor.querySelector('.vistaBotonAgregarRecepcion').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarRecepcion').style.display = 'block';
+        }
+
+        function ocultarAgregarRecepcion(elemento) {
+            const contenedor = elemento.closest('.container-recepciones');
+
+            contenedor.querySelector('.vistaBotonAgregarRecepcion').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarRecepcion').style.display = 'none';
+        }
+
+        // AGREGAR NOTA
+        function mostrarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
+        }
+
+        function ocultarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
+        }
+
+        // AGREGAR PRESUPUESTOS
+        function mostrarAgregraPresupuesto(elemento) {
+            const contenedor = elemento.closest('.container-agregarPresupuesto');
+
+            contenedor.querySelector('.vistaBotonAgregarPresupuesto').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarPresupuesto').style.display = 'block';
+        }
+
+        function ocultarAgregraPresupuesto(elemento) {
+            const contenedor = elemento.closest('.container-agregarPresupuesto');
+
+            contenedor.querySelector('.vistaBotonAgregarPresupuesto').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarPresupuesto').style.display = 'none';
+        }
+
+        // MODIFICAR RECEPCION FACTURADA
+        function mostrarEstadoFacturadaMostrarBotones(elemento) {
+            const contenedor = elemento.closest('.container-opcionFacturada');
+
+            contenedor.querySelector('.vistaPregunta').style.display = 'none';
+            contenedor.querySelector('.vistaBotones').style.display = 'block';
+        }
+
+        function ocultarBotonesModificarEstado(elemento) {
+            const contenedor = elemento.closest('.container-opcionFacturada');
+
+            contenedor.querySelector('.vistaPregunta').style.display = 'block';
+            contenedor.querySelector('.vistaBotones').style.display = 'none';
+        }
+
+        // CARGAR ARCHIVO
+        function mostrarCargarArchivo(elemento){
+            const contenedor = elemento.closest('.container-cargarArchivo');
+
+            contenedor.querySelector('.vistaBotonCargarArchivo').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'block';
+        }
+        function ocultarCargarArchivo(elemento) {
+            const contenedor = elemento.closest('.container-cargarArchivo');
+
+            contenedor.querySelector('.vistaBotonCargarArchivo').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'none';
+
+            document.getElementById('cargarArchivo').value = '';
+        }
+
+        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formAgregarPresupuestos");
+            const btnGuardar = document.getElementById("btnGuardarAgregarPresupuestos");
+
+            function validarFormulario() {
+                const checkboxes = form.querySelectorAll('input[id="presupuestoSeleccion"]:checked');
+                const presupuestosSeleccionados = checkboxes.length > 0;
+
+                btnGuardar.disabled = !(presupuestosSeleccionados);
+            }
+
+            form.addEventListener("change", function(e) {
+                    if (e.target.id === "presupuestoSeleccion") {
+                    validarFormulario();
+                }
+            });
+
+            validarFormulario();
+        });
+
+        // VER ITEMS EN PRESUPUESTO
+        function mostrarItemsPresupuesto(elemento){
+            const contenedor = elemento.closest('.container-itemsPresupuesto');
+
+            contenedor.querySelector('.vistaBotonVerItemsPresupuesto').style.display = 'none';
+            contenedor.querySelector('.vistaItemsPresupuesto').style.display = 'block';
+        }
+        function ocultarItemsPresupuesto(elemento){
+            const contenedor = elemento.closest('.container-itemsPresupuesto');
+
+            contenedor.querySelector('.vistaBotonVerItemsPresupuesto').style.display = 'block';
+            contenedor.querySelector('.vistaItemsPresupuesto').style.display = 'none';
+        }
+
+        // MODIFICAR NOTA
+        function mostrarModificarNota(elemento, index) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector(`.vistaNota-${index}`).style.display = 'none';
+            contenedor.querySelector(`.vistaModificarNota-${index}`).style.display = 'block';
+        }
+        function ocultarModificarNota(elemento, index) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector(`.vistaNota-${index}`).style.display = 'block';
+            contenedor.querySelector(`.vistaModificarNota-${index}`).style.display = 'none';
+        }
+
+        // LIMPIAR ARCHIVO SELECCIONADO
+        document.getElementById('btnLimpiarArchivo').addEventListener('click', function () {
+            document.getElementById('cargarArchivo').value = '';
+        });
+
+        // FILTRAR PRESUPUESTO AGREGAR POR NUMERO
+        
+        function filtrarTablaNumeroPresupuesto() {
+            let input = document.getElementById("filtroNumeroPresupuesto");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-presupuesto");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-numero");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPresupuestos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaAgregarPresupuestos', 'prevPresupuestos', 'nextPresupuestos', 'numPresupuestos', 'cantPresupuestos', 'fila-presupuesto');
+
+        // MOSTRAR BUSCAR POR NUMERO PRESUPUESTO
+        function mostrarBuscarNumero(elemento) {
+            const contenedor = elemento.closest('.container-tituloNumeroPresupuesto');
+
+            contenedor.querySelector('.vistaBotonBuscarNumero').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarNumero').style.display = 'block';
+        }
+        function ocultarBuscarNumero(elemento) {
+            const contenedor = elemento.closest('.container-tituloNumeroPresupuesto');
+
+            contenedor.querySelector('.vistaBotonBuscarNumero').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarNumero').style.display = 'none';
+        }
+
+        // BORRAR ORDEN DE COMPRA
+        function mostrarBorrarOC(elemento, index) {
+        const contenedor = elemento.closest('.container-borrar');
+
+        contenedor.querySelector('.vistaBotonBorrarOC').style.display = 'none';
+        contenedor.querySelector('.vistaBorrarOC').style.display = 'block';
+        }
+        function ocultarBorrarOC(elemento, index) {
+        const contenedor = elemento.closest('.container-borrar');
+
+        contenedor.querySelector('.vistaBotonBorrarOC').style.display = 'block';
+        contenedor.querySelector('.vistaBorrarOC').style.display = 'none';
+        }
+
+        // SELECCIONAR SOCIO
+        document.querySelectorAll('.opcion-socio').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const id = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+
+                document.getElementById('btnSocio').innerText = nombre;
+
+                document.getElementById('idSocioSeleccionado').value = id;
+            });
+        });
+
+        // VER/OCULTAR CONTRASEñA
+        function togglePassword() {
+            var input = document.getElementById("passSocio");
+            // Si es password lo pasa a text, y viceversa
+            if (input.type === "password") {
+                input.type = "text";
+            } else {
+                input.type = "password";
+            }
+        }
+
+
+    </script>
+}

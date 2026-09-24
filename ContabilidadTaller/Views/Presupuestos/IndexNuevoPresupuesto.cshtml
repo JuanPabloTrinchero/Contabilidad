@@ -1,0 +1,380 @@
+﻿@{
+    ViewData["Title"] = "Nuevo Presupuesto";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    int idPresupuesto = (int)ViewBag.SiguienteIdPresupuesto;
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Empleado> empleados = (List<Empleado>)ViewBag.Empleados;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    List<Presupuesto> presupuestos = (List<Presupuesto>)ViewBag.Presupuestos;
+
+    int siguienteNumeroPresupuesto = (int)ViewBag.SiguienteNumeroPresupuesto;
+}
+
+<div class="text-center">
+    <h1>Nuevo Presupuesto para @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <form id="formNuevoPresupuesto" asp-controller="Presupuestos" asp-action="GuardarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" enctype="multipart/form-data" method="post">
+        <div>
+            <h6>Id: @idPresupuesto</h6>
+            <input type="hidden" name="idPresupuesto" value="@idPresupuesto" required/>
+        </div>
+
+        <div class="form-group">
+            <h6>Fecha:</h6>
+            <input type="date" name="fecha" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+        </div>
+
+        <div>
+            <h6>Numero Presupuesto (Siguiente numero sugerido: @siguienteNumeroPresupuesto):</h6>
+            <input style="width: 25%" type="number" name="numeroPresupuesto" placeholder="(Requerido)" required/>
+        </div>
+
+        <div class="container-agregarItems">
+            <h6>Agregar Pedidos entregados y sin asignar:</h6>
+            <div class="VistaBoton">
+                <a class="btn btn-primary" onclick="mostrarPedidos(this)">Agregar Pedidos Guardados</a>
+            </div>
+
+            <div class="VistaPedidos" style="Display: none">
+                <table id="tablaPedidos" class="table table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th>AGREGAR?</th>
+                            <th>Id</th>
+                            <th>Fecha Encargo</th>
+                            <th>Cantidad</th>
+                            <th>
+                                <div class="container-tituloDescripcion mb-3">
+                                    <div class="vistaBotonBuscarDescripcion">
+                                        Descripcion
+                                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                            <li>
+                                                <a class="dropdown-item" onclick="mostrarBuscarPorDescripcion(this)">Buscar por Descripcion</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="vistaBuscarDescripcion" style="display: none">
+                                        <div class="d-flex align-items-center">
+                                            <input type="text" id="filtroDescripcion" class="form-control" placeholder="Buscar por Descripción..." onkeyup="filtrarTabla()">
+                                            <a class="btn btn-danger" onclick="ocultarBuscarPorDescripcion(this)">X</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th>Precio Unitario</th>
+                            <th>Sub-Total</th>
+                            <th>Encargado por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pedidos != null && pedidos.Any())
+                        {
+                            int presupuestosSinAsignar = 0;
+                            foreach (Pedido p in pedidos)
+                            {
+                                if (p.Estado == EstadoPedido.Entregado && p.PresupuestoFK == null && p.FacturaFK == null)
+                                {
+                                    presupuestosSinAsignar++;
+                                    <tr class="fila-pedido">
+                                        <td>
+                                            <input type="checkbox" name="idItems" value="@p.IdPedido" />
+                                        </td>
+                                        <td>@p.IdPedido</td>
+                                        <td>@p.FechaEncargo.ToString("dd/MM/yyyy")</td>
+                                        <td>@p.Cantidad</td>
+                                        <td class="col-descripcion">
+                                            @if (p.PiezaExistenteFK != null)
+                                            {
+                                                foreach (Pieza pieza in piezas)
+                                                {
+                                                    if (pieza.IdPieza == p.PiezaExistenteFK)
+                                                    {
+                                                        @pieza.Descripcion
+                                                    }
+                                                }
+                                            }
+                                            else if (p.ConjuntoExistenteFK != null)
+                                            {
+                                                foreach (Conjunto c in conjuntos)
+                                                {
+                                                    if (c.IdConjunto == p.ConjuntoExistenteFK)
+                                                    {
+                                                        @c.Descripcion
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                @p.Descripcion
+                                            }
+
+                                        </td>
+                                        <td>@(p.PrecioUnitario?.ToString("C2") ?? "Sin Precio")</td>
+                                        <td>@(((decimal)(p.PrecioUnitario * p.Cantidad)).ToString("C2"))</td>
+                                        <td>
+                                            @foreach (Empleado e in empleados)
+                                            {
+                                                if (e.IdEmpleado == p.EncargadoPorFK)
+                                                {
+                                                    string nombreApellido = e.NombreEmpleado + ". " + e.ApellidoEmpleado;
+                                                    <p>@nombreApellido</p>
+                                                    break;
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            if (presupuestosSinAsignar == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" style="text-align: center">- No hay pedidos entregados o sin asignar -</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="d-flex align-items-center">
+                        <label for="cantPedidos" class="me-2 mb-0">Mostrar de a</label>
+                        <select id="cantPedidos" class="form-select form-select-sm" style="width: auto;">
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <label>Pedidos</label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="paginacion mt-3 d-flex align-items-center">
+                        <button id="prevPedidos" class="btn btn-sm btn-secondary">Anterior</button>
+                        <span id="numPedidos" class="mx-2"></span>
+                        <button id="nextPedidos" class="btn btn-sm btn-secondary">Siguiente</button>
+                    </div>
+                </div>
+
+                <a class="btn btn-secondary" onclick="ocultarPedidos(this)">Ocultar Pedidos</a>
+            </div>
+        </div>
+
+        <div id="listaNotas">
+            <h6>Notas:</h6>
+            <!-- Agregar Notas -->
+            <button class=" btn btn-primary" type="button" onclick="agregarNuevaNota()">+ Agregar Nota</button>
+        </div>
+
+        <div id="listaArchivos">
+            <h6>Archivos:</h6>
+            <!-- Agregar Archivos -->
+            <button class=" btn btn-primary" type="button" onclick="agregarNuevoArchivo()">+ Agregar Archivo</button>
+        </div>
+
+        <button id="btnGuardar" type="submit" class="btn btn-success" onclick="return confirm('Confirmar guardar nuevo presupuesto?')" disabled>Guardar Nuevo Presupuesto</button>
+            
+    </form>
+</div>
+
+<div style="text-align: center">
+    <a class="btn btn-secondary" asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+    <!--
+            <a class="btn btn-secondary" href="javascript:history.back()">Cancelar</a>
+    -->
+</div>
+
+
+@section Scripts{
+    <script>
+        // NUMERO PRESUPUESTO
+        function mostrarInput() {
+            document.getElementById('sectionPregunta').style.display = 'none';
+            document.getElementById('sectionInputManual').style.display = 'block';
+            document.getElementById('sectionContinuarConUno').style.display = 'none';
+
+            document.getElementById('labelInput').innerText = 'Ingrese el número inicial:';
+
+            document.getElementById('inputFinalRemito').type = 'number';
+            document.getElementById('inputFinalRemito').focus();
+        }
+
+        function continuarConUno() {
+            document.getElementById('sectionPregunta').style.display = 'none';
+            document.getElementById('sectionInputManual').style.display = 'none';
+            document.getElementById('sectionContinuarConUno').style.display = 'block';
+
+            document.getElementById('labelInput').innerText = 'Se usará el número: 1';
+
+            var input = document.getElementById('inputFinalPresupuesto');
+            input.value = 1;
+            input.type = 'hidden';
+        }
+
+        // PEDIDOS
+        function ocultarPedidos(elemento) {
+            const contenedor = elemento.closest('.container-agregarItems');
+
+            contenedor.querySelector('.VistaBoton').style.display = 'block';
+            contenedor.querySelector('.VistaPedidos').style.display = 'none';
+        }
+
+        function mostrarPedidos(elemento) {
+            const contenedor = elemento.closest('.container-agregarItems');
+
+            contenedor.querySelector('.VistaBoton').style.display = 'none';
+            contenedor.querySelector('.VistaPedidos').style.display = 'block';
+        }
+
+        // AGREGAR NUEVA NOTAS
+        function agregarNuevaNota() {
+            const contenedor = document.getElementById('listaNotas');
+
+            const fila = document.createElement('div');
+            fila.className = 'nota-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                        <textarea type="text" id="archivoCargado" name="notas" class="form-control-sm" style="width: 50%; height: 100px" placeholder="Nueva nota..."></textarea>
+                        <button type="button" class="btn btn-danger btn-eliminarNotaNueva2 btn-sm px-3 text-nowrap">Quitar fila</button>
+                            `;
+
+            fila.querySelector('.btn-eliminarNotaNueva2').addEventListener('click', function() {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+        // AGREGAR NUEVO ARCHIVO
+        function agregarNuevoArchivo() {
+            const contenedor = document.getElementById('listaArchivos');
+
+            const fila = document.createElement('div');
+            fila.className = 'archivo-item d-flex align-items-center';
+
+            fila.innerHTML = `
+                            <input type="file" id="archivoCargado" name="archivos" class="form-control-sm">
+                            <button type="button" class="btn btn-warning btn-limpiar btn-sm px-3 text-nowrap">Limpiar archivo</button>
+                            <button type="button" class="btn btn-danger btn-eliminar btn-sm px-3 text-nowrap">Quitar fila</button>
+                        `;
+
+            fila.querySelector('.btn-limpiar').addEventListener('click', function () {
+                fila.querySelector('input[type="file"]').value = '';
+            });
+
+            fila.querySelector('.btn-eliminar').addEventListener('click', function () {
+                fila.remove();
+            });
+
+            contenedor.appendChild(fila);
+        }
+
+
+        // FILTRAR POR DESCRIPCION
+        function filtrarTabla() {
+            let input = document.getElementById("filtroDescripcion");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-pedido");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcion");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPedidos', 'prevPedidos', 'nextPedidos', 'numPedidos', 'cantPedidos', 'fila-pedido');
+
+        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formNuevoPresupuesto");
+            const btnGuardar = document.getElementById("btnGuardar");
+
+            const inputNumero = document.querySelector('input[name="numeroPresupuesto"]');
+            const inputFecha = document.querySelector('input[name="fecha"]');
+            
+            function validarFormulario() {
+                const fechaValida = inputFecha && inputFecha.value.trim() !== "";
+                const numeroValido = inputNumero && inputNumero.value.trim() !== "";
+
+                const checkboxes = form.querySelectorAll('input[name="idItems"]:checked');
+                const pedidoSeleccionado = checkboxes.length > 0;
+
+                btnGuardar.disabled = !(fechaValida && pedidoSeleccionado && numeroValido);
+            }
+
+            if (inputNumero) {
+                inputNumero.addEventListener("change", validarFormulario);
+            }
+
+            if (inputFecha) {
+                inputFecha.addEventListener("change", validarFormulario);
+            }
+
+            form.addEventListener("change", function(e) {
+                if (e.target.name === "idItems") {
+                    validarFormulario();
+                }
+            });
+
+            validarFormulario();
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formPresupuestoReemplazo");
+            const btnGuardar = document.getElementById("btnGuardar");
+
+            const inputFecha = document.querySelector('input[id="fecha"]');
+
+            function validarFormulario() {
+                const fechaValida = inputFecha && inputFecha.value.trim() !== "";
+
+                btnGuardar.disabled = !fechaValida;
+            }
+
+            if (inputFecha) {
+                inputFecha.addEventListener("change", validarFormulario);
+            }
+
+            validarFormulario();
+        });
+
+        // MOSTRAR BUSCAR POR DESCRIPCION
+        function mostrarBuscarPorDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'block';
+        }
+        function ocultarBuscarPorDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'none';
+        }
+
+
+    </script>
+}

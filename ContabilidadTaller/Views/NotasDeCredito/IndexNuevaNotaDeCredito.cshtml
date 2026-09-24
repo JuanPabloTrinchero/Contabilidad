@@ -1,0 +1,330 @@
+﻿@{
+    ViewData["Title"] = "Nueva Nota de Credito";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+
+    List<Factura> facturas = (List<Factura>)ViewBag.Facturas;
+
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Presupuesto> presupuestos = (List<Presupuesto>)ViewBag.Presupuestos;
+    List<OrdenDeCompra> odcs = (List<OrdenDeCompra>)ViewBag.OrdenesDeCompra;
+
+    int id = (int)ViewBag.Id;
+}
+
+<div>
+    <h1>Nueva Nota de Credito para @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <h6>Id: @id</h6>
+
+    <form id="formNotaDeCredito" asp-controller="NotasDeCredito" asp-action="GuardarNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" enctype="multipart/form-data" method="post">
+        <div>
+            <h6>Fecha:</h6>
+            <input type="date" id="fecha" name="fecha" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+        </div>
+        <div>
+            <h6>Codigo:</h6>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Puesto</th>
+                        <th></th>
+                        <th>Numero</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <input type="text" id="puesto" name="puesto" placeholder="4 Digitos" maxlength="4" style="width: 75px" required />
+                        </td>
+                        <td>-</td>
+                        <td>
+                            <input type="text" id="numero" name="numero" placeholder="8 Digitos" maxlength="8" style="width: 85px" required />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <h6>Facturas anuladas sin Notas de Credito:</h6>
+            <table id="tablaFacturas" class="table table-striped text-center">
+                <thead>
+                    <tr>
+                        <th>AGREGAR?</th>
+                        <th>Id</th>
+                        <th>Fecha</th>
+                        <th>
+                            <div class="container-tituloCodigo mb-3">
+                                <div class="vistaBotonBuscarCodigo">
+                                    Codigo
+                                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                        <li>
+                                            <a class="dropdown-item" onclick="mostrarBuscarFacturaPorCodigo(this)">Buscar por Codigo</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="vistaBuscarCodigo" style="display: none">
+                                    <div class="d-flex align-items-center">
+                                        <input type="text" id="filtroCodigo" class="form-control" placeholder="Buscar por Codigo..." onkeyup="filtrarTabla()">
+                                        <a class="btn btn-danger" onclick="ocultarBuscarFacturaPorCodigo(this)">X</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+                        <th>Items</th>
+                        <th>Monto</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody class="listaFacturas">
+                        @if (facturas != null && facturas.Any())
+                        {
+                            int facturasAnuladasYSinNDC = 0;
+                            foreach (Factura f in facturas)
+                            {
+                                if (f.Estado == EstadoFactura.Anulada && f.NotaDeCredito == null)
+                                {
+                                facturasAnuladasYSinNDC++;
+                                    <tr class="fila-factura">
+                                        <td>
+                                            <input type="checkbox" id="idFacturaAsociada" name="idsFacturasAsociadas" value="@f.IdFactura"/>
+                                        </td>
+                                        <td>@f.IdFactura</td>
+                                        <td>@f.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td class="col-codigo">
+                                            @f.Codigo.Puesto-@f.Codigo.Numero
+                                        </td>
+                                        <td>
+                                            <div class="container-items">
+                                                <div class="vistBotonVerItems">
+                                                    <a class="btn btn-primary" onclick="mostrarItems(this)">Ver Items</a>
+                                                </div>
+                                                <div class="vistaItems" style="display: none">
+                                                    @{
+                                                        switch (f.Contiene)
+                                                        {
+                                                            case Contiene.SinDefinir:
+
+                                                                break;
+                                                            case Contiene.Pedidos:
+
+                                                                break;
+                                                            case Contiene.Presupuestos:
+
+                                                                break;
+                                                            case Contiene.OrdenesDeCompra:
+
+                                                            break;
+                                                        }
+
+                                                    }
+                                                    <a class="btn btn-secondary" onclick="ocultarItems(this)">Ocultar Items</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        @{
+                                            double? monto = 0;
+                                            switch (f.Contiene)
+                                            {
+                                                case Contiene.SinDefinir:
+                                                    monto = f.MontoManual;
+                                                    break;
+                                                case Contiene.Pedidos:
+                                                    if (pedidos != null && pedidos.Any())
+                                                    {
+                                                        foreach (Pedido pe in pedidos)
+                                                        {
+                                                            monto += (pe.Cantidad * pe.PrecioUnitario);
+                                                        }
+                                                    }
+                                                    break;
+                                                case Contiene.Presupuestos:
+                                                    if (presupuestos != null && presupuestos.Any())
+                                                    {
+                                                        foreach (Presupuesto pr in presupuestos)
+                                                        {
+                                                            if (pr.FacturaFK == f.IdFactura)
+                                                            {
+                                                                if (pedidos != null && pedidos.Any())
+                                                                {
+                                                                    foreach (Pedido pe in pedidos)
+                                                                    {
+                                                                        if (pe.PresupuestoFK == pr.IdPresupuesto)
+                                                                        {
+                                                                            monto += (pe.Cantidad * pe.PrecioUnitario);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    break;
+                                                case Contiene.OrdenesDeCompra:
+                                                    
+                                                    break;
+                                            }
+                                            <td>@monto?.ToString("C2")</td>
+                                        }
+                                        <td>
+                                            <a class="btn btn-primary">Ver</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            if (facturasAnuladasYSinNDC == 0)
+                            {
+                                <tr>
+                                    <td colspan="7" style="text-align: center">- No hay facturas anuladas y sin Nota de Credito -</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center">- No hay facturas guardadas -</td>
+                            </tr>
+                        }
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="d-flex align-items-center">
+                <label for="cantFacturas" class="me-2 mb-0">Mostrar de a</label>
+                <select id="cantFacturas" class="form-select form-select-sm" style="width: auto;">
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+                <label>Facturas Anuladas</label>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="paginacion mt-3 d-flex align-items-center">
+                <button id="prevFacturas" type="button" class="btn btn-sm btn-secondary">Anterior</button>
+                <span id="numFacturas" class="mx-2"></span>
+                <button id="nextFacturas" type="button" class="btn btn-sm btn-secondary">Siguiente</button>
+            </div>
+        </div>
+
+        <button id="btnGuardar" class="btn btn-success" type="submit" onclick="return confirm('Confirmar guardar nueva nota de credito?')">Guardar Nueva Nota de Credito</button>
+    </form>
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // MOSTRAR ITEMS
+        function mostrarItems(elemento) {
+            const contenedor = elemento.closest('.container-items');
+
+            contenedor.querySelector('.vistBotonVerItems').style.display = 'none';
+            contenedor.querySelector('.vistaItems').style.display = 'block';
+        }
+        function ocultarItems(elemento) {
+            const contenedor = elemento.closest('.container-items');
+
+            contenedor.querySelector('.vistBotonVerItems').style.display = 'block';
+            contenedor.querySelector('.vistaItems').style.display = 'none';
+        }
+
+
+    // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
+    document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formNotaDeCredito");
+        const btnGuardar = document.getElementById("btnGuardar");
+
+        const inputFecha = document.querySelector('input[id="fecha"]');
+        const inputPuesto = document.querySelector('input[id="puesto"]');
+        const inputNumero = document.querySelector('input[id="numero"]');
+
+        function validarFormulario() {
+            const fechaValida = inputFecha && inputFecha.value.trim() !== "";
+            const puestoValido = inputPuesto && inputPuesto.value.trim() !== "";
+            const numeroValido = inputNumero && inputNumero.value.trim() !== "";
+
+            const checkboxes = form.querySelectorAll('input[id="idFacturaAsociada"]:checked');
+            const pedidoSeleccionado = checkboxes.length > 0;
+
+            btnGuardar.disabled = !(fechaValida && puestoValido && numeroValido && pedidoSeleccionado);
+        }
+        if (inputFecha) {
+            inputFecha.addEventListener("change", validarFormulario);
+        }
+        if (inputPuesto) {
+            inputPuesto.addEventListener("input", validarFormulario);
+        }
+        if (inputNumero) {
+            inputNumero.addEventListener("input", validarFormulario);
+        }
+
+        form.addEventListener("change", function(e) {
+                if (e.target.id === "idFacturaAsociada") {
+                validarFormulario();
+            }
+        });
+
+        validarFormulario();
+    });
+
+    // FILTRAR POR CODIGO
+        function filtrarTabla() {
+            let input = document.getElementById("filtroCodigo");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-factura");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigo");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantFacturas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaFacturas', 'prevFacturas', 'nextFacturas', 'numFacturas', 'cantFacturas', 'fila-factura');
+
+        function mostrarBuscarFacturaPorCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'block';
+        }
+        function ocultarBuscarFacturaPorCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'none';
+        }
+
+    </script>
+}

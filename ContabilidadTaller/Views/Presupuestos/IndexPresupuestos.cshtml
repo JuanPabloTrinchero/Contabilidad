@@ -1,0 +1,453 @@
+﻿@model Presupuesto;
+
+@{
+    ViewData["Title"] = "Presupuestos";
+    string nombreEmpresa = ViewBag.NombreEmpresa;
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    List<Presupuesto> presupuestos = ViewBag.Presupuestos;
+    List<Pedido> pedidos = ViewBag.Pedidos;
+    List<Empleado> empleados = ViewBag.Empleados;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+
+    double precioTotal = 0;
+}
+
+<div class="text-center">
+    <h1>Presupuestos de @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexNuevoPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuestoAReamplazar="-1">+ Nuevo Presupuesto</a>
+</div>
+
+<div>
+    <table id="tablaPresupuestos" class="table text-center table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>
+                    <div class="container-tituloNumero">
+                        <div class="vistaBotonBuscarNumero">
+                            Numero
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarNumero(this)">Buscar por Numero</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarNumero mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroNumero" class="form-control" placeholder="Buscar por Numero..." onkeyup="filtrarTabla()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarNumero(this)">X</a>
+                            </div> 
+                        </div>
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        Fecha
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li><a class="dropdown-item" asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-nombreEmpresa="@nombreEmpresa">Todos</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="des">Mas recientes</a></li>
+
+                            <li><a class="dropdown-item" asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-ordenar="asc">Mas antiguos</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarPorIntervalo(this)">Desde - Hasta</a></li>
+                            <li><a class="dropdown-item" onclick="mostrarBuscarFechaEspecifica(this)">Buscar fecha especifica</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="container-fecha">
+                        <form asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">
+                            <div class="vistaBuscarFechaIntervalo" style="display: none">
+                                <div>
+                                    <label>Desde:</label>
+                                    <input type="date" name="desde" />
+                                </div>
+                                <div>
+                                    <label>Hasta:</label>
+                                    <input type="date" name="hasta" />
+                                </div>
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                            </div>
+                            <div class="vistaBuscarFechaEspecifica" style="display: none">
+                                <div>
+                                    <label>Buscar fecha especifica</label>
+                                </div>
+                                <div>
+                                    <input type="date" name="fechaEspecifica" />
+                                    <button type="submit" class="btn btn-primary">Buscar</button>
+                                    <a class="btn btn-secondary" onclick="ocultarFiltrosDeFechas(this)">Cancelar</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>  
+                </th>
+                <!--
+                    <th>Items</th>
+                -->
+                <th>Precio Total</th>
+                <th>Estado
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('todos')">Todos</button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPresupuesto.Borrador.ToString()')">Borradores</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPresupuesto.Confirmado.ToString()')">Confirmados</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPresupuesto.Cancelado.ToString()')">Cancelados</button>
+                        </li>
+                    </ul>
+                </th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (presupuestos != null && presupuestos.Any())
+            {
+                foreach(Presupuesto p in presupuestos){
+                    <tr class="fila-presupuesto">
+                        <td>@p.IdPresupuesto</td>
+                        <td class="col-numero">@p.Numero</td>
+                        <td>@p.Fecha.ToString("dd/MM/yyyy")</td>
+                        <!--
+                        <td>
+                            @if (p.Estado == EstadoPresupuesto.Cancelado)
+                            {
+                                <label>Pedidos a reasignar</label>
+                            }
+                            else
+                            {
+                                @if (pedidos != null && pedidos.Any())
+                                {
+                                    if (pedidos.Any(ped => ped.PresupuestoFK == p.IdPresupuesto))
+                                    {
+                                        <div class="container-items">
+                                            <div class="VistaBotonItems">
+                                                <a class="btn btn-primary" onclick="mostrarItems(this)">Ver</a>
+                                            </div>
+
+                                            <div class="VistaItems" style="Display: none">
+                                                <table class="table table-secondary text-center">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Cantidad</th>
+                                                            <th>Descripcion</th>
+                                                            <th>Precio Unitario</th>
+                                                            <th>SUB-TOTAL</th>
+                                                            <th>Encargado por:</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @if (pedidos != null)
+                                                        {
+                                                            foreach (Pedido pedido in pedidos)
+                                                            {
+                                                                if (pedido.PresupuestoFK == p.IdPresupuesto)
+                                                                {
+                                                                    precioTotal += (double)(pedido.PrecioUnitario * pedido.Cantidad);
+                                                                    <tr>
+                                                                        <td>@pedido.Cantidad</td>
+                                                                        <td>
+                                                                            @if (pedido.PiezaExistenteFK != null)
+                                                                            {
+                                                                                foreach (Pieza pieza in piezas)
+                                                                                {
+                                                                                    if (pieza.IdPieza == pedido.PiezaExistenteFK)
+                                                                                    {
+                                                                                        @pieza.Descripcion
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                @pedido.Descripcion
+                                                                            }
+                                                                        </td>
+                                                                        <td>@pedido.PrecioUnitario</td>
+                                                                        <td>@(pedido.PrecioUnitario * pedido.Cantidad)</td>
+                                                                        <td>
+                                                                            @{
+                                                                                string empleado = "";
+                                                                                foreach (Empleado e in empleados)
+                                                                                {
+                                                                                    if (pedido.EncargadoPorFK == e.IdEmpleado)
+                                                                                    {
+                                                                                        empleado = (e.NombreEmpleado + ". " + e.ApellidoEmpleado);
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            @empleado
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                        <tr>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td><h6>Precio Total:</h6></td>
+                                                            <td><h5>@precioTotal.ToString("C2")</h5></td>
+                                                            <td></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <a class="btn btn-secondary" onclick="ocultarItems(this)">Ocultar Items</a>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p>Este presupuesto no tiene pedidos cargados</p>
+                                    }
+                                }
+                            }
+                        </td>
+                         -->
+                        <td>
+                            @{
+                                double? total = 0;
+                                @if (p.Estado == EstadoPresupuesto.Cancelado)
+                                {
+                                    foreach (int i in p.CopiaPedidos)
+                                    {
+                                        foreach (Pedido pe in pedidos)
+                                        {
+                                            if (i == pe.IdPedido)
+                                            {
+                                                total += (double)(pe.PrecioUnitario * pe.Cantidad);
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (pedidos != null)
+                                    {
+                                        foreach (Pedido pedido in pedidos)
+                                        {
+                                            if (pedido.PresupuestoFK == p.IdPresupuesto)
+                                            {
+                                                total += (double)(pedido.PrecioUnitario * pedido.Cantidad);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            @total?.ToString("C2")
+                        </td>
+                        @{
+                            switch (p.Estado)
+                            {
+                                case EstadoPresupuesto.Borrador :
+                                    <td class="col-estado" data-estado="@EstadoPresupuesto.Borrador.ToString().ToLower()" style="background-color: yellow">Borrador</td>
+                                    break;
+                                case EstadoPresupuesto.Confirmado :
+                                    <td class="col-estado" data-estado="@EstadoPresupuesto.Confirmado.ToString().ToLower()" style="background-color: green">Confirmado</td>
+                                    break;
+                                case EstadoPresupuesto.Cancelado:
+                                    <td class="col-estado" data-estado="@EstadoPresupuesto.Cancelado.ToString().ToLower()" style="background-color: red">Cancelado</td>
+                                    break;
+                            }
+                        }
+                        <td>
+                            <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@p.IdPresupuesto">Ver</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">- No hay presupuestos guardados -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantPresupuestos" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantPresupuestos" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Presupuestos</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevPresupuestos" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numPresupuestos" class="mx-2"></span>
+            <button id="nextPresupuestos" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+
+@section Scripts{
+    <script>
+        function ocultarItems(elemento) {
+        const contenedor = elemento.closest('.container-items');
+
+        contenedor.querySelector('.VistaBotonItems').style.display = 'block';
+        contenedor.querySelector('.VistaItems').style.display = 'none';
+        }
+
+        function mostrarItems(elemento) {
+        const contenedor = elemento.closest('.container-items');
+
+        contenedor.querySelector('.VistaBotonItems').style.display = 'none';
+        contenedor.querySelector('.VistaItems').style.display = 'block';
+        }
+
+        //FILTROS DE FECHAS
+        function mostrarBuscarPorIntervalo(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+        function mostrarBuscarFechaEspecifica(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'block';
+        }
+        function ocultarFiltrosDeFechas(elemento) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const contenedor = elemento.closest('th');
+
+            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
+        }
+
+        // FILTRAR POR NUMERO
+        function filtrarTabla() {
+            let input = document.getElementById("filtroNumero");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-presupuesto");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-numero");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPresupuestos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPresupuestos', 'prevPresupuestos', 'nextPresupuestos', 'numPresupuestos', 'cantPresupuestos', 'fila-presupuesto');
+
+        // FILTRO POR ESTADO
+        function filtrarTablaEstados(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".fila-presupuesto");
+
+            filas.forEach(fila => {
+                let celdaEstado = fila.querySelector(".col-estado");
+
+                if (celdaEstado) {
+                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
+
+                    if (filter === 'todos' || estadoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPresupuestos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // MOSTRAR BUSCAR POR NUMERO
+        function mostrarBuscarNumero(elemento) {
+            const contenedor = elemento.closest('.container-tituloNumero');
+
+            contenedor.querySelector('.vistaBotonBuscarNumero').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarNumero').style.display = 'block';
+        }
+        function ocultarBuscarNumero(elemento) {
+            const contenedor = elemento.closest('.container-tituloNumero');
+
+            contenedor.querySelector('.vistaBotonBuscarNumero').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarNumero').style.display = 'none';
+        }
+
+
+    </script>
+}
+
+
+
+

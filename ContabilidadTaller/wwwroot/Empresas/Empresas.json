@@ -1,0 +1,13 @@
+[
+  {
+    "IdEmpresa": 0,
+    "NombreEmpresa": "Pep",
+    "Cuit": {
+      "InicioCuit": 12,
+      "MedioCuit": 42752752,
+      "FinCuit": 1
+    },
+    "Direccion": null,
+    "Notas": []
+  }
+]

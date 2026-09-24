@@ -1,0 +1,321 @@
+﻿@{
+    ViewData["Title"] = "Piezas";
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    List<Pieza> Piezas = (List<Pieza>)ViewBag.Piezas;
+    int PiezasGuardadas = (int)ViewBag.PiezasGuardadas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<div>
+    <h1>Piezas de @nombreEmpresa (@idEmpresa)</h1>
+</div>
+
+<div>
+    <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexNuevaPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">+ Nueva Pieza</a>
+    <a class="btn btn-primary" asp-controller="Conjuntos" asp-action="IndexConjuntos" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Ver Conjuntos</a>
+</div>
+
+<div class="text-center">
+    @if ((Piezas.Count() < PiezasGuardadas) && (Piezas.Any()))
+    {
+        <a asp-action="IndexPiezas" class="btn btn-secondary btn-sm">Ver todas</a>
+    }
+</div>
+
+<div>
+    <table class="table table-striped text-center" id="tablaPiezas">
+        <thead>
+            <tr>
+                <th style="width: 5%">Id</th>
+                <th style="width: 40%">
+                    <div class="container-tituloDescripcion">
+                        <div class="vistaBotonBuscarDescripcion">
+                            Descripcion
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarDescripcion mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroDescripcion" class="form-control" placeholder="Buscar por descripcion..." onkeyup="filtrarTablaDescripcion()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarDescripcion(this)">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th style="width: 20%">
+                    <div class="container-tituloCodigo">
+                        <div class="vistaBotonBuscarCodigo">
+                            Codigo
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarCodigo(this)">Buscar por Codigo</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarCodigo mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroCodigo" class="form-control" placeholder="Buscar por codigo..." onkeyup="filtrarTablaCodigo()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarCodigo(this)">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th style="width: 30%">
+                    <div class="container-tituloConjunto">
+                        <div class="vistaBotonBuscarConjunto">
+                            Conjunto
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarConjunto(this)">Buscar por Conjunto</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="vistaBuscarConjunto mb-3" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroConjunto" class="form-control" placeholder="Filtrar por conjunto..." onkeyup="filtrarTablaConjunto()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarConjunto(this)">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Piezas != null && Piezas.Any())
+            {
+                foreach (Pieza p in Piezas)
+                {
+                    <tr class="fila-pieza">
+                        <td>@p.IdPieza</td>
+                        <td class="col-descripcion">@p.Descripcion</td>
+                        @if (p.Codigo != null)
+                        {
+                            <td class="col-codigo">@p.Codigo</td>
+                        }
+                        else
+                        {
+                            <td class="col-codigo">-</td>
+                        }
+                        @if (p.ConjuntoFK != null)
+                        {
+                            foreach (Conjunto c in conjuntos)
+                            {
+                                if (p.ConjuntoFK == c.IdConjunto)
+                                {
+                                    <td class="col-conjunto">
+                                        <a class="btn btn-primary" asp-controller="Conjuntos" asp-action="IndexVerConjunto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idConjunto="@c.IdConjunto">@c.Descripcion</a>
+                                    </td>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <td class="col-conjunto">-</td>
+                        }
+                        <td>
+                            <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idPieza="@p.IdPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Ver</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" style="text-align: center">- No hay Piezas guardadas -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantPiezas" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantPiezas" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Piezas</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevPiezas" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numPiezas" class="mx-2"></span>
+            <button id="nextPiezas" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+</div>
+
+<!--
+    <div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // FILTRAR POR DESCRIPCION
+        function filtrarTablaDescripcion() {
+            let input = document.getElementById("filtroDescripcion");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-pieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcion");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRAR POR CODIGO
+        function filtrarTablaCodigo() {
+            let input = document.getElementById("filtroCodigo");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-pieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-codigo");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // FILTRAR POR CONJUNTO
+        function filtrarTablaConjunto() {
+            let input = document.getElementById("filtroConjunto");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".fila-pieza");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-conjunto");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPiezas');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPiezas', 'prevPiezas', 'nextPiezas', 'numPiezas', 'cantPiezas', 'fila-pieza');
+
+        // MOSTRAR BUSCAR POR DESCRIPCION
+        function mostrarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'block';
+        }
+        function ocultarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'none';
+        }
+
+        // MOSTRAR BUSCAR POR CODIGO
+        function mostrarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'block';
+        }
+        function ocultarBuscarCodigo(elemento) {
+            const contenedor = elemento.closest('.container-tituloCodigo');
+
+            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'none';
+        }
+
+
+
+
+        // MOSTRAR BUSCAR POR CODIGO
+        function mostrarBuscarConjunto(elemento) {
+            const contenedor = elemento.closest('.container-tituloConjunto');
+
+            contenedor.querySelector('.vistaBotonBuscarConjunto').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarConjunto').style.display = 'block';
+        }
+        function ocultarBuscarConjunto(elemento) {
+            const contenedor = elemento.closest('.container-tituloConjunto');
+
+            contenedor.querySelector('.vistaBotonBuscarConjunto').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarConjunto').style.display = 'none';
+        }
+
+
+    </script>
+}
+
+
+

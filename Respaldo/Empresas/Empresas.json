@@ -1,0 +1,13 @@
+[
+  {
+    "IdEmpresa": 0,
+    "NombreEmpresa": "Pepsico",
+    "Cuit": {
+      "InicioCuit": 72,
+      "MedioCuit": 53742757,
+      "FinCuit": 8
+    },
+    "Direccion": "Parque Instrustrial General Savio",
+    "Notas": []
+  }
+]

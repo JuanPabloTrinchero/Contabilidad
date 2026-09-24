@@ -1,0 +1,91 @@
+﻿@{
+    ViewData["Title"] = "Pagina Principal";
+
+    string texto = (string)ViewBag.Texto;
+}
+
+<div class="text-center">
+    <h1>Contabilidad</h1>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary d-flex align-items-center justify-content-center fs-2" asp-controller="Home" asp-action="IrAEmpresas" style="width: 50%; height: 100px">Empresas</a>
+
+        <a class="btn btn-primary d-flex align-items-center justify-content-center fs-2" asp-controller="Socios" asp-action="IndexSocios" style="width: 50%; height: 100px">Socios</a>
+    </div>
+</div>
+
+
+
+
+
+
+<div>
+    <!--
+    <h1>Pruebas</h1>
+
+    <form asp-controller="Home" asp-action="ConvertirArchivoAJson" enctype="multipart/form-data" method="post">
+        <input type="file" name="archivo" />
+        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar?')">Guardar</button>
+    </form>
+     
+    <div>
+        <form asp-controller="Home" asp-action="RecuperarArchivoJson" method="get">
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Recuperar Archivo?')">Recuperar Archivo</button>
+        </form>
+    </div>
+
+    @if (texto != null)
+    {
+        <label>@texto</label>
+        <form asp-controller="Home" asp-action="RecuperarArchivoJson" asp-route-texto="@texto" method="get">
+            <button class="btn btn-success" type="submit" onclick="return confirm('Abrir en ubicacion??')">Abrir en ubicacion</button>
+        </form>
+
+    }
+    -->
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+
+<div>
+    <a class="btn btn-primary" asp-controller="Empresas" asp-action="CrearCarpetasEmpresa">Crear Carpeta Empresa</a>
+</div>
+
+
+<form asp-controller="Home" asp-action="CrearCarpeta" method="post" class="mt-3">
+    <div class="input-group mb-3" style="max-width: 400px;">
+        <input type="text" name="nombreCarpeta" class="form-control" placeholder="Nombre de la carpeta" required />
+        <button type="submit" class="btn btn-primary">Crear Carpeta</button>
+    </div>
+</form>
+
+<form method="post" enctype="multipart/form-data" asp-controller="Home" asp-action="SubirArchivo">
+    <input type="file" name="archivo" />
+    <button type="submit">Cargar</button>
+</form>
+
+-->
+

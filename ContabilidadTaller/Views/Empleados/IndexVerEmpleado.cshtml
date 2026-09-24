@@ -1,0 +1,677 @@
+﻿@model Empleado;
+
+@{
+    ViewData["Title"] = "Ver Empleado";
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    Empleado empleado = (Empleado)ViewBag.Empleado;
+    string nombreEmpleado = empleado.NombreEmpleado + ". " + empleado.ApellidoEmpleado;
+
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Conjunto> conjuntos = (List<Conjunto>)ViewBag.Conjuntos;
+
+    List<Socio> socios = (List<Socio>)ViewBag.Socios;
+
+    RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <script type="text/javascript">
+            window.onload = function () {
+                var mensaje = "@Html.Raw(TempData["Mensaje"])";
+                if (mensaje) {
+                    alert(mensaje);
+                }
+            };
+        </script>
+    }
+}
+
+<h1>Ver Empleado de @nombreEmpresa (@idEmpresa)</h1>
+
+<div class="container-nombresApellido">
+    <div class="vistaNombreApellido">
+        <h3>Nombre Empleado: @nombreEmpleado</h3>
+        <a class="btn btn-primary" onclick="mostrarModificarNombre(this)">Modificar Nombres</a>
+        <a class="btn btn-primary" onclick="mostrarModificarApellido(this)">Modificar Apellido</a>
+    </div>
+    <div class="vistaModificarNombres" style="display: none">
+        <form asp-controller="Empleados" asp-action="ModificarNombres" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+            <h6>Nuevo/s Nombre/s: </h6>
+            <input type="text" name="nuevosNombres" placeholder="@empleado.NombreEmpleado"/>
+            <label>. @empleado.ApellidoEmpleado</label>
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo/s nombre/s?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarNombreApellido(this)">Cancelar</a>
+        </form>
+    </div>
+    <div class="vistaModificarApellido" style="display: none">
+        <form asp-controller="Empleados" asp-action="ModificarApellido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+            <h6>Nuevo Apellido: </h6>
+            <label>@empleado.NombreEmpleado.</label>
+            <input type="text" name="nuevoApellido" placeholder="@empleado.ApellidoEmpleado" />
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo apellido?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarNombreApellido(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-telefonos">
+    <h3>Telefonos</h3>
+    @if (empleado.Telefonos != null && empleado.Telefonos.Any())
+    {
+        foreach (string telefono in empleado.Telefonos)
+        {
+            <div class="container-telefono">   
+                <div class="vistaTelefono">
+                    @telefono
+                    <a class="btn btn-primary" onclick="mostrarModificarTelefono(this)">Modificar Telefono</a>
+                </div>
+                <div class="vistaModificarTelefono" style="display: none">
+                    <form asp-controller="Empleados" asp-action="ModificarTelefono" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" asp-route-telefonoViejo="@telefono" method="post">
+                        <h6>Modificar Telefono:</h6>
+                        <input type="text" name="telefonoModificado" placeholder="@telefono" required />
+
+                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar telefono?')">Guardar</button>
+                        <a class="btn btn-secondary" onclick="ocultarModificarTelefono(this)">Cancelar</a>
+                    </form>
+                </div>
+                <form asp-controller="Empleados" asp-action="BorrarTelefono" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" asp-route-telefonoBorrar="@telefono" method="post">
+                    <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar telefono?')">Borrar Telefono</button>
+                </form>
+            </div>
+        }
+    }
+    <div class="vistaBotonAgregarTelefono">
+        <a class="btn btn-primary" onclick="mostrarAgregarTelefono(this)">+ Agregar Telefono</a>
+    </div>
+    <div class="vistaAgregarTelefono" style="display: none">
+        <form asp-controller="Empleados" asp-action="AgregarTelefono" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+            <h6>Nuevo Telefono:</h6>
+            <input type="text" name="nuevoTelefono" style="width: 200px" required/>
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nuevo telefono?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarAgregarTelefono(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-emails">
+    <h3>E-mails</h3>
+    @if (empleado.Emails != null && empleado.Emails.Any())
+    {
+        foreach (string email in empleado.Emails)
+        {
+            <div class="container-email">
+                <div class="vistaEmail">
+                    @email
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copiarEmail('@email')" title="Copiar E-mail">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                    <a class="btn btn-primary" onclick="mostrarModificarEmail(this)">Modificar Email</a>
+                </div>
+                <div class="vistaModificarEmail" style="display: none">
+                    <form asp-controller="Empleados" asp-action="ModificarEmail" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" asp-route-emailViejo="@email" method="post">
+                        <h6>Modificar Email:</h6>
+                        <input type="text" name="emailModificado" placeholder="@email" required/>
+
+                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar email?')">Guardar</button>
+                        <a class="btn btn-secondary" onclick="ocultarModificarEmail(this)">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+            <form asp-controller="Empleados" asp-action="BorrarEmail" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" asp-route-emailBorrar="@email" method="post">
+                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar email?')">Borrar Email</button>
+            </form>
+        }
+    }
+    <div class="vistaBotonAgregarEmail">
+        <a class="btn btn-primary" onclick="mostrarAgregarEmail(this)">+ Agregar Email</a>
+    </div>
+    <div class="vistaAgregarEmail" style="display: none">
+        <form asp-controller="Empleados" asp-action="AgregarEmail" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+            <h6>Nuevo Email:</h6>
+
+            <input type="email" name="nuevoEmail" placeholder="ejemplo@dominio.com" style="width: 400px" required/>
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nuevo email?')">Guardar</button>
+            <a class="btn btn-secondary" onclick="ocultarAgregarEmail(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-estado">
+    @if (empleado.Estado == EstadoEmpleado.Activo)
+    {
+        <h3 style="background-color: green; color: white">Estado: Activo</h3>
+    }
+    else
+    {
+        <h5 style="background-color: red; color: white">Estado: Inactivo</h5>
+    }
+    <form asp-controller="Empleados" asp-action="ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+            @if (empleado.Estado == EstadoEmpleado.Activo)
+            {
+                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar BAJA de empleado?')">Cambiar a Inactivo</button>
+            }
+            else
+            {
+            <button class="btn btn-success" type="submit" onclick="return confirm('Confirmar ALTA de empleado?')">Cambiar a Activo</button>
+            }
+    </form>
+</div>
+
+<div class="container-pedidos">
+    <h3>Pedidos de @empleado.NombreEmpleado. @empleado.ApellidoEmpleado</h3>
+    <table id="tablaPedidos" class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Fecha</th>
+                <th>  
+                    <div class="container-tituloDescripcion mb-3">
+                        <div class="vistaBotonBuscarDescripcion">
+                            Descripcion
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
+                                </li>
+                            </ul> 
+                        </div>
+                        <div class="vistaBuscarDescripcion" style="display: none">
+                            <div class="d-flex align-items-center">
+                                <input type="text" id="filtroDescripcion" class="form-control" placeholder="Buscar por Descripcion..." onkeyup="filtrarTablaDescripcion()">
+                                <a class="btn btn-danger" onclick="ocultarBuscarDescripcion(this)">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Sub-Total</th>
+                <th>
+                    Estado
+                    <button class="btn btn-light btn-sm" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('todos')">Todos</button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.Entregado.ToString()')">Entregados</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.EntregadoParcial.ToString()')">Entrega Parcial</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.Pendiente.ToString()')">Pendientes</button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" onclick="filtrarTablaEstados('@EstadoPedido.Cancelado.ToString()')">Cancelados</button>
+                        </li>
+                    </ul>
+                </th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (pedidos != null && pedidos.Any())
+            {
+                int cantPedidosEncargados = 0;
+                foreach (Pedido pe in pedidos)
+                {
+                    if (pe.EncargadoPorFK == empleado.IdEmpleado)
+                    {
+                        cantPedidosEncargados++;
+                        <tr class="claseFila">
+                            <td>@pe.IdPedido</td>
+                            <td>@pe.FechaEncargo.ToString("dd/MM/yyyy")</td>
+                            @{
+                                string? descripcion = "";
+                                if (pe.PiezaExistenteFK != null)
+                                {
+                                    foreach (Pieza pi in piezas)
+                                    {
+                                        if (pe.PiezaExistenteFK == pi.IdPieza)
+                                        {
+                                            descripcion = pi.Descripcion;
+                                        }
+                                    }
+                                }
+                                else if (pe.ConjuntoExistenteFK != null)
+                                {
+                                    foreach (Conjunto c in conjuntos)
+                                    {
+                                        if (pe.ConjuntoExistenteFK == c.IdConjunto)
+                                        {
+                                            descripcion = c.Descripcion;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    descripcion = pe.Descripcion;
+                                }
+                                <td class="col-descripcion">@descripcion</td>
+                            }
+                            <td>@pe.Cantidad</td>
+                            <td>@pe.PrecioUnitario?.ToString("C2");</td>
+                            @{
+                                double? subTotal = 0;
+                                subTotal = (pe.Cantidad * pe.PrecioUnitario);
+                                <td>@subTotal?.ToString("C2")</td>
+                            }
+                            @{
+                                switch (pe.Estado)
+                                {
+                                    case EstadoPedido.Pendiente:
+                                        <td class="col-estado" data-estado="@EstadoPedido.Pendiente.ToString().ToLower()" style="background-color: red; color: white">Pendiente</td>
+                                        break;
+                                    case EstadoPedido.EntregadoParcial:
+                                        int cantEntregadas = 0;
+                                        if (pe.Entregas != null && pe.Entregas.Any())
+                                        {
+                                            foreach (Entrega e in pe.Entregas)
+                                            {
+                                                cantEntregadas += (e.cantidadEntrega);
+                                            }
+                                        }
+                                        <td class="col-estado" data-estado="@EstadoPedido.EntregadoParcial.ToString().ToLower()" style="background-color: yellow">Entregado Parcial (@cantEntregadas/@pe.Cantidad)</td>
+                                        break;
+                                    case EstadoPedido.Entregado:
+                                        <td class="col-estado" data-estado="@EstadoPedido.Entregado.ToString().ToLower()" style="background-color: green; color: white">Entregado</td>
+                                        break;
+                                    case EstadoPedido.Cancelado:
+                                        <td class="col-estado" data-estado="@EstadoPedido.Cancelado.ToString().ToLower()" style="background-color: black; color: white">Cancelado</td>
+                                        break;
+                                }
+                            }
+                            <td>
+                                <a class="btn btn-primary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pe.IdPedido" asp-route-idEmpleado="@empleado.IdEmpleado">Ver</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                if (cantPedidosEncargados == 0)
+                {
+                    <tr>
+                        <td colspan="8" style="text-align: center">- No tiene pedidos encargados -</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" style="text-align: center">- Aun no hay pedidos guardados -</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="d-flex align-items-center">
+            <label for="cantPedidos" class="me-2 mb-0">Mostrar de a</label>
+            <select id="cantPedidos" class="form-select form-select-sm" style="width: auto;">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <label>Pedidos</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="paginacion mt-3 d-flex align-items-center">
+            <button id="prevPedidos" class="btn btn-sm btn-secondary">Anterior</button>
+            <span id="numPedidos" class="mx-2"></span>
+            <button id="nextPedidos" class="btn btn-sm btn-secondary">Siguiente</button>
+        </div>
+    </div>
+</div>
+
+<div class="container-notas">
+    <h3>Notas:</h3>
+    @if (empleado.Notas != null && empleado.Notas.Any())
+    {
+        foreach (string nota in empleado.Notas)
+        {
+            <div class="container-nota">
+                <div class="vistaNota">
+                    @nota
+                    <a class="btn btn-primary" onclick="mostrarModificarNota(this)">Modificar Nota</a>
+                    <form asp-controller="Empleados" asp-action="Empleado_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" asp-route-notaBorrar="@nota" method="post">
+                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
+                    </form>
+                </div>
+                <div class="vistaModificarNota" style="display: none">
+                    <form asp-controller="Empleados" asp-action="Empleado_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" asp-route-notaVieja="@nota" method="post">
+                        <h6>Modificar Nota:</h6>
+                        <textarea type="text" placeholder="@nota" name="notaModificada" style="width: 50%; height: 100px" required></textarea>
+
+                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nueva nota?')">Guardar Nota</button>
+                        <a class="btn btn-secondary" onclick="ocultarModificarNota(this)">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <h6>- Sin notas -</h6>
+    }
+    <div class="vistaBotonAgregarNota">
+        <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
+    </div>
+    <div class="vistaAgregarNota" style="display: none">
+        <form asp-controller="Empleados" asp-action="Empleado_AgregarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@empleado.IdEmpleado" method="post">
+            <h6>Nueva Nota:</h6>
+            <textarea type="text" name="nuevaNota" placeholder="Nota nueva..." style="width: 50%; height: 100px" required></textarea>
+
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva nota?')">Guardar Nota</button>
+            <a class="btn btn-secondary" onclick="ocultarAgregarNota(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<div class="container-borrarEmpleado">
+    <div class="vistaBotonBorrarEmpleado">
+        @if (sePuedeBorrar.SePuede == true)
+        {
+            <h5>@sePuedeBorrar.Mensajes[0]</h5>
+            <a class="btn btn-danger" onclick="mostrarBorrarEmpleado(this)">Borrar Empleado</a>
+        }
+        else
+        {
+            <button class="btn btn-danger" disabled>Borrar Empleado</button>
+            <h5>No se puede borrar este empleado ya que:</h5>
+            <ul>
+                @foreach (string mensaje in sePuedeBorrar.Mensajes)
+                {
+                    <li>@mensaje</li>
+                }
+            </ul>
+        }
+    </div>
+    <div class="vistaBorrarEmpleado" style="display: none">
+        <form asp-controller="Empleados" asp-action="Empleado_BorrarEmpleado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleadoBorrar="@empleado.IdEmpleado" method="post">
+            <label>Socio:</label>
+            <div class="dropdown">
+                <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
+
+                <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                    Seleccionar Socio
+                </button>
+                <ul class="dropdown-menu">
+                    @{
+                        <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                        if (socios != null && socios.Any())
+                        {
+                            foreach (Socio s in socios)
+                            {
+                                string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                <li>
+                                    <a class="dropdown-item opcion-socio"
+                                       href="#"
+                                       data-id="@s.IdSocio"
+                                       data-nombre="@nombreApellido">
+                                        @nombreApellido
+                                    </a>
+                                </li>
+                            }
+                        }
+                    }
+                </ul>
+            </div>
+
+            <label>Contraseña:</label>
+            <div>
+                <input type="password" name="contraseñaSocio" id="passSocio" />
+                <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+            </div>
+
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar empleado?')">Borrar Empleado</button>
+            <a class="btn btn-secondary" onclick="ocultarBorrarEmpleado(this)">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Empleados" asp-action="IndexEmpleados" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+</div>
+
+
+@section Scripts{
+    <script>
+        // MODIFICAR NOMBRES Y/O APELLIDO
+        function mostrarModificarNombre(elemento) {
+            const contenedor = elemento.closest('.container-nombresApellido');
+
+            contenedor.querySelector('.vistaNombreApellido').style.display = 'none';
+            contenedor.querySelector('.vistaModificarNombres').style.display = 'block';
+            contenedor.querySelector('.vistaModificarApellido').style.display = 'none';
+        }
+        function mostrarModificarApellido(elemento) {
+            const contenedor = elemento.closest('.container-nombresApellido');
+
+            contenedor.querySelector('.vistaNombreApellido').style.display = 'none';
+            contenedor.querySelector('.vistaModificarNombres').style.display = 'none';
+            contenedor.querySelector('.vistaModificarApellido').style.display = 'block';
+        }
+        function ocultarModificarNombreApellido(elemento) {
+            const contenedor = elemento.closest('.container-nombresApellido');
+
+            contenedor.querySelector('.vistaNombreApellido').style.display = 'block';
+            contenedor.querySelector('.vistaModificarNombres').style.display = 'none';
+            contenedor.querySelector('.vistaModificarApellido').style.display = 'none';
+        }
+
+        // AGREGAR TELEFONO
+        function mostrarAgregarTelefono(elemento) {
+            const contenedor = elemento.closest('.container-telefonos');
+
+            contenedor.querySelector('.vistaBotonAgregarTelefono').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarTelefono').style.display = 'block';
+        }
+        function ocultarAgregarTelefono(elemento) {
+            const contenedor = elemento.closest('.container-telefonos');
+
+            contenedor.querySelector('.vistaBotonAgregarTelefono').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarTelefono').style.display = 'none';
+        }
+
+        // MODIFICAR TELEFONO
+        function mostrarModificarTelefono(elemento) {
+            const contenedor = elemento.closest('.container-telefono');
+
+            contenedor.querySelector('.vistaTelefono').style.display = 'none';
+            contenedor.querySelector('.vistaModificarTelefono').style.display = 'block';
+        }
+        function ocultarModificarTelefono(elemento) {
+            const contenedor = elemento.closest('.container-telefono');
+
+            contenedor.querySelector('.vistaTelefono').style.display = 'block';
+            contenedor.querySelector('.vistaModificarTelefono').style.display = 'none';
+        }
+
+        // AGREGAR EMAIL
+        function mostrarAgregarEmail(elemento) {
+            const contenedor = elemento.closest('.container-emails');
+
+            contenedor.querySelector('.vistaBotonAgregarEmail').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarEmail').style.display = 'block';
+        }
+        function ocultarAgregarEmail(elemento) {
+            const contenedor = elemento.closest('.container-emails');
+
+            contenedor.querySelector('.vistaBotonAgregarEmail').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarEmail').style.display = 'none';
+        }
+
+        // MODIFICAR EMAIL
+        function mostrarModificarEmail(elemento) {
+            const contenedor = elemento.closest('.container-email');
+
+            contenedor.querySelector('.vistaEmail').style.display = 'none';
+            contenedor.querySelector('.vistaModificarEmail').style.display = 'block';
+        }
+        function ocultarModificarEmail(elemento) {
+            const contenedor = elemento.closest('.container-email');
+
+            contenedor.querySelector('.vistaEmail').style.display = 'block';
+            contenedor.querySelector('.vistaModificarEmail').style.display = 'none';
+        }
+
+
+        // FILTRO POR ESTADO
+        function filtrarTablaEstados(valorFiltro) {
+            let filter = valorFiltro.toLowerCase();
+            let filas = document.querySelectorAll(".claseFila");
+
+            filas.forEach(fila => {
+                let celdaEstado = fila.querySelector(".col-estado");
+
+                if (celdaEstado) {
+                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
+
+                    if (filter === 'todos' || estadoCelda === filter) {
+                        fila.classList.remove('filtrado-oculto');
+                        fila.style.display = "";
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        Paginacion('tablaPedidos', 'prevPedidos', 'nextPedidos', 'numPedidos', 'cantPedidos', 'claseFila');
+
+        // FILTRAR POR DESCRIPCION
+        function filtrarTablaDescripcion() {
+            let input = document.getElementById("filtroDescripcion");
+            let filter = input.value.toLowerCase();
+            let filas = document.querySelectorAll(".claseFila");
+
+            filas.forEach(fila => {
+                let celdaDescripcion = fila.querySelector(".col-descripcion");
+                if (celdaDescripcion) {
+                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
+
+                    if (texto.toLowerCase().indexOf(filter) > -1) {
+                        fila.classList.remove('filtrado-oculto');
+                    } else {
+                        fila.classList.add('filtrado-oculto');
+                        fila.style.display = "none";
+                    }
+                }
+            });
+
+            const selectCant = document.getElementById('cantPedidos');
+            if (selectCant) {
+                selectCant.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // MOSTRAR BUSCAR DESCRIPCION
+        function mostrarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'none';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'block';
+        }
+        function ocultarBuscarDescripcion(elemento) {
+            const contenedor = elemento.closest('.container-tituloDescripcion');
+
+            contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'block';
+            contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'none';
+        }
+
+        // COPIAR EMAIL
+        function copiarEmail(email) {
+            navigator.clipboard.writeText(email).then(() => { })
+                .catch(err => {
+                    console.error('Error al copiar: ', err);
+                });
+        }
+
+        // AGREGAR NOTA
+        function mostrarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
+        }
+        function ocultarAgregarNota(elemento) {
+            const contenedor = elemento.closest('.container-notas');
+
+            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
+            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
+        }
+
+        // MODIFICAR NOTA
+        function mostrarModificarNota(elemento) {
+            const contenedor = elemento.closest('.container-nota');
+
+            contenedor.querySelector('.vistaNota').style.display = 'none';
+            contenedor.querySelector('.vistaModificarNota').style.display = 'block';
+        }
+        function ocultarModificarNota(elemento) {
+            const contenedor = elemento.closest('.container-nota');
+
+            contenedor.querySelector('.vistaNota').style.display = 'block';
+            contenedor.querySelector('.vistaModificarNota').style.display = 'none';
+        }
+
+        // MOSTRAR BORRAR EMPLEADO
+        function mostrarBorrarEmpleado(elemento) {
+            const contenedor = elemento.closest('.container-borrarEmpleado');
+
+            contenedor.querySelector('.vistaBotonBorrarEmpleado').style.display = 'none';
+            contenedor.querySelector('.vistaBorrarEmpleado').style.display = 'block';
+        }
+        function ocultarBorrarEmpleado(elemento) {
+            const contenedor = elemento.closest('.container-borrarEmpleado');
+
+            contenedor.querySelector('.vistaBotonBorrarEmpleado').style.display = 'block';
+            contenedor.querySelector('.vistaBorrarEmpleado').style.display = 'none';
+        }
+
+        // SELECCIONAR SOCIO
+        document.querySelectorAll('.opcion-socio').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const id = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+
+                document.getElementById('btnSocio').innerText = nombre;
+
+                document.getElementById('idSocioSeleccionado').value = id;
+            });
+        });
+
+        // VER/OCULTAR CONTRASEñA
+        function togglePassword() {
+            var input = document.getElementById("passSocio");
+            // Si es password lo pasa a text, y viceversa
+            if (input.type === "password") {
+                input.type = "text";
+            } else {
+                input.type = "password";
+            }
+        }
+
+    </script>
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "IdEmpleado": 0,
+    "NombreEmpleado": "Mariano",
+    "ApellidoEmpleado": null,
+    "Telefonos": [
+      "2235669988"
+    ],
+    "Emails": [
+      "mariano@frontear.com"
+    ],
+    "Notas": [
+      "prueba nota"
+    ],
+    "Estado": 1
+  }
+]

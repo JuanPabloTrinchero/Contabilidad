@@ -1,0 +1,19 @@
+[
+  {
+    "IdFactura": 0,
+    "Fecha": "2026-09-20",
+    "Codigo": {
+      "Puesto": "1321",
+      "Numero": "51651616"
+    },
+    "Contiene": 3,
+    "Descripcion": null,
+    "MontoManual": null,
+    "Estado": 3,
+    "Notas": [],
+    "UbicacionArchivo": null,
+    "ItemsRespaldo": [],
+    "RecepionesRespaldo": [],
+    "NotaDeCredito": 0
+  }
+]

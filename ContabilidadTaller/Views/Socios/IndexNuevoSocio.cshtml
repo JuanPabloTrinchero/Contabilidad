@@ -1,0 +1,178 @@
+﻿@{
+    ViewData["Title"] = "Nuevo Socio";
+}
+
+<div>
+    <h1>Nuevo Socio</h1>
+</div>
+
+<div>
+    <form id="formSocio" asp-controller="Socios" asp-action="GuardarSocio" method="post">
+        <div>
+            <h6>Nombre\s</h6>
+            <input type="text" name="nombres" style="width: 35%" placeholder="(Requerido)" required/>
+        </div>
+        <div>
+            <h6>Apellido</h6>
+            <input type="text" style="width: 35%" name="apellido" placeholder="(Opcional)" />
+        </div>
+        <div>
+            <h6>C.U.I.T (Requerido)</h6>
+
+            <input type="number" name="inicioCuit" style="width: 50px" placeholder="00" oninput="if (this.value.length > 2) this.value = this.value.slice(0, 2);" required />
+            <label>-</label>
+            <input type="number" name="medioCuit" style="width: 110px" placeholder="00000000" oninput="if (this.value.length > 8) this.value = this.value.slice(0, 8);" required />
+            <label>-</label>
+            <input type="number" name="finCuit" style="width: 40px" placeholder="0" oninput="if (this.value.length > 1) this.value = this.value.slice(0, 1);" required />
+        </div>
+        <div>
+            <h6>Direccion</h6>
+            <input type="text" style="width: 35%" name="direccion" />
+        </div>
+        <div id="contenedor-emails">
+            <h6>Emails</h6>
+            <div id="lista-inputsEmails" class="mb-2">
+                <!-- <input type="text" class="form-control mb-2" name="emails" /> -->
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="agregarEmail()">
+                + Agregar Email
+            </button>
+        </div>
+        <div>
+            <h6>Telefono</h6>
+            <input type="text" name="telefono"/>
+        </div>
+        <div id="contenedor-notas">
+            <h6>Notas</h6>
+            <div id="lista-inputsNotas" class="mb-2">
+                <!-- <textarea type="text" class="form-control mb-2" name="notas" /></textarea> -->
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="agregarNota()">
+                + Agregar Nota
+            </button>
+        </div>
+        <div>
+            <h6>Contraseña (8 digitos minimo):</h6>
+            <input id="passwordNueva" type="password" name="contraseña" placeholder="Contraseña" style="width: 250px" minlength="8" required />
+            <button class="btn btn-outline-primary" type="button" onclick="togglePassword()">
+                <i id="iconoOjo" class="bi bi-eye"></i>
+            </button>
+        </div>
+        
+        <button id="btnGuardar" class="btn btn-success" type="submit" onclick="return confirm('Confirmar nuevo socio?')">Guardar Nuevo Socio</button>
+    </form>
+</div>
+
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" asp-controller="Socios" asp-action="IndexSocios">Atras</a>
+</div>
+
+<!--
+<div class="d-flex justify-content-center">
+    <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
+</div>
+-->
+
+@section Scripts{
+    <script>
+        // agregarEmail EMAILS
+        function agregarEmail() {
+            const contenedor = document.getElementById('lista-inputsEmails');
+
+            const grupo = document.createElement('div');
+            grupo.className = 'input-group mb-2';
+
+            const nuevoInput = document.createElement('input');
+            nuevoInput.type = 'email';
+            nuevoInput.name = 'emails';
+            nuevoInput.style.width = '50%';
+            nuevoInput.placeholder = 'ejemplo@dominio.com';
+
+            const botonBorrar = document.createElement('button');
+            botonBorrar.type = 'button';
+            botonBorrar.className = 'btn btn-outline-danger';
+            botonBorrar.innerHTML = '×';
+
+            botonBorrar.onclick = function() {
+                grupo.remove();
+            };
+
+            grupo.appendChild(nuevoInput);
+            grupo.appendChild(botonBorrar);
+            contenedor.appendChild(grupo);
+        }
+
+        // AGREGAR NOTAS
+        function agregarNota() {
+            const contenedor = document.getElementById('lista-inputsNotas');
+
+            const grupo = document.createElement('div');
+            grupo.className = 'input-group mb-2';
+
+            const nuevoInput = document.createElement('textarea');
+            nuevoInput.type = 'text';
+            nuevoInput.name = 'notas';
+            nuevoInput.style.width = '50%';
+            nuevoInput.style.height = '100px';
+            nuevoInput.placeholder = 'Nueva nota...'
+
+            const botonBorrar = document.createElement('button');
+            botonBorrar.type = 'button';
+            botonBorrar.className = 'btn btn-outline-danger';
+            botonBorrar.innerHTML = '×';
+
+            botonBorrar.onclick = function() {
+                grupo.remove();
+            };
+
+            grupo.appendChild(nuevoInput);
+            grupo.appendChild(botonBorrar);
+            contenedor.appendChild(grupo);
+        }
+
+        // MOSTRAR CONTRASEñA
+        function togglePassword() {
+                var input = document.getElementById("passwordNueva");
+                const icono = document.getElementById('iconoOjo');
+
+            if (input.type === "password") {
+                input.type = "text";
+
+                icono.classList.remove('bi-eye');
+                icono.classList.add('bi-eye-slash');
+            } else {
+                input.type = "password";
+
+                icono.classList.remove('bi-eye-slash');
+                icono.classList.add('bi-eye');
+            }
+        }
+
+        // HABILITAR BOTON GUARDADO
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("formSocio");
+            const btnGuardar = document.getElementById("btnGuardar");
+            const requiredFields = form.querySelectorAll("[required]");
+
+            function validarFormulario() {
+                let formValido = true;
+
+                requiredFields.forEach(function(field) {
+                    if (field.value.trim() === "") {
+                        formValido = false;
+                    }
+                    if (field.id === "passwordNueva" && field.value.trim().length < 8) {
+                        formValido = false;
+                    }
+                });
+
+                btnGuardar.disabled = !formValido;
+            }
+            form.addEventListener("input", validarFormulario);
+            validarFormulario();
+        });
+
+    </script>
+}
