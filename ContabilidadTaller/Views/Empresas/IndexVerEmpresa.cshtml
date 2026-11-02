@@ -23,41 +23,51 @@
     string estiloDisplayBotonVerNotas = ViewBag.EstiloBoton == true ? "block" : "none";
 }
 
+
 <div class="container-nombreEmpresa d-flex align-items-center">
-    <div class="vistaBotonModificarNombre">
-        <h1>@empresa.NombreEmpresa (@empresa.IdEmpresa)</h1>
-        <a class="btn btn-primary" onclick="mostrarModificarNombreEmpresa(this)">Modificar Nombre Empresa</a>
+    <div class="vistaNombreEmpresa">
+        <h1>Nombre Empresa: @empresa.NombreEmpresa (@empresa.IdEmpresa)</h1>
     </div>
     <div class="vistaModificarNombre" style="display: none">
         <form asp-controller="Empresas" asp-action="ModificarNombre" asp-route-idEmpresa="@empresa.IdEmpresa" method="post">
-            <h3>Nuevo Nombre:</h3>
+            <h6>Nuevo Nombre:</h6>
             <input type="text" name="nuevoNombre" placeholder="@empresa.NombreEmpresa" required/>
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo nombre de empresa?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarNombreEmpresa(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarNombreEmpresa()">Cancelar</a>
         </form>
     </div>
-    <!--
-    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-three-dots-vertical"></i>
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
-        <li><a class="dropdown-item" onclick="">Modificar Direccion</a></li>
 
-        <li><a class="dropdown-item" onclick="">Eliminar Empresa</a></li>
-    </ul>
-    -->
+    <div class="opciones ms-auto">
+        <button class="btn btn-primary" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            Opciones
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                <button id="botonModifNombre" class="dropdown-item" onclick="mostrarModificarNombreEmpresa()">Modificar Nombre Empresa</button>
+            </li>
+            <li>
+                <button id="botonModifCuit" class="dropdown-item" onclick="mostrarModificarCuit()">Modificar C.U.I.T</button>
+            </li>
+            <li>
+                <button id="botonModifDireccion" class="dropdown-item" onclick="mostrarModificarDireccion()">Modificar Direccion</button>
+            </li>
+            <li>
+                <button id="botonBorrarEmpresa" class="dropdown-item" onclick="mostrarEliminarEmpresa()" style="background-color: red; color: white">Borrar Empresa</button>
+            </li>
+        </ul>
+    </div>
 </div>
-
 
 <div class="container-cuit">
     @{
         <div class="vistaCuit">
-            <h3>C.U.I.T: @empresa.Cuit.GetCuitConGuiones()</h3>
-            <button class="btn btn-sm btn-outline-secondary" onclick="copiarCuit('@empresa.Cuit.GetCuitSinGuiones()')" title="Copiar CUIT">
-                <i class="bi bi-clipboard"></i>
-            </button>
-            <a class="btn btn-primary" onclick="mostrarModificarCuit(this)">Modificar C.U.I.T</a>
+            <h3>C.U.I.T: @empresa.Cuit.GetCuitConGuiones()
+                <button class="btn btn-sm btn-outline-secondary" onclick="copiarCuit('@empresa.Cuit.GetCuitSinGuiones()')" title="Copiar CUIT">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </h3>
         </div>
         <div class="vistaModificarCuit" style="display: none">
             <form asp-controller="Empresas" asp-action="Empresa_ModificarCuit" asp-route-idEmpresa="@empresa.IdEmpresa" method="post">
@@ -70,7 +80,7 @@
                 <input type="number" name="finCuit" oninput="if (this.value.length > 1) this.value = this.value.slice(0, 1);" style="width: 40px" placeholder="@empresa.Cuit.FinCuit" required />
 
                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo C.U.I.T?')">Guardar</button>
-                <a class="btn btn-secondary" onclick="ocultarModificarCuit(this)">Cancelar</a>
+                <a class="btn btn-secondary" onclick="ocultarModificarCuit()">Cancelar</a>
             </form>
         </div>
     }
@@ -78,17 +88,24 @@
 
 
 <div class="container-direccion">
+@{
+    string direccion = "- Sin direccion -";
     <div class="vistaDireccion">
-        <h3>Direccion: @empresa.Direccion</h3>
-        <a class="btn btn-primary" onclick="mostrarModificarDireccion(this)">Modificar Direccion</a>
+        @if (empresa.Direccion != null)
+        {
+            direccion = empresa.Direccion;
+        }
+        <h3>Direccion: @direccion</h3>
     </div>
     <div class="vistaModificarDireccion" style="display: none">
         <form asp-controller="Empresas" asp-action="ModificarDireccion" asp-route-idEmpresa="@empresa.IdEmpresa" method="post">
-            <input type="text" name="nuevaDireccion" placeholder="@empresa.Direccion" style="width: 50%" required/>
+            <h6>Nueva Direccion:</h6>
+            <input type="text" name="nuevaDireccion" placeholder="@direccion" style="width: 50%" />
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva direccion?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarDireccion(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarDireccion()">Cancelar</a>
         </form>
     </div>
+}  
 </div>
 
 <div class="container-empleados">
@@ -116,7 +133,7 @@
                             <td>@e.IdEmpleado</td>
                             <td class="col-nombreApellido">@(e.NombreEmpleado + ". " + e.ApellidoEmpleado)</td>
                             <td>
-                                @if (e.Telefonos != null)
+                                @if (e.Telefonos != null && e.Telefonos.Any())
                                 {
                                     foreach (string telefono in e.Telefonos)
                                     {
@@ -125,11 +142,11 @@
                                 }
                                 else
                                 {
-                                    <p>No hay telefonos</p>
+                                    <p>- Sin telefonos -</p>
                                 }
                             </td>
                             <td>
-                                @if (e.Emails != null)
+                                @if (e.Emails != null && e.Emails.Any())
                                 {
                                     foreach (string email in e.Emails)
                                     {
@@ -143,7 +160,7 @@
                                 }
                                 else
                                 {
-                                    <p>No hay direcciones de E-mail</p>
+                                    <p>- Sin E-mails -</p>
                                 }
                             </td>
                             <td>
@@ -163,6 +180,56 @@
         <a class="btn btn-secondary" onclick="ocultarEmpleados(this)">Ocultar</a>
     </div>
 </div>
+
+<div class="container-documentos">
+    <h3>
+        Ver Documentos:
+        <!--
+        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li><a class="dropdown-item" asp-controller="Piezas" asp-action="IndexPiezas" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Piezas</a></li>
+
+            <li><a class="dropdown-item" asp-controller="Conjuntos" asp-action="IndexConjuntos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Conjuntos</a></li>
+
+            <li><a class="dropdown-item" asp-controller="Utilajes" asp-action="IndexUtilajes" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Utilajes</a></li>
+
+            <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" asp-route-idEmpleado="-1">Pedidos</a></li>
+
+            <li><hr class="dropdown-divider"></li>
+
+            <li><a class="dropdown-item" asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Presupuestos</a></li>
+            <li><a class="dropdown-item" asp-controller="Remitos" asp-action="IndexRemitos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Remitos</a></li>
+            <li><a class="dropdown-item" asp-controller="OrdenesDeCompra" asp-action="IndexOrdenesDeCompra" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Ordenes de Compra</a></li>
+            <li><a class="dropdown-item" asp-controller="Facturas" asp-action="IndexFacturas" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Facturas</a></li>
+            <li><a class="dropdown-item" asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Notas de Credito</a></li>
+        </ul>
+        -->
+    </h3>
+
+
+    
+    <a class="btn" asp-controller="Piezas" asp-action="IndexPiezas" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #E9ECEF">Piezas</a>
+
+    <a class="btn" asp-controller="Conjuntos" asp-action="IndexConjuntos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #DEE2E6">Conjuntos</a>
+
+    <a class="btn" asp-controller="Utilajes" asp-action="IndexUtilajes" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #CED4DA">Utilajes</a>
+
+    <a class="btn" asp-controller="Pedidos" asp-action="IndexPedidos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #ADB5BD">Pedidos</a>
+
+    <a class="btn" asp-controller="Presupuestos" asp-action="IndexPresupuestos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #6C757D; color: white">Presupuestos</a>
+
+    <a class="btn" asp-controller="Remitos" asp-action="IndexRemitos" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #495057; color: white">Remitos</a>
+
+    <a class="btn" asp-controller="OrdenesDeCompra" asp-action="IndexOrdenesDeCompra" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #343A40; color: white">Ordenes de Compra</a>
+
+    <a class="btn" asp-controller="Facturas" asp-action="IndexFacturas" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #212529; color: white">Facturas</a>
+
+    <a class="btn" asp-controller="NotasDeCredito" asp-action="IndexNotasDeCredito" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" style="background-color: #121416; color: white">Notas de Credito</a>
+    
+</div>
+
 <div class="container-notas">
     <h3>Notas:</h3>
     <div class="vistaBotonVerNotas" style="display: @estiloDisplayBotonVerNotas">
@@ -172,6 +239,7 @@
         @if (empresa.Notas != null && empresa.Notas.Any())
         {
             int contadorNotas = 1;
+
             @foreach (string n in empresa.Notas)
             {
                 <div class="container-nota">
@@ -184,7 +252,7 @@
                             <li><a class="dropdown-item" onclick="mostrarModificarNota(this)">Modificar Nota</a></li>
                             <li>
                                 <form asp-controller="Empresas" asp-action="EliminarNota" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" asp-route-notaEliminar="@n" methos="post">
-                                    <button class="dropdown-item" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar esta nota?')">Eliminar Nota</button>
+                                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
                                 </form>
                             </li>
                         </ul>
@@ -192,7 +260,7 @@
                     <div class="vistaModificarNota" style="display: none">
                         <form asp-controller="Empresas" asp-action="ModificarNota" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" asp-route-notaVieja="@n" method="post">
                             <textarea type="text" name="notaModificada" placeholder="@n" style="width: 50%; height: 100px" required></textarea>
-                            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar cambios en nota?')">Confirmar Cambios</button>
+                            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar cambios en nota?')">Guardar Cambios</button>
                             <a class="btn btn-secondary" onclick="ocultarModificarNota(this)">Cancelar</a>
                         </form>
                     </div>
@@ -202,7 +270,7 @@
         }
         else
         {
-            <h6>- No hay notas -</h6>
+            <h6>- Sin notas -</h6>
         }
         <a class="btn btn-secondary" onclick="ocultarNotas(this)">Ocultar Notas</a>
     </div>
@@ -213,7 +281,6 @@
         </div>
         <div class="vistaAgregarNota" style="display: none">
             <form asp-controller="Empresas" asp-action="AgregarNota" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">
-                <h6>Nueva Nota</h6>
                 <textarea typeof="text" name="nuevaNota" placeholder="Nueva nota..." style="width: 50%; height: 100px" required></textarea>
                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nueva nota?')">Guardar Nota</button>
                 <a class="btn btn-secondary" onclick="ocultarAgregarNota(this)">Cancelar</a>
@@ -221,18 +288,56 @@
         </div>
     </div>
 </div>
-<div class="container-borrarEmpresa">
+<div class="container-borrarEmpresa" style="display: none">
     @if (sePuedeBorrar.SePuede ==  true)
     {
         string mensaje = sePuedeBorrar.Mensajes[0];
-        <h5>@mensaje</h5>
-        <div class="vistaBotonBorrarEmpresa">
-            <a class="btn btn-danger" onclick="mostrarEliminarEmpresa(this)">Eliminar Empresa</a>
+
+        <div class="vistaBorrarEmpresa">
+            <h5>@mensaje</h5>
+            <form asp-controller="Empresas" asp-action="Empresa_Eliminar" asp-route-idEmpresa="@empresa.IdEmpresa" method="post">
+
+                <label>Socio:</label>
+                <div class="dropdown">
+                    <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="" required>
+
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                        Seleccionar Socio
+                    </button>
+                    <ul class="dropdown-menu">
+                        @{
+                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                            if (socios != null && socios.Any())
+                            {
+                                foreach (Socio s in socios)
+                                {
+                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                    <li>
+                                        <a class="dropdown-item opcion-socio"
+                                           href="#"
+                                           data-id="@s.IdSocio"
+                                           data-nombre="@nombreApellido">
+                                            @nombreApellido
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        }
+                    </ul>
+                </div>
+
+                <label>Contraseña:</label>
+                <div>
+                    <input type="password" name="contraseñaSocio" id="passSocio" required/>
+                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+                </div>
+
+                <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido?')">Eliminar Empresa</button>
+            </form>
         </div>
     }
     else
     {
-        <button class="btn btn-danger" disabled>Eliminar Empresa</button>
         <h5>No se puede borrar esta empresa ya que:</h5>
         <ul>
             @foreach (string mensaje in sePuedeBorrar.Mensajes)
@@ -241,48 +346,7 @@
             }
         </ul>
     }
-    <div class="vistaBorrarEmpresa" style="display: none">
-        <form asp-controller="Empresas" asp-action="Empresa_Eliminar" asp-route-idEmpresa="@empresa.IdEmpresa" method="post">
-
-            <label>Socio:</label>
-            <div class="dropdown">
-                <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
-
-                <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
-                    Seleccionar Socio
-                </button>
-                <ul class="dropdown-menu">
-                    @{
-                        <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
-                        if (socios != null && socios.Any())
-                        {
-                            foreach (Socio s in socios)
-                            {
-                                string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                <li>
-                                    <a class="dropdown-item opcion-socio"
-                                       href="#"
-                                       data-id="@s.IdSocio"
-                                       data-nombre="@nombreApellido">
-                                        @nombreApellido
-                                    </a>
-                                </li>
-                            }
-                        }
-                    }
-                </ul>
-            </div>
-
-            <label>Contraseña:</label>
-            <div>
-                <input type="password" name="contraseñaSocio" id="passSocio" />
-                <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
-            </div>
-
-            <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido?')">Eliminar Empresa</button>
-            <a class="btn btn-secondary" onclick="ocultarEliminarEmpresa(this)">Cancelar</a>
-        </form>
-    </div>
+    <a class="btn btn-secondary" onclick="ocultarEliminarEmpresa()">Cancelar</a>
 </div>
 
 <div class="d-flex justify-content-center">
@@ -295,166 +359,6 @@
 </div>
 -->
 
-@section Scripts{
-    <script>
-        // MOSTRAR EMPLEADOS
-        function mostrarEmpleados(elemento) {
-            const contenedor = elemento.closest('.container-empleados');
-
-            contenedor.querySelector('.vistaBotonMostrarEmpleados').style.display = 'none';
-            contenedor.querySelector('.vistaMostrarEnpleados').style.display = 'block';
-        }
-
-        function ocultarEmpleados(elemento) {
-            const contenedor = elemento.closest('.container-empleados');
-
-            contenedor.querySelector('.vistaBotonMostrarEmpleados').style.display = 'block';
-            contenedor.querySelector('.vistaMostrarEnpleados').style.display = 'none';
-        }
-
-        function copiarEmail(email) {
-            navigator.clipboard.writeText(email).then(() => { })
-                .catch(err => {
-                    console.error('Error al copiar: ', err);
-                });
-        }
-
-        // MODIFICAR NOMBRE EMPRESA
-        function mostrarModificarNombreEmpresa(elemento) {
-            const contenedor = elemento.closest('.container-nombreEmpresa');
-
-            contenedor.querySelector('.vistaBotonModificarNombre').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNombre').style.display = 'block';
-        }
-        function ocultarModificarNombreEmpresa(elemento) {
-            const contenedor = elemento.closest('.container-nombreEmpresa');
-
-            contenedor.querySelector('.vistaBotonModificarNombre').style.display = 'block';
-            contenedor.querySelector('.vistaModificarNombre').style.display = 'none';
-        }
-
-        // VER NOTAS
-        function mostrarNotas(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'none';
-            contenedor.querySelector('.vistaVerNotas').style.display = 'block';
-        }
-
-        function ocultarNotas(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'block';
-            contenedor.querySelector('.vistaVerNotas').style.display = 'none';
-        }
-
-        // MODIFICAR NOTAS
-        function mostrarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-nota');
-
-            contenedor.querySelector('.vistaNota').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'block';
-        }
-
-        function ocultarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-nota');
-
-            contenedor.querySelector('.vistaNota').style.display = 'block';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'none';
-        }
-
-
-        // MODIFICAR CUIT
-        function mostrarModificarCuit(elemento) {
-            const contenedor = elemento.closest('.container-cuit');
-
-            contenedor.querySelector('.vistaCuit').style.display = 'none';
-            contenedor.querySelector('.vistaModificarCuit').style.display = 'block';
-        }
-        function ocultarModificarCuit(elemento) {
-            const contenedor = elemento.closest('.container-cuit');
-
-            contenedor.querySelector('.vistaCuit').style.display = 'block';
-            contenedor.querySelector('.vistaModificarCuit').style.display = 'none';
-        }
-
-
-        // MODIFICAR DIRECCION
-        function mostrarModificarDireccion(elemento) {
-            const contenedor = elemento.closest('.container-direccion');
-
-            contenedor.querySelector('.vistaDireccion').style.display = 'none';
-            contenedor.querySelector('.vistaModificarDireccion').style.display = 'block';
-        }
-
-        function ocultarModificarDireccion(elemento) {
-            const contenedor = elemento.closest('.container-direccion');
-
-            contenedor.querySelector('.vistaDireccion').style.display = 'block';
-            contenedor.querySelector('.vistaModificarDireccion').style.display = 'none';
-        }
-
-        // AGREGAR NOTA
-        function mostrarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-nuevaNota');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-        }
-
-        function ocultarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-nuevaNota');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-        }
-
-        // ELIMINAR EMPRESA
-        function mostrarEliminarEmpresa(elemento) {
-            const contenedor = elemento.closest('.container-borrarEmpresa');
-
-            contenedor.querySelector('.vistaBotonBorrarEmpresa').style.display = 'none';
-            contenedor.querySelector('.vistaBorrarEmpresa').style.display = 'block';
-        }
-
-        function ocultarEliminarEmpresa(elemento) {
-            const contenedor = elemento.closest('.container-borrarEmpresa');
-
-            contenedor.querySelector('.vistaBotonBorrarEmpresa').style.display = 'block';
-            contenedor.querySelector('.vistaBorrarEmpresa').style.display = 'none';
-        }
-
-        // SELECCIONAR SOCIO
-        document.querySelectorAll('.opcion-socio').forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                const id = this.getAttribute('data-id');
-                const nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('btnSocio').innerText = nombre;
-
-                document.getElementById('idSocioSeleccionado').value = id;
-            });
-        });
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            // Si es password lo pasa a text, y viceversa
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-        function copiarCuit(cuit) {
-            navigator.clipboard.writeText(cuit).then(() => { })
-                .catch(err => {
-                    console.error('Error al copiar: ', err);
-                });
-        }
-
-    </script>
+@section Scripts {
+    <script src="~/js/Empresas/IndexVerEmpresa.js" asp-append-version="true"></script>
 }

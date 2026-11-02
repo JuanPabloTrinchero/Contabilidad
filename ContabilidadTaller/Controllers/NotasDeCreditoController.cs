@@ -79,10 +79,13 @@ namespace ContabilidadTaller.Controllers
             ViewBag.NombreEmpresa = nombreEmpresa;
 
             ViewBag.NotaDeCredito = _serJson.SeleccionarNotaDeCredito(idEmpresa, idNotaDeCredito);
+
+            ViewBag.FacturasEnNDC = _serJson.FacturasEnNotaDeCredito(idEmpresa, idNotaDeCredito);
             ViewBag.Facturas = _serJson.ObtenerFacturasJson(idEmpresa);
 
             ViewBag.Socios = _serJson.ObtenerSociosJson();
 
+            ViewBag.SePuedeReactivar = _serJson.SePuedeReactivarNotaDeCredito(idEmpresa, idNotaDeCredito);
             ViewBag.SePuedeBorrar = _serJson.SePuedeBorrarNotaDeCredito(idEmpresa, idNotaDeCredito);
 
             return View();

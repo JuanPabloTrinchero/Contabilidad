@@ -24,10 +24,12 @@
 
 <form asp-controller="Entregas" asp-action="GuardarNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" method="post">
     <div>
+        <h6>Fechas:</h6>
         <input type="date" name="fechaEntrega" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
     </div>
     <div>
-        <input style="width: 300px" type="number" name="cantidadEntrega" max="@maximoEntrega" placeholder="Faltan entregar @maximoEntrega unidades" />
+        <h6>Cantidad Entregadas:</h6>
+        <input style="width: 300px" type="number" name="cantidadEntrega" max="@maximoEntrega" placeholder="Faltan entregar @maximoEntrega unidades" required/>
     </div>
 
     <button class="btn btn-success" type="submit" onclick="return confirm('Confirmar guardar nueva entrega')">Guardar Entrega</button>

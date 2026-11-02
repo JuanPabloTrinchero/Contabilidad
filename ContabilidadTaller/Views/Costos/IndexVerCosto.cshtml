@@ -52,38 +52,6 @@
     <a class="btn btn-secondary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado">Atras</a>
 </div>
 
-
-
-@section Scripts{
-    <script>
-        // MODIFICAR DESCRIPCION
-        function mostrarModificarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-descripcion');
-
-            contenedor.querySelector('.vistaDescripcion').style.display = 'none';
-            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'block';
-        }
-        function ocultarModificarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-descripcion');
-
-            contenedor.querySelector('.vistaDescripcion').style.display = 'block';
-            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'none';
-        }
-
-        // MODIFICAR PRECIO
-        function mostrarModificarPrecio(elemento) {
-            const contenedor = elemento.closest('.container-precio');
-
-            contenedor.querySelector('.vistaPrecio').style.display = 'none';
-            contenedor.querySelector('.vistaModificarPrecio').style.display = 'block';
-        }
-        function ocultarModificarPrecio(elemento) {
-            const contenedor = elemento.closest('.container-precio');
-
-            contenedor.querySelector('.vistaPrecio').style.display = 'block';
-            contenedor.querySelector('.vistaModificarPrecio').style.display = 'none';
-        }
-
-
-    </script>
+@section Scripts {
+    <script src="~/js/Costos/IndexVerCosto.js" asp-append-version="true"></script>
 }

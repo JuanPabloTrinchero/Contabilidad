@@ -26,6 +26,7 @@
 
     List<Socio> socios = (List<Socio>)ViewBag.Socios;
 
+    bool sePuedeReactivar = (bool)ViewBag.SePuedeReactivar;
     RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
 
     @if (TempData["MensajeExito"] != null)
@@ -50,45 +51,126 @@
     }
 }
 
-<h1>Ver Factura de @nombreEmpresa (@idEmpresa)</h1>
+<div class="text-center"> 
+    <h1>Factura de @nombreEmpresa (@idEmpresa)</h1>
+</div>
 
-<h3>Id: @factura.IdFactura</h3>
+<div class="d-flex align-items-center">
+    <h3>Id: @factura.IdFactura</h3>
+
+    <div class="opciones ms-auto">
+        <button class="btn btn-primary" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            Opciones
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                @if (factura.Estado != EstadoFactura.Pagada)
+                {
+                    <button id="botonModifDescripcion" class="dropdown-item" onclick="mostrarModificarCodigo()">Modificar Codigo</button>
+                }
+                else
+                {
+                    <button class="dropdown-item" disabled>Modificar Codigo</button>
+                }
+            </li>
+            <li>
+                @if (factura.Estado != EstadoFactura.Pagada)
+                {
+                    <button id="botonModifDescripcion" class="dropdown-item" onclick="mostrarModificarFecha()">Modificar Fecha</button>
+                }
+                else
+                {
+                    <button class="dropdown-item" disabled>Modificar Fecha</button>
+                }   
+            </li>
+            @switch (factura.Estado)
+            {
+                case EstadoFactura.Impaga:
+                
+                    <li>
+                        <form asp-controller="Facturas" asp-action="Factura_FacturaPagada" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar pagar factura?')">Factura Pagada</button>
+                        </form> 
+                    </li>
+                    
+                    <li>
+                        <form asp-controller="Facturas" asp-action="Factura_AnularFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar anular factura?')">Anular Factura</button>
+                        </form>
+                    </li>
+                    break;
+                case EstadoFactura.Pagada:
+                    <li>
+                        @if (sePuedeReactivar == true)
+                        {
+                            <form asp-controller="Facturas" asp-action="Factura_FacturaImpaga" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar cambiar a impaga?')">Cambiar a Impaga</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="dropdown-item" disabled>Cambiar a Impaga</button>
+                        }
+                    </li> 
+                    break;
+                case EstadoFactura.Anulada:
+                    <li>
+                        @if (sePuedeReactivar == true)
+                        {
+                            <form asp-controller="Facturas" asp-action="Factura_ReactivarFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar reactivar factura?')">Reactivar Factura</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="dropdown-item" disabled>Reactivar Factura</button>
+                        }
+                    </li>
+                    break;
+            }
+            <li>
+                <button id="" class="dropdown-item" onclick="mostrarBorrarFactura()" style="background-color: red; color: white">Borrar Factura</button>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <div class="container-codigo">
     <div class="vistaCodigo">
-        <h3>Codigo: @factura.Codigo.Puesto-@factura.Codigo.Numero</h3>
-        @if (factura.Estado == EstadoFactura.Impaga)
-        {
-            <a class="btn btn-primary" onclick="mostrarModificarCodigo(this)">Modificar Codigo</a>  
-        }        
+        <h3>Codigo: @factura.Codigo.Puesto-@factura.Codigo.Numero</h3>       
     </div>
     <div class="vistaModificarCodigo" style="display: none">
         <form asp-controller="Facturas" asp-action="Factura_ModificarCodigo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-            <label>Puesto:</label>
-            <input type="text" name="puesto" placeholder="@factura.Codigo.Puesto" minlength="4" maxlength="4" required/>
-            <label>Numero:</label>
-            <input type="text" name="numero" placeholder="@factura.Codigo.Numero" minlength="8" maxlength="8" required/>
+            <h5>Nuevo Codigo:</h5>
 
+            <div style="display: flex; text-align: center; gap: 10px">
+                <h6>Puesto:</h6>
+                <input type="text" name="puesto" placeholder="@factura.Codigo.Puesto" minlength="4" maxlength="4" required/>
+            </div>
+            
+            <div style="display: flex; text-align: center; gap: 10px">
+                <h6>Numero:</h6>
+                <input type="text" name="numero" placeholder="@factura.Codigo.Numero" minlength="8" maxlength="8" required/>
+            </div>
+            
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo codigo?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarCodigo(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarCodigo()">Cancelar</a>
         </form>
     </div>
 </div>
 
 <div class="container-fecha">
     <div class="vistaFecha">
-        <h3>Fecha: @factura.Fecha.ToString("dd/MM/yyyy")</h3>
-        @if (factura.Estado == EstadoFactura.Impaga)
-        {
-            <a class="btn btn-primary" onclick="mostrarModificarFecha(this)">Modificar Fecha</a>
-        }   
+        <h3>Fecha: @factura.Fecha.ToString("dd/MM/yyyy")</h3> 
     </div>
     <div class="vistaModificarFecha" style="display: none">
         <form asp-cpntroller="Facturas" asp-action="Factura_ModificarFecha" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+            <h6>Nueva Fecha:</h6>
             <input type="date" name="fechaNueva" value="@factura.Fecha.ToString("yyyy-MM-dd")" required/>
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva fecha?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarFecha(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarFecha()">Cancelar</a>
         </form>
     </div>
 </div>
@@ -212,7 +294,7 @@
                                             }
                                         }
                                         <td>
-                                            <a class="btn btn-primary">Ver DESARROLLAR</a>
+                                            <a class="btn btn-primary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-idEpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@p.IdPedido" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
                                         </td>
                                         @if (factura.Estado != EstadoFactura.Pagada)
                                         {
@@ -1239,16 +1321,28 @@
                                 <div class="container-descripcion">
                                     <div class="vistaBotonModificarDescripcion">
                                         @factura.Descripcion
-                                        @if(factura.Estado != EstadoFactura.Pagada)
-                                        {
-                                            <a class=" btn btn-primary" onclick="mostrarModificarDescripcion(this)">Modificar Descripcion</a>
-                                        }
+                                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                            <li>
+                                                @if (factura.Estado != EstadoFactura.Pagada)
+                                                {
+                                                    <button class="dropdown-item" onclick="mostrarModificarDescripcion()">Modificar Descripcion</button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="dropdown-item" disabled>Modificar Descripcion</button>
+                                                }
+                                            </li>
+                                        </ul>
                                     </div>
                                     <div class="vistaModificarDescripcion" style="display: none">
                                         <form asp-controller="Facturas" asp-action="Factura_ModificarDescripcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+                                            <h6>Nueva Descripcion:</h6>
                                             <input type="text" name="nuevaDescripcion" placeholder="@factura.Descripcion" required />
                                             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva descripcion?')">Guardar</button>
-                                            <a class=" btn btn-secondary" onclick="ocultarModificarDescripcion(this)">Cancelar</a>
+                                            <a class=" btn btn-secondary" onclick="ocultarModificarDescripcion()">Cancelar</a>
                                         </form>
                                     </div>
                                 </div>
@@ -1268,16 +1362,27 @@
                                                <label>- Sin monto -</label>
                                                 placeholder = "- Sin monto -";
                                             }
-                                            @if(factura.Estado != EstadoFactura.Pagada)
-                                            {
-                                                <a class=" btn btn-primary" onclick="mostrarModificarMonto(this)">Modificar Monto</a>
-                                            }  
+                                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                                <li>
+                                                    @if (factura.Estado != EstadoFactura.Pagada)
+                                                    {
+                                                        <button class="dropdown-item" onclick="mostrarModificarMonto()">Modificar Monto</button>
+                                                    }else
+                                                    {
+                                                        <button class="dropdown-item" disabled>Modificar Monto</button>
+                                                    }
+                                                </li>
+                                            </ul> 
                                         </div>
                                         <div class="vistaModificarMonto" style="display: none">
                                             <form asp-controller="Facturas" asp-action="Factura_ModificarMonto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
+                                                <h6>Nuevo Monto:</h6>
                                                 <input type="number" name="nuevoMonto" placeholder="@placeholder" required />
                                                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo monto?')">Guardar</button>
-                                                <a class=" btn btn-secondary" onclick="ocultarModificarMonto(this)">Cancelar</a>
+                                                <a class=" btn btn-secondary" onclick="ocultarModificarMonto()">Cancelar</a>
                                             </form>
                                         </div>
                                     </div>
@@ -1301,24 +1406,34 @@
 
         if (extension == ".jpg" || extension == ".png" || extension == ".ico")
         {
-            <h6>@nombre
+            <label>@nombre
                 <img src="@archCoregido" alt="not found" style="max-width: 100px;" />
-            </h6>
+            </label>
         }
         else
         {
-            <h6>@nombre
+            <label>@nombre
                 <img src="\iconoArchivoGenerico.png" alt="not found" style="max-width: 50px;" />
-            </h6>
+            </label>
         }
-        <a class="btn btn-primary"" asp-controller="Facturas" asp-action="Factura_AbrirArchivoEnUbicacion" asp-route-ruta="@factura.UbicacionArchivo">Abrir en ubicacion</a>
-        <form asp-controller="Facturas" asp-action="Factura_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" asp-route-archivo="@factura.UbicacionArchivo" method="post">
-            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
-        </form>
+
+        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                <a class="dropdown-item"" asp-controller="Facturas" asp-action="Factura_AbrirArchivoEnUbicacion" asp-route-ruta="@factura.UbicacionArchivo">Abrir en ubicacion</a>
+            </li>
+            <li>
+                <form asp-controller="Facturas" asp-action="Factura_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" asp-route-archivo="@factura.UbicacionArchivo" method="post">
+                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
+                </form>
+            </li>
+        </ul>
     }
     else
     {
-        <h5>- No hay archivo guardado -</h5>
+        <h6>- Sin archivos -</h6>
         <div class="vistaBotonAgregarArchivo">
             <a class="btn btn-primary" onclick="mostrarAgregarArchivo(this)">+ Agregar Archivo</a>
         </div>
@@ -1338,20 +1453,33 @@
     <h3>Notas:</h3>
     @if(factura.Notas != null && factura.Notas.Any())
     {
+        int contadorNotas = 0;
         foreach (string nota in factura.Notas)
         {
+            contadorNotas++;
             <div class="container-nota">
                 <div class="vistaNota">
-                    <h5>@nota</h5>
-                    <a class="btn btn-primary" onclick="mostrarModificarNota(this)">Modificar Nota</a>
-                    <form asp-controller="Facturas" asp-action="Factura_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" asp-route-notaBorrar="@nota" method="post">
-                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
-                    </form>
+                    <label>
+                        @contadorNotas: @nota
+                    </label>
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li>
+                            <a class="dropdown-item" onclick="mostrarModificarNota(this)">Modificar Nota</a>
+                        </li>
+                        <li>
+                            <form asp-controller="Facturas" asp-action="Factura_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" asp-route-notaBorrar="@nota" method="post">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
                 <div class="vistaModificarNota" style="display: none">
                     <form asp-controller="Facturas" asp-action="Factura_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" asp-route-nuevaAModificar="@nota" method="post">
                         <h5>Modificar Nota:</h5>
-                        <textarea type="text" name="notaModificada" placeholder="@nota" required></textarea>
+                        <textarea type="text" name="notaModificada" placeholder="@nota" style="width: 50%; height: 100px" required></textarea>
 
                         <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar nota?')">Guardar</button>
                         <a class="btn btn-secondary" onclick="ocultarModificarNota(this)">Cancelar</a>
@@ -1362,14 +1490,13 @@
     }
     else
     {
-        <h6>- No hay notas en esta factura -</h6>
+        <h6>- Sin notas -</h6>
     }
     <div class="vistaBotonAgregarNota">
         <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
     </div>
     <div class="vistaAgregarNota" style="display: none">
         <form asp-controller="Facturas" asp-action="Factura_AgregarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-            <h6>Nueva Nota:</h6>
             <textarea type="text" placeholder="Nueva nota..." name="nuevaNota" style="width: 50%; height: 100px" required/></textarea>
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva nota?')">Guardar Nota</button>
@@ -1378,212 +1505,79 @@
     </div>
 </div>
 
-<div>
-    @{
-        switch (factura.Estado)
+<div class="container-estado">
+    @switch (factura.Estado)
         {
             case EstadoFactura.Impaga:
-                <h3>Estado: <span style="color: yellow">@factura.Estado</span></h3>
-
-                @if ( factura.Contiene == Contiene.SinDefinir || (pedidosEnFactura != null && pedidosEnFactura.Any()) || (presupuestosEnFactura != null && presupuestosEnFactura.Any()) || (odcEnFactura != null && odcEnFactura.Any()) )
-                {
-                    <form asp-controller="Facturas" asp-action="Factura_FacturaPagada" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-                    <button class="btn btn-success" type="submit" onclick="return confirm('Confirmar pagar factura?')">Factura Pagada</button>
-                    </form>                    
-                }else
-                {
-                    <button class="btn btn-success" disabled>Factura Pagada</button>
-                }
-
-                <form asp-controller="Facturas" asp-action="Factura_AnularFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-                    <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar anular factura?')">Anular Factura</button>
-                </form>
+            <h3>Estado: <span style="color: yellow">@factura.Estado</span></h3>
                 break;
             case EstadoFactura.Pagada:
-                <h3>Estado: <span style="color: green">@factura.Estado</span></h3>
-                <form asp-controller="Facturas" asp-action="Factura_FacturaImpaga" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-                    <button class="btn btn-warning" type="submit" onclick="return confirm('Confirmar cambiar a impaga?')">Cambiar a Impaga</button>
-                </form>
+            <h3>Estado: <span style="color: green">@factura.Estado</span></h3>
                 break;
             case EstadoFactura.Anulada:
-                <h3>Estado:  <span style="color: red">@factura.Estado</span></h3>
-
-                int itemsSinReasignar = 0;
-                bool reactivar = false;
-
-                switch (factura.Contiene)
+            <h3>Estado:  <span style="color: red">@factura.Estado</span></h3>
+                
+            <div class="container-notaDeCredito">
+                @if (ndc != null)
                 {
-                    case Contiene.Pedidos:
-                        foreach (Pedido p in pedidos)
-                        {
-                            foreach (int i in factura.ItemsRespaldo)
-                            {
-                                if (p.IdPedido == i)
-                                {
-                                    if (p.PresupuestoFK == null && p.FacturaFK == null)
-                                    {
-                                        itemsSinReasignar++;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case Contiene.Presupuestos:
-                        foreach (Presupuesto pr in presupuestos)
-                        {
-                            foreach (int i in factura.ItemsRespaldo)
-                            {
-                                if (pr.IdPresupuesto == i)
-                                {
-                                    if(pr.OrdenDeCompraFK == null && pr.FacturaFK == null)
-                                    {
-                                        itemsSinReasignar++;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case Contiene.OrdenesDeCompra:
-                        @if (recepciones != null && recepciones.Any())
-                        {
-                            foreach (Recepcion r in recepciones)
-                            {
-                                if (factura.RecepionesRespaldo != null && factura.RecepionesRespaldo.Any())
-                                {
-                                    foreach (Recepcion rr in factura.RecepionesRespaldo)
-                                    {
-                                        if (r.IdRecepcion == rr.IdRecepcion)
-                                        {
-                                            if (r.IdFacturaFK == null)
-                                            {
-                                                itemsSinReasignar++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                }
-
-                if (factura.Contiene == Contiene.Pedidos || factura.Contiene == Contiene.Presupuestos)
-                {
-                    if (itemsSinReasignar == factura.ItemsRespaldo.Count())
-                    {
-                    <form asp-controller="Facturas" asp-action="Factura_ReactivarFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar reactivar factura?')">Reactivar Factura</button>
-                    </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-danger" disabled>Reactivar Factura </button>
-                        <h5>No se puede reactivar factura, algunos items fueron reasignados</h5>
-                    }
-                }
-                else if (factura.Contiene == Contiene.OrdenesDeCompra)
-                {
-                    if (itemsSinReasignar == factura.RecepionesRespaldo.Count())
-                    {
-                        <form asp-controller="Facturas" asp-action="Factura_ReactivarFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar reactivar factura?')">Reactivar Factura</button>
-                    </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-danger" disabled>Reactivar Factura </button>
-                        <h5>No se puede reactivar factura, algunos items fueron reasignados</h5>
-                    }
+                    <h4>
+                        Nota de Credito Asociada: @ndc.Fecha.ToString("dd/MM/yyyy") -  @ndc.Codigo.GetCodigoNDC()
+                        <a class="btn btn-primary" asp-controller="NotasDeCredito" asp-action="IndexVerNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@ndc.IdNotaCredito" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                    </h4>  
                 }
                 else
                 {
-                    <form asp-controller="Facturas" asp-action="Factura_ReactivarFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@factura.IdFactura" method="post">
-                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar reactivar factura?')">Reactivar Factura</button>
-                    </form>
-                } 
+                    <h6>- Sin Nota de Credito -</h6>
+                }
+            </div>
                 break;
         }
-    }
 </div>
 
-<div class="container-borrar">
+<div class="container-borrar" style="display: none">
+    <h3>Borrar Factura:</h3>
     @if (sePuedeBorrar.SePuede == true)
     {
-        <div class="vistaBotonBorrarFactura">
-            <h5>@sePuedeBorrar.Mensajes[0]</h5>
-            <a class="btn btn-danger" onclick="mostrarBorrarFactura(this)">Borrar Factura</a>
-        </div>
-        <div class="vistaBorrarFactura" style="display: none">
-            <form asp-controller="Facturas" asp-action="Factura_BorrarFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFacturaBorrar="@factura.IdFactura" method="post">
+        <form asp-controller="Facturas" asp-action="Factura_BorrarFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFacturaBorrar="@factura.IdFactura" method="post">
 
-                <label>Socios:</label>
-                <table class="table table-striped text-center" style="width: 25%;">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Socio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if(socios != null && socios.Any())
+            <table class="table table-striped text-center" style="width: 50%">
+                <thead>
+                    <tr>
+                        <th>Seleccionar Socio</th>
+                        <th>Socio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (socios != null && socios.Any())
+                    {
+                        foreach (Socio s in socios)
                         {
-                            foreach (Socio s in socios)
-                            {
-                                string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                <tr>
-                                    <td>
-                                        <input class="radio-desmarcable" type="radio" name="idSocio" value="@s.IdSocio" onclick="ToggleRadio(this)"/>
-                                    </td>
-                                    <td>@nombreApellido</td>
-                                </tr>
-                            }
+                            string nombreApellido = s.Nombres + ". " + s.Apellido;
+                            <tr>
+                                <td>
+                                    <input class="radio-desmarcable" type="radio" name="idSocio" value="@s.IdSocio" onclick="ToggleRadio(this)" />
+                                </td>
+                                <td>@nombreApellido</td>
+                            </tr>
                         }
-                    </tbody>
-                </table>
+                    }
+                </tbody>
+            </table>
 
-                <!--
-                <div class="dropdown">
-                    <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
+            <h6>Contraseña:</h6>
+            <div>
+                <input type="password" name="contraseñaSocio" id="passSocio" />
+                <button class="btn btn-outline-primary" type="button" onclick="togglePassword()">
+                    <i id="iconoOjo" class="bi bi-eye"></i>
+                </button>
+            </div>
 
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
-                        Seleccionar Socio
-                    </button>
-                    <ul class="dropdown-menu">
-                        @{
-                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
-                            if (socios != null && socios.Any())
-                            {
-                                foreach (Socio s in socios)
-                                {
-                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                    <li>
-                                        <a class="dropdown-item opcion-socio"
-                                           href="#"
-                                           data-id="@s.IdSocio"
-                                           data-nombre="@nombreApellido">
-                                            @nombreApellido
-                                        </a>
-                                    </li>
-                                }
-                            }
-                        }
-                    </ul>
-                </div>
-                -->
-
-                <label>Contraseña:</label>
-                <div>
-                    <input type="password" name="contraseñaSocio" id="passSocio" />
-                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
-                </div>
-
-                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar factura?')">Borrar Factura</button>
-                <a class="btn btn-secondary" onclick="ocultarBorrarFactura(this)">Cancelar</a>
-            </form>
-        </div>
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar factura?')">Borrar Factura</button>
+            
+        </form>
     }
     else
     {
-        <button class="btn btn-danger" disabled>Borrar factura</button>
         <label>No se puede borrar esta factura ya que:</label>
         <ul>
             @foreach(string mensaje in sePuedeBorrar.Mensajes){
@@ -1591,6 +1585,7 @@
             }
         </ul>
     }
+    <a class="btn btn-secondary" onclick="ocultarBorrarFactura()">Cancelar</a>
 </div>
 
 
@@ -1604,562 +1599,6 @@
 </div>
 -->
 
-@section Scripts{
-    <script>
-        // MODIFICAR CODIGO
-        function mostrarModificarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-codigo');
-
-            contenedor.querySelector('.vistaCodigo').style.display = 'none';
-            contenedor.querySelector('.vistaModificarCodigo').style.display = 'block';
-        }
-        function ocultarModificarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-codigo');
-
-            contenedor.querySelector('.vistaCodigo').style.display = 'block';
-            contenedor.querySelector('.vistaModificarCodigo').style.display = 'none';
-        }
-        // -----------------------------------------------------------------
-
-        // MODIFICAR FECHA
-        function mostrarModificarFecha(elemento) {
-            const contenedor = elemento.closest('.container-fecha');
-
-            contenedor.querySelector('.vistaFecha').style.display = 'none';
-            contenedor.querySelector('.vistaModificarFecha').style.display = 'block';
-        }
-        function ocultarModificarFecha(elemento) {
-            const contenedor = elemento.closest('.container-fecha');
-
-            contenedor.querySelector('.vistaFecha').style.display = 'block';
-            contenedor.querySelector('.vistaModificarFecha').style.display = 'none';
-        }
-        // -----------------------------------------------------------------
-        // MODIFICAR DESCRIPCION
-        function mostrarModificarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-descripcion');
-
-            contenedor.querySelector('.vistaBotonModificarDescripcion').style.display = 'none';
-            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'block';
-        }
-        function ocultarModificarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-descripcion');
-
-            contenedor.querySelector('.vistaBotonModificarDescripcion').style.display = 'block';
-            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'none';
-        }
-
-        // MODIFICAR MONTO
-        function mostrarModificarMonto(elemento) {
-            const contenedor = elemento.closest('.container-monto');
-
-            contenedor.querySelector('.vistaBotonModificarMonto').style.display = 'none';
-            contenedor.querySelector('.vistaModificarMonto').style.display = 'block';
-        }
-        function ocultarModificarMonto(elemento) {
-            const contenedor = elemento.closest('.container-monto');
-
-            contenedor.querySelector('.vistaBotonModificarMonto').style.display = 'block';
-            contenedor.querySelector('.vistaModificarMonto').style.display = 'none';
-        }
-
-        // -----------------------------------------------------------------
-
-        // AGREGAR PEDIDOS
-        function mostrarAgregarPedidos(elemento) {
-            const contenedor = elemento.closest('.container-agregarPedidos');
-
-            contenedor.querySelector('.vistaBotonAgregarPedidos').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarPedidos').style.display = 'block';
-        }
-        function ocultarAgregarPedidos(elemento) {
-            const contenedor = elemento.closest('.container-agregarPedidos');
-
-            contenedor.querySelector('.vistaBotonAgregarPedidos').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarPedidos').style.display = 'none';
-        }
-        // -----------------------------------------------------------------
-
-        // AGREGAR PRESUPUESTOS
-        function mostrarAgregarPresupuestos(elemento) {
-            const contenedor = elemento.closest('.container-agregraPresupuestos');
-
-            contenedor.querySelector('.vistaBotonAgregarPresupuestos').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarPresupuestos').style.display = 'block';
-        }
-        function ocultarAgregarPresupuestos(elemento) {
-            const contenedor = elemento.closest('.container-agregraPresupuestos');
-
-            contenedor.querySelector('.vistaBotonAgregarPresupuestos').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarPresupuestos').style.display = 'none';
-        }
-        // -----------------------------------------------------------------
-
-        // AGREGAR OCS
-        function mostrarAgregarOCsConRecepciones(elemento) {
-            const contenedor = elemento.closest('.container-agregarOCs');
-
-            contenedor.querySelector('.vistaBotonesAgregarOCs').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarOCsConRecepciones').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarOCsSinRecepciones').style.display = 'none';
-        }
-        function mostrarAgregarOCsSinRecepciones(elemento) {
-            const contenedor = elemento.closest('.container-agregarOCs');
-
-            contenedor.querySelector('.vistaBotonesAgregarOCs').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarOCsConRecepciones').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarOCsSinRecepciones').style.display = 'block';
-        }
-        function mostrarBotonesAgregarOCs(elemento) {
-            const contenedor = elemento.closest('.container-agregarOCs');
-
-            contenedor.querySelector('.vistaBotonesAgregarOCs').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarOCsConRecepciones').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarOCsSinRecepciones').style.display = 'none';
-        }
-        // -----------------------------------------------------------------
-
-        // VALIDAR FORMULARIO AGREGAR OC SIN RECEPCIONES
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("formAgregarOCSinRecep");
-            const btnGuardar = document.getElementById("btnGuardar1");
-
-            function validarFormulario() {
-                const checkboxes = form.querySelectorAll('input[name="items"]:checked');
-                const ocSeleccionado = checkboxes.length > 0;
-
-                btnGuardar.disabled = !(ocSeleccionado);
-            }
-
-            form.addEventListener("change", function(e) {
-                if (e.target.name === "items") {
-                    validarFormulario();
-                }
-            });
-
-            validarFormulario();
-        });
-        // -----------------------------------------------------------------
-
-        // VALIDAR FORMULARIO AGREGAR OC CON RECEPCIONES
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("formAgregarOCConRecep");
-            const btnGuardar = document.getElementById("btnGuardar2");
-
-            function validarFormulario() {
-                const origenMarcado = form.querySelectorAll('.origen-oc:checked').length > 0;
-                const destinoMarcado = form.querySelectorAll('.destino-recepcion:checked').length > 0;
-        
-                const itemsSeleccionados = origenMarcado || destinoMarcado;
-
-                btnGuardar.disabled = !(itemsSeleccionados);
-            }
-
-            form.addEventListener("change", function(e) {
-                if (e.target.classList.contains("origen-oc") || e.target.classList.contains("destino-recepcion")) {
-                    validarFormulario();
-                }
-            });
-
-            validarFormulario();
-        });
-        // -----------------------------------------------------------------
-
-        // SELECCIONAR OC O RECEPCIONES
-        function seleccionarTodos(origen) {
-            const fila = origen.closest('.fila-occrAgregar');
-
-            const destinos = fila.querySelectorAll('.destino-recepcion');
-            const inputs = fila.querySelectorAll('.monto-recepcion-input');
-
-            destinos.forEach(destino => {
-                destino.checked = origen.checked;
-            });
-
-            inputs.forEach(input =>{
-                if(origen.checked == true){
-                    input.style.display = 'block';
-                }else{
-                    input.style.display = 'none';
-                }
-            });
-        }
-
-        function verificarDestinos(destinoClickeado) {
-            const fila = destinoClickeado.closest('.fila-occrAgregar');
-            if (!fila) return;
-
-            const origen = fila.querySelector('.origen-oc');
-            const destinos = fila.querySelectorAll('.destino-recepcion');
-
-            const algunoMarcado = Array.from(destinos).some(destino => destino.checked);
-
-            if (origen && !origen.disabled) {
-                origen.checked = algunoMarcado;
-            }
-
-            const parrafoPadre = destinoClickeado.closest('p');
-            const contenedorMonto = parrafoPadre ? parrafoPadre.nextElementSibling : null;
-
-            if (contenedorMonto && contenedorMonto.classList.contains('monto-recepcion-input')) {
-                const inputTexto = contenedorMonto.querySelector('input[type="text"]');
-        
-                if (destinoClickeado.checked) {
-                    contenedorMonto.style.display = 'block';
-                    if (inputTexto) inputTexto.disabled = false;
-                } else {
-                    contenedorMonto.style.display = 'none';
-                    if (inputTexto) inputTexto.disabled = true;
-                }
-            }
-        }
-        // -----------------------------------------------------------------
-
-        // ENVIAR DATOS
-        document.getElementById('formAgregarOCConRecep').addEventListener('submit', function(e) {
-    
-            let todosLosInputs = this.querySelectorAll('input[name^="OCsRecepciones"]');
-            todosLosInputs.forEach(input => {
-        
-            if (!input.dataset.originalName) {
-                input.dataset.originalName = input.name;
-            }
-        
-            input.removeAttribute('name'); 
-            });
-
-            let indexOC = 0;
-
-                let filasOcMarcadas = document.querySelectorAll('.fila-occrAgregar:has(.origen-oc:checked)');
-
-            filasOcMarcadas.forEach(fila => {
-
-            let checkboxOC = fila.querySelector('.origen-oc');
-            checkboxOC.name = `OCsRecepciones[${indexOC}].idOC`;
-
-            let indexRecep = 0;
-
-            let recepcionesMarcadas = fila.querySelectorAll('.destino-recepcion:checked');
-
-            recepcionesMarcadas.forEach(checkboxRecep => {
-
-                checkboxRecep.name = `OCsRecepciones[${indexOC}].Recepciones[${indexRecep}].IdRecepcion`;
-
-                let divMonto = checkboxRecep.closest('p').nextElementSibling; 
-                let inputMonto = divMonto ? divMonto.querySelector('input[type="number"]') : null;
-
-                if (inputMonto) {
-                    inputMonto.name = `OCsRecepciones[${indexOC}].Recepciones[${indexRecep}].Monto`;
-                }
-
-                indexRecep++;
-            });
-
-            if (indexRecep > 0) {
-                indexOC++;
-            } else {
-                checkboxOC.removeAttribute('name');
-            }
-        });
-    });
-
-    // AGREGAR NOTA
-    function mostrarAgregarNota(elemento) {
-        const contenedor = elemento.closest('.container-notas');
-
-        contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-        contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-    }
-    function ocultarAgregarNota(elemento) {
-        const contenedor = elemento.closest('.container-notas');
-
-        contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-        contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-    }
-
-    // MODIFICAR NOTA
-    function mostrarModificarNota(elemento) {
-        const contenedor = elemento.closest('.container-nota');
-
-        contenedor.querySelector('.vistaNota').style.display = 'none';
-        contenedor.querySelector('.vistaModificarNota').style.display = 'block';
-    }
-    function ocultarModificarNota(elemento) {
-        const contenedor = elemento.closest('.container-nota');
-
-        contenedor.querySelector('.vistaNota').style.display = 'block';
-        contenedor.querySelector('.vistaModificarNota').style.display = 'none';
-    }
-
-    // AGREGAR ARCHIVO
-    function mostrarAgregarArchivo(elemento) {
-        const contenedor = elemento.closest('.container-archivo');
-
-        contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'none';
-        contenedor.querySelector('.vistaAgregarArchivo').style.display = 'block';
-    }
-    function ocultarAgregarArchivo(elemento) {
-        const contenedor = elemento.closest('.container-archivo');
-
-        contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'block';
-        contenedor.querySelector('.vistaAgregarArchivo').style.display = 'none';
-    }
-
-    // MOSTRAR BUSCAR PEDIDO AGREGAR POR DESCRIPCION
-    function mostrarBuscarPedidosAgregarDescricpion(elemento) {
-        const contenedor = elemento.closest('.container-tituloPedidoDescripcion');
-
-        contenedor.querySelector('.vistaBotonBuscarPedidoAgregarDescripcion').style.display = 'none';
-        contenedor.querySelector('.vistaBuscarPedidoAgregarDescripcion').style.display = 'block';
-    }
-    function ocultarBuscarPedidosAgregarDescricpion(elemento) {
-        const contenedor = elemento.closest('.container-tituloPedidoDescripcion');
-
-        contenedor.querySelector('.vistaBotonBuscarPedidoAgregarDescripcion').style.display = 'block';
-        contenedor.querySelector('.vistaBuscarPedidoAgregarDescripcion').style.display = 'none';
-    }
-
-    // FILTRAR POR DESCRIPCION PEDIDO A AGREGAR
-    function filtrarTablaDescripcionPedido() {
-        let input = document.getElementById("filtroDescripcionPedido");
-        let filter = input.value.toLowerCase();
-        let filas = document.querySelectorAll(".fila-pedidoAgregar");
-
-        filas.forEach(fila => {
-            let celdaDescripcion = fila.querySelector(".col-descripcionPedidoAgregar");
-            if (celdaDescripcion) {
-                let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                if (texto.toLowerCase().indexOf(filter) > -1) {
-                    fila.classList.remove('filtrado-oculto');
-                    fila.style.display = "";
-                } else {
-                    fila.classList.add('filtrado-oculto');
-                    fila.style.display = "none";
-                }
-            }
-        });
-
-        const selectCant = document.getElementById('cantPedidos');
-        if (selectCant) {
-            selectCant.dispatchEvent(new Event('change'));
-        }
-    }
-
-    Paginacion('tablaAgregarPedidos', 'prevPedidos', 'nextPedidos', 'numPedidos', 'cantPedidos', 'fila-pedidoAgregar');
-
-    // MOSTRAR BUSCAR PRESUPUESTO AGREGAR POR NUMERO
-    function mostrarBuscarPresupuestoAgregarNumero(elemento) {
-        const contenedor = elemento.closest('.container-tituloNumeroPresupuesto');
-
-        contenedor.querySelector('.vistaBotonBuscarPresupuestoAgregarNumero').style.display = 'none';
-        contenedor.querySelector('.vistaBuscarPresupuestoAgregarNumero').style.display = 'block';
-    }
-    function ocultarBuscarPresupuestoAgregarNumero(elemento) {
-        const contenedor = elemento.closest('.container-tituloNumeroPresupuesto');
-
-        contenedor.querySelector('.vistaBotonBuscarPresupuestoAgregarNumero').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarPresupuestoAgregarNumero').style.display = 'none';
-    }
-
-    // FILTRAR POR NUMERO PRESUPUESTO A AGREGAR
-    function filtrarTablaNumeroPresupuesto() {
-        let input = document.getElementById("filtroNumeroPresupuesto");
-        let filter = input.value.toLowerCase();
-        let filas = document.querySelectorAll(".fila-presupuestoAgregar");
-
-        filas.forEach(fila => {
-            let celdaDescripcion = fila.querySelector(".col-numeroPresupuestoAgregar");
-            if (celdaDescripcion) {
-                let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                if (texto.toLowerCase().indexOf(filter) > -1) {
-                    fila.classList.remove('filtrado-oculto');
-                    fila.style.display = "";
-                } else {
-                    fila.classList.add('filtrado-oculto');
-                    fila.style.display = "none";
-                }
-            }
-        });
-
-        const selectCant = document.getElementById('cantPresupuestos');
-        if (selectCant) {
-            selectCant.dispatchEvent(new Event('change'));
-        }
-    }
-
-    Paginacion('tablaAgregarPresupuestos', 'prevPresupuestos', 'nextPresupuestos', 'numPresupuestos', 'cantPresupuestos', 'fila-presupuestoAgregar');
-
-    // MOSTRAR BUSCAR CODIGO OC SIN RECEPCIONES
-    function mostrarBuscarCodigoOCsRecep(elemento) {
-        const contenedor = elemento.closest('.container-tituloCodigoOCsRecep');
-
-        contenedor.querySelector('.vistaBotonBuscarCodigoOCsRecep').style.display = 'none';
-        contenedor.querySelector('.vistaBuscarCodigoOCsRecep').style.display = 'block';
-    }
-    function ocultarBuscarCodigoOCsRecep(elemento) {
-        const contenedor = elemento.closest('.container-tituloCodigoOCsRecep');
-
-        contenedor.querySelector('.vistaBotonBuscarCodigoOCsRecep').style.display = 'block';
-        contenedor.querySelector('.vistaBuscarCodigoOCsRecep').style.display = 'none';
-    }
-
-    // FILTRAR POR CODIGO OC SIN RECEPCIONES A AGREGAR
-    function filtrarTablaACodigoOCsr() {
-        let input = document.getElementById("filtroCodigoOCsr");
-        let filter = input.value.toLowerCase();
-        let filas = document.querySelectorAll(".fila-ocsrAgregar");
-
-        filas.forEach(fila => {
-            let celdaDescripcion = fila.querySelector(".col-codigoOCsrAgregar");
-            if (celdaDescripcion) {
-                let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                if (texto.toLowerCase().indexOf(filter) > -1) {
-                    fila.classList.remove('filtrado-oculto');
-                    fila.style.display = "";
-                } else {
-                    fila.classList.add('filtrado-oculto');
-                    fila.style.display = "none";
-                }
-            }
-        });
-
-        const selectCant = document.getElementById('cantOCsrs');
-        if (selectCant) {
-            selectCant.dispatchEvent(new Event('change'));
-        }
-    }
-
-    Paginacion('tablaAgregarOCsRecep', 'prevOCsr', 'nextOCsr', 'numOCsr', 'cantOCsr', 'fila-ocsrAgregar');
-
-    // MOSTRAR BUSCAR CODIGO OC CON RECEPCIONES
-    function mostrarBuscarCodigoOCcRecep(elemento) {
-        const contenedor = elemento.closest('.container-tituloCodigoOCcRecep');
-
-        contenedor.querySelector('.vistaBotonBuscarCodigoOCcRecep').style.display = 'none';
-        contenedor.querySelector('.vistaBuscarCodigoOCcRecep').style.display = 'block';
-    }
-    function ocultarBuscarCodigoOCcRecep(elemento) {
-        const contenedor = elemento.closest('.container-tituloCodigoOCcRecep');
-
-        contenedor.querySelector('.vistaBotonBuscarCodigoOCcRecep').style.display = 'block';
-        contenedor.querySelector('.vistaBuscarCodigoOCcRecep').style.display = 'none';
-    }
-
-    // FILTRAR POR CODIGO OC CON RECEPCIONES A AGREGAR
-    function filtrarTablaACodigoOCcr() {
-        let input = document.getElementById("filtroCodigoOCcr");
-        let filter = input.value.toLowerCase();
-        let filas = document.querySelectorAll(".fila-occrAgregar");
-
-        filas.forEach(fila => {
-            let celdaDescripcion = fila.querySelector(".col-codigoOCcrAgregar");
-            if (celdaDescripcion) {
-                let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                if (texto.toLowerCase().indexOf(filter) > -1) {
-                    fila.classList.remove('filtrado-oculto');
-                    fila.style.display = "";
-                } else {
-                    fila.classList.add('filtrado-oculto');
-                    fila.style.display = "none";
-                }
-            }
-        });
-
-        const selectCant = document.getElementById('cantOCcr');
-        if (selectCant) {
-            selectCant.dispatchEvent(new Event('change'));
-        }
-    }
-
-    Paginacion('tablaAgregarOCcRecep', 'prevOCcr', 'nextOCcr', 'numOCcr', 'cantOCcr', 'fila-occrAgregar');
-
-    // MOSTRAR BUSCAR RECEPCIONES
-    function mostrarBuscarRecepciones(elemento) {
-        const contenedor = elemento.closest('.container-tituloRecepciones');
-
-        contenedor.querySelector('.vistaBotonBuscarRecepciones').style.display = 'none';
-        contenedor.querySelector('.vistaBuscarRecepciones').style.display = 'block';
-    }
-        function ocultarBuscarRecepciones(elemento) {
-        const contenedor = elemento.closest('.container-tituloRecepciones');
-
-        contenedor.querySelector('.vistaBotonBuscarRecepciones').style.display = 'block';
-        contenedor.querySelector('.vistaBuscarRecepciones').style.display = 'none';
-    }
-
-    function filtrarTablaRecepciones() {
-        let input = document.getElementById("filtroRecepciones");
-        let filter = input.value.toLowerCase();
-        let filas = document.querySelectorAll(".fila-occrAgregar");
-
-        filas.forEach(fila => {
-            let celdaDescripcion = fila.querySelector(".col-recepciones");
-            if (celdaDescripcion) {
-                let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                if (texto.toLowerCase().indexOf(filter) > -1) {
-                    fila.classList.remove('filtrado-oculto');
-                    fila.style.display = "";
-                } else {
-                    fila.classList.add('filtrado-oculto');
-                    fila.style.display = "none";
-                }
-            }
-        });
-
-        const selectCant = document.getElementById('cantRecep');
-        if (selectCant) {
-            selectCant.dispatchEvent(new Event('change'));
-        }
-    }
-
-        // BORRAR FACTURA
-        function mostrarBorrarFactura(elemento) {
-            const contenedor = elemento.closest('.container-borrar');
-
-            contenedor.querySelector('.vistaBotonBorrarFactura').style.display = 'none';
-            contenedor.querySelector('.vistaBorrarFactura').style.display = 'block';
-        }
-        function ocultarBorrarFactura(elemento) {
-            const contenedor = elemento.closest('.container-borrar');
-
-            contenedor.querySelector('.vistaBotonBorrarFactura').style.display = 'block';
-            contenedor.querySelector('.vistaBorrarFactura').style.display = 'none';
-        }
-
-        // DESMARCAR INPUT RADIO
-        function ToggleRadio(radio) {
-            if (radio.getAttribute('data-checked') === 'true') {
-                radio.checked = false;
-                radio.removeAttribute('data-checked');
-            } else {
-                document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => {
-                    r.removeAttribute('data-checked');
-                });
-                radio.checked = true;
-                radio.setAttribute('data-checked', 'true');
-            }
-        }
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            // Si es password lo pasa a text, y viceversa
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-         // LIMPIAR ARCHIVO A CARGAR
-        document.getElementById('btnLimpiarArchivo').addEventListener('click', function() {
-            document.getElementById('cargarArchivo').value = '';
-        });
-
-    </script>
+@section Scripts {
+    <script src="~/js/Facturas/IndexVerFactura.js" asp-append-version="true"></script>
 }

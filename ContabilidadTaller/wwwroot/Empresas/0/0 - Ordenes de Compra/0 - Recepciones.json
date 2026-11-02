@@ -1,0 +1,10 @@
+[
+  {
+    "IdRecepcion": 0,
+    "NumeroRecepcion": "112233",
+    "Estado": 2,
+    "IdOdCFK": 1,
+    "IdFacturaFK": 0,
+    "Monto": 4000.0
+  }
+]

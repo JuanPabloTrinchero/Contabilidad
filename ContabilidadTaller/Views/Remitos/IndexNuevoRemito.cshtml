@@ -24,7 +24,7 @@
     }
 }
 
-<div>
+<div class="text-center">
     <h1>Nuevo Remito para @nombreEmpresa (@idEmpresa)</h1>
 </div>
 
@@ -46,129 +46,157 @@
 
     <div>
         <h6>Pedidos entregados y sin remitir:</h6>
-        @if (sinRemito != null && sinRemito.Any())
-        {
-            <table id="tabla-pedidos" class="table table-striped text-center">
-                <thead>
-                    <tr>
-                        <th>AGREGAR?</th>
-                        <th>Cantidad</th>
-                        <th>
-                            <div class="container-tituloDescripcion mb-3">
-                                <div class="vistaBotonBuscarDescripcion">
-                                    Descripcion
-                                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
-                                        <li>
-                                            <a class="dropdown-item" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="vistaBuscarDescripcion" style="display: none">
-                                    <div class="d-flex align-items-center">
-                                        <input type="text" id="filtroDescripcion" class="form-control" placeholder="Buscar por Descripcion..." onkeyup="filtrarTablaDescripcion()">
-                                        <a class="btn btn-danger" onclick="ocultarBuscarDescripcion(this)">X</a>
-                                    </div>
+        <table id="tabla-pedidos" class="table table-striped text-center">
+            <thead>
+                <tr>
+                    <th>AGREGAR?</th>
+                    <th>Cantidad</th>
+                    <th>
+                        <div class="container-tituloDescripcion mb-3">
+                            <div class="vistaBotonBuscarDescripcion">
+                                Descripcion
+                                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li>
+                                        <a class="dropdown-item" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="vistaBuscarDescripcion" style="display: none">
+                                <div class="d-flex align-items-center">
+                                    <input type="text" id="filtroDescripcion" class="form-control" placeholder="Buscar por Descripcion..." onkeyup="filtrarTablaDescripcion()">
+                                    <a class="btn btn-danger" onclick="ocultarBuscarDescripcion(this)">X</a>
                                 </div>
                             </div>
-                        </th>
-                        <th>Precio Unitario</th>
-                        <th>Sub-Total</th>
-                        <th>Entregas</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (Pedido p in sinRemito)
+                        </div>
+                    </th>
+                    <th>Precio Unitario</th>
+                    <th>Sub-Total</th>
+                    <th>Entregas</th>
+                    <th>Detalles</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (sinRemito != null && sinRemito.Any())
+                {
+                    foreach (Pedido p in sinRemito)
                     {
-                        if (p.PrecioUnitario != 0 && p.Entregas != null && p.Entregas.Any())
-                        {
                         <tr class="fila-pedido">
-                            <td><input type="checkbox" class="origen-pedido" onchange="seleccionarTodos(this)" name="items[].IdPedido" value="@p.IdPedido"/></td>
+                            <td>
+                                @if (p.PrecioUnitario != null && p.PrecioUnitario != 0)
+                                {
+                                    <input type="checkbox" class="origen-pedido" onchange="seleccionarTodos(this)" name="items[].IdPedido" value="@p.IdPedido" />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" title="Pedido sin precio unitario" disabled />
+                                }      
+                            </td>
                             <td>@p.Cantidad</td>
-                                    @{
-                                        string descripcion = "";
+                            @{
+                                string descripcion = "";
 
-                                        if (p.PiezaExistenteFK != null)
+                                if (p.PiezaExistenteFK != null)
+                                {
+                                    foreach (Pieza pieza in piezas)
+                                    {
+                                        if (pieza.IdPieza == p.PiezaExistenteFK)
                                         {
-                                            foreach (Pieza pieza in piezas)
-                                            {
-                                                if (pieza.IdPieza == p.PiezaExistenteFK)
-                                                {
-                                                    descripcion = pieza.Descripcion;
-                                                }
-                                            }
-                                        }else if (p.ConjuntoExistenteFK != null)
-                                        {
-                                            foreach (Conjunto c in conjuntos)
-                                            {
-                                                if (c.IdConjunto == p.ConjuntoExistenteFK)
-                                                {
-                                                    descripcion = c.Descripcion;
-                                                }
-                                            }
+                                            descripcion = pieza.Descripcion;
                                         }
-                                        else if(p.Descripcion != null)
+                                    }
+                                }
+                                else if (p.ConjuntoExistenteFK != null)
+                                {
+                                    foreach (Conjunto c in conjuntos)
+                                    {
+                                        if (c.IdConjunto == p.ConjuntoExistenteFK)
                                         {
-                                            descripcion = p.Descripcion;
+                                            descripcion = c.Descripcion;
                                         }
+                                    }
+                                }
+                                else if (p.Descripcion != null)
+                                {
+                                    descripcion = p.Descripcion;
+                                }
                                 <td class="col-descripcion">@descripcion</td>
                             }
                             <td>@p.PrecioUnitario?.ToString("C2")</td>
                             <td>@((p.Cantidad * p.PrecioUnitario)?.ToString("C2"))</td>
                             <td>
-                                @{
-                                    foreach (Entrega e in p.Entregas)
-                                    {
-                                        if (e.idRemitoFK == null)
+                                    @{
+                                        if (p.Entregas != null && p.Entregas.Any())
                                         {
-                                            <p>@e.fechaEntrega.ToString("dd/MM/yyyy"): Cantidad: @e.cantidadEntrega
-                                            <input type="checkbox" class="destino-entrega" onchange="verificarDestinos(this)" name="items[].Entregas[].idEntrega" value="@e.idEntrega"/>
-                                            </p>
-                                        }
-                                        else
-                                        {
-                                            <p style="text-decoration-line: line-through">@e.fechaEntrega.ToString("dd/MM/yyyy"): Cantidad: @e.cantidadEntrega
-                                            <input type="checkbox" disabled/>
-                                            </p>
+                                            foreach (Entrega e in p.Entregas)
+                                            {
+                                                if (e.idRemitoFK == null)
+                                                {
+                                                    if (p.PrecioUnitario != null && p.PrecioUnitario != 0)
+                                                    {
+                                                    <p>
+                                                        @e.fechaEntrega.ToString("dd/MM/yyyy"): Cantidad: @e.cantidadEntrega
+                                                        <input type="checkbox" class="destino-entrega" onchange="verificarDestinos(this)" name="items[].Entregas[].idEntrega" value="@e.idEntrega" />
+                                                    </p>
+                                                    }
+                                                    else
+                                                    {
+                                                    <p>
+                                                        @e.fechaEntrega.ToString("dd/MM/yyyy"): Cantidad: @e.cantidadEntrega
+                                                        <input type="checkbox" title="Pedido sin precio unitario" disabled/>
+                                                    </p>
+                                                    }
+                                            }
+                                            else
+                                            {
+                                                <p style="text-decoration-line: line-through">
+                                                    @e.fechaEntrega.ToString("dd/MM/yyyy"): Cantidad: @e.cantidadEntrega
+                                                    <input type="checkbox" title="Entrega ya remitida" disabled />
+                                                </p>
+                                            }
                                         }
                                     }
                                 }
                             </td>
+                            <td>
+                                <a class="btn btn-primary" asp-controller="Pedidos" asp-action="IndexVerPedido" asp-route-IdEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@p.IdPedido" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                            </td>
                         </tr>
-                        }
                     }
-                </tbody>
-            </table>  
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" style="text-align: center">- No hay pedidos/entregas sin remitir -</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-            <div class="d-flex justify-content-center align-items-center">
-                <div class="d-flex align-items-center">
-                    <label for="cantPedidos" class="me-2 mb-0">Mostrar de a</label>
-                    <select id="cantPedidos" class="form-select form-select-sm" style="width: auto;">
-                        <option value="3">3</option>
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                    </select>
-                    <label>Pedidos</label>
-                </div>
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="d-flex align-items-center">
+                <label for="cantPedidos" class="me-2 mb-0">Mostrar de a</label>
+                <select id="cantPedidos" class="form-select form-select-sm" style="width: auto;">
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+                <label>Pedidos</label>
             </div>
-
-            <div class="d-flex justify-content-center align-items-center">
-                <div class="paginacion mt-3 d-flex align-items-center">
-                    <button id="prevPedidos" class="btn btn-sm btn-secondary">Anterior</button>
-                    <span id="numPedidos" class="mx-2"></span>
-                    <button id="nextPedidos" class="btn btn-sm btn-secondary">Siguiente</button>
-                </div>
-            </div>
-        }
-        else
-        {
-            <h6>- No hay pedidos sin remitir -</h6>       
-        }
         </div>
+
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="paginacion mt-3 d-flex align-items-center">
+                <button id="prevPedidos" class="btn btn-sm btn-secondary">Anterior</button>
+                <span id="numPedidos" class="mx-2"></span>
+                <button id="nextPedidos" class="btn btn-sm btn-secondary">Siguiente</button>
+            </div>
+        </div>
+    </div>
 
     <div class="cargarArchivo">
         <h6>Archivo:</h6>
@@ -189,183 +217,6 @@
 </div>
 -->
 
-@section Scripts{
-    <script>
-        function mostrarInput() {
-            document.getElementById('sectionPregunta').style.display = 'none';
-            document.getElementById('sectionInputManual').style.display = 'block';
-            document.getElementById('sectionContinuarConUno').style.display = 'none';
-
-            document.getElementById('labelInput').innerText = 'Ingrese el número inicial:';
-
-            document.getElementById('inputFinalRemito').type = 'number';
-            document.getElementById('inputFinalRemito').focus();
-        }
-
-        function continuarConUno() {
-            document.getElementById('sectionPregunta').style.display = 'none';
-            document.getElementById('sectionInputManual').style.display = 'none';
-            document.getElementById('sectionContinuarConUno').style.display = 'block';
-
-            document.getElementById('labelInput').innerText = 'Se usará el número: 1';
-
-            var input = document.getElementById('inputFinalRemito');
-            input.value = 1;
-            input.type = 'hidden';
-        }
-
-        // FILTRAR POR DESCRIPCION
-        function filtrarTablaDescripcion() {
-            let input = document.getElementById("filtroDescripcion");
-            let filter = input.value.toLowerCase();
-            let filas = document.querySelectorAll(".fila-pedido");
-
-            filas.forEach(fila => {
-                let celdaDescripcion = fila.querySelector(".col-descripcion");
-                if (celdaDescripcion) {
-                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                    if (texto.toLowerCase().indexOf(filter) > -1) {
-                        fila.classList.remove('filtrado-oculto');
-                        fila.style.display = "";
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantPedidos');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-
-        Paginacion('tabla-pedidos', 'prevPedidos', 'nextPedidos', 'numPedidos', 'cantPedidos', 'fila-pedido');
-
-        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("formNuevoRemito");
-            const btnGuardar = document.getElementById("btnGuardar");
-
-            const inputNumero = document.querySelector('input[name="numeroRemito"]');
-            const inputFecha = document.querySelector('input[name="fecha"]');
-
-            function validarFormulario() {
-                const numeroValido = inputNumero && inputNumero.value.trim() !== "";
-                const fechaValida = inputFecha && inputFecha.value.trim() !== "";
-
-                const origenMarcado = form.querySelectorAll('.origen-pedido:checked').length > 0;
-                const destinoMarcado = form.querySelectorAll('.destino-entrega:checked').length > 0;
-        
-                const pedidoSeleccionado = origenMarcado || destinoMarcado;
-
-                btnGuardar.disabled = !(fechaValida && pedidoSeleccionado && numeroValido);
-            }
-
-            if (inputFecha) {
-                inputFecha.addEventListener("change", validarFormulario);
-            }
-
-            form.addEventListener("change", function(e) {
-                if (e.target.classList.contains("origen-pedido") || e.target.classList.contains("destino-entrega")) {
-                    validarFormulario();
-                }
-            });
-
-            validarFormulario();
-        });
-
-        // SELECCIONAR PEDIDO O ENTREGAS
-        function seleccionarTodos(origen) {
-            const fila = origen.closest('.fila-pedido');
-
-            const destinos = fila.querySelectorAll('.destino-entrega');
-
-            destinos.forEach(destino => {
-                destino.checked = origen.checked;
-            });
-        }
-
-        function verificarDestinos(destinoClickeado) {
-            const fila = destinoClickeado.closest('.fila-pedido');
-            if (!fila) return;
-
-            const origen = fila.querySelector('.origen-pedido');
-            const destinos = fila.querySelectorAll('.destino-entrega');
-
-            const algunoMarcado = Array.from(destinos).some(destino => destino.checked);
-
-            if (origen && !origen.disabled) {
-                origen.checked = algunoMarcado;
-            }
-        }
-
-        // ENVIAR DATOS
-        document.getElementById('formNuevoRemito').addEventListener('submit', function(e) {
-    
-            let todosLosInputs = this.querySelectorAll('input[name^="items"]');
-            todosLosInputs.forEach(input => {
-        
-            if (!input.dataset.originalName) {
-                input.dataset.originalName = input.name;
-            }
-        
-            input.removeAttribute('name'); 
-            });
-
-            let indexPedido = 0;
-
-            let filasPedidosMarcadas = document.querySelectorAll('.fila-pedido:has(.origen-pedido:checked)');
-
-            filasPedidosMarcadas.forEach(fila => {
-
-            let checkboxPedido = fila.querySelector('.origen-pedido');
-            checkboxPedido.name = `items[${indexPedido}].IdPedido`;
-
-            let indexEntrega = 0;
-
-            let entregasMarcadas = fila.querySelectorAll('.destino-entrega:checked');
-
-            entregasMarcadas.forEach(checkboxRecep => {
-
-                checkboxRecep.name = `items[${indexPedido}].Entregas[${indexEntrega}].idEntrega`;
-
-                indexEntrega++;
-            });
-
-            if (indexEntrega > 0) {
-                indexPedido++;
-            } else {
-                checkboxOC.removeAttribute('name');
-            }
-        });
-    });
-
-    // LIMPIAR ARCHIVO
-    function LimpiarArchivo(elemento){
-        const contenedor = elemento.closest('.cargarArchivo');
-        const inputArchivo = contenedor.querySelector('input[name="archivo"]');
-
-            if (inputArchivo) {
-                inputArchivo.value = '';
-                inputArchivo.files = new DataTransfer().files;
-            }
-    }
-
-    // MOSTRAR BUSCAR POR DESCRIPCION
-    function mostrarBuscarDescripcion(elemento) {
-        const contenedor = elemento.closest('.container-tituloDescripcion');
-
-        contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'none';
-        contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'block';
-    }
-    function ocultarBuscarDescripcion(elemento) {
-        const contenedor = elemento.closest('.container-tituloDescripcion');
-
-        contenedor.querySelector('.vistaBotonBuscarDescripcion').style.display = 'block';
-        contenedor.querySelector('.vistaBuscarDescripcion').style.display = 'none';
-    }
-
-    </script>
+@section Scripts {
+    <script src="~/js/Remitos/IndexNuevoRemito.js" asp-append-version="true"></script>
 }

@@ -6,28 +6,26 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata;
 using System.Text.Json;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace ContabilidadTaller.Controllers
 {
     public class EmpresasController : Controller
     {
         private readonly ServiciosJson _serJson;
-        public EmpresasController(ServiciosJson serJson)
+        private readonly IWebHostEnvironment _env;
+        public EmpresasController(ServiciosJson serJson, IWebHostEnvironment env)
         {
             _serJson = serJson;
+            _env = env;
         }
-        public IActionResult IndexEmpresas(string texto)
+        public IActionResult IndexEmpresas()
         {
 
             ViewBag.EmpresasGuardadas = _serJson.ObtenerEmpresasJson().Count();
-            if (string.IsNullOrEmpty(texto))
-            {
-                ViewBag.Empresas = _serJson.EmpresasOrdenadasPorId();
-            }
-            else
-            {
-                ViewBag._serEmpresas = FiltradasEmpresas(texto);
-            }
+            ViewBag.Empresas = _serJson.EmpresasOrdenadasPorId();
+
             return View();
         }
         public IActionResult IndexNuevaEmpresa()
@@ -50,10 +48,6 @@ namespace ContabilidadTaller.Controllers
         public IActionResult IrAEmpleados()
         {
             return RedirectToAction("IndexEmpleados", "Empleados");
-        }
-        public List<Empresa> FiltradasEmpresas(string texto)
-        {
-            return _serJson.ObtenerEmpresasJson().Where(e => e.NombreEmpresa.Contains(texto, StringComparison.OrdinalIgnoreCase)).ToList();
         }
         [HttpPost]
         public IActionResult NuevaEmpresa(string nombreEmpresa, int inicioCuit, int medioCuit, int finCuit, string direccion, List<string> notas)
@@ -116,46 +110,42 @@ namespace ContabilidadTaller.Controllers
             }
             return ultimoId;
         }
-        public IActionResult CrearCarpetasEmpresa(int idEmpresaNueva)
+
+
+        public void CrearCarpetasEmpresa(int idEmpresaNueva)
         {
-            string ruta = Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresaNueva;
+            string id = idEmpresaNueva.ToString();
+            string ruta = Path.Combine(_env.WebRootPath, "Empresas", id);
 
             if (!Directory.Exists(ruta))
             {
+                // Creamos la carpeta de la empresa
                 Directory.CreateDirectory(ruta);
 
-                // Creamos las demas carperas internas
+                // Elementos a crear
+                string[] elementos = { "Conjuntos", "Costos", "Facturas", "Notas de Credito", "Ordenes de Compra", "Pedidos", "Piezas", "Presupuestos", "Remitos", "Utilajes" };
 
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Costos");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Facturas");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Notas de Credito");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Ordenes de Compra");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Pedidos");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Piezas");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Presupuestos");
-                Directory.CreateDirectory(ruta + @"\" + idEmpresaNueva.ToString() + @" - Remitos");
+                foreach (string e in elementos)
+                {
+                    string carpeta = id + " - " + e;
+                    string carpetaArchivos = id + " - Archivos " + e;
 
-                // Creamos los archivos Json
+                    string carpetaElemento = Path.Combine(ruta, carpeta);
+                    string rutaArchivos = Path.Combine(carpetaElemento, carpetaArchivos);
 
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Costos\" + idEmpresaNueva.ToString() + @" - Costos.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Facturas\" + idEmpresaNueva.ToString() + @" - Facturas.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Notas de Credito\" + idEmpresaNueva.ToString() + @" - Notas de Credito.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Ordenes de Compra\" + idEmpresaNueva.ToString() + @" - Ordenes de Compra.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Pedidos\" + idEmpresaNueva.ToString() + @" - Pedidos.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Piezas\" + idEmpresaNueva.ToString() + @" - Piezas.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Piezas\" + idEmpresaNueva.ToString() + @" - Conjuntos.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Presupuestos\" + idEmpresaNueva.ToString() + @" - Presupuestos.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Remitos\" + idEmpresaNueva.ToString() + @" - Remitos.json", "[]");
+                    // Creamos las carpetas base
+                    Directory.CreateDirectory(rutaArchivos);
 
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Empleados.json", "[]");
-                System.IO.File.WriteAllText(ruta + @"\" + idEmpresaNueva.ToString() + @" - Ordenes de Compra\RelacionODCFactura.json", "[]");
+                    string nombreArchivoJson = $"{id} - {e}.json";
+                    string rutaCompletaJson = Path.Combine(carpetaElemento, nombreArchivoJson);
+
+                    // Creamos el archivo json
+                    System.IO.File.WriteAllText(rutaCompletaJson, "[]");
+                }
             }
-            else
-            {
-                return Content($"ALERTA: Carpeta ubicada en {ruta} ya existente");
-            }
-            return Content($"Carpeta creada en: {ruta}");
         }
+
+
         public IActionResult EliminarCarpetaEmpresa(int idEmpresaEliminar)
         {
             string ruta = Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresaEliminar;

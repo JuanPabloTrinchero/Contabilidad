@@ -36,22 +36,95 @@
     }
 }
 
-<h1>Ver Orden de Compra de @nombreEmpresa (@idEmpresa)</h1>
+<div class="text-center">
+    <h1>Orden de Compra de @nombreEmpresa (@idEmpresa)</h1>
+</div>
 
-<h3>Id: @odc.IdOC</h3>
+<div class="d-flex align-items-center">
+    <h3>Id: @odc.IdOC</h3>
+
+    <div class="opciones ms-auto">
+        <button class="btn btn-primary" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            Opciones
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                @if (odc.Estado != EstadoOC.Facturada)
+                {
+                    <button id="botonModifDescripcion" class="dropdown-item" onclick="mostrarModificarCodigo()">Modificar Codigo</button>
+                }
+                else
+                {
+                    <button class="dropdown-item" disabled>Modificar Codigo</button>
+                }
+            </li>
+            <li>
+                @if (odc.Estado != EstadoOC.Facturada)
+                {
+                    <button id="botonModifDescripcion" class="dropdown-item" onclick="mostrarModificarFecha()">Modificar Fecha</button>
+                }
+                else
+                {
+                    <button class="dropdown-item" disabled>Modificar Fecha</button>
+                } 
+            </li>
+            <li>
+                @if(odc.Relacion == Relacion.SinRecepcion)
+                {
+                    switch (odc.Estado)
+                    {
+                        case EstadoOC.Activa:
+                            <form asp-controller="OrdenesDeCompra" asp-action="OC_CambiarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-estadoNuevo="@EstadoRecepcion.Anulada">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar anular OC?')">Anular</button>
+                            </form>
+                            break;
+                        case EstadoOC.Anulada:
+                            if (sePuedeReactivar == true)
+                            {
+                                <form asp-controller="OrdenesDeCompra" asp-action="OC_CambiarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-estadoNuevo="@EstadoRecepcion.Activa">
+                                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar reactivar OC?')">Reactivar</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="dropdown-item" disabled>Reactivar</button>
+                            }
+                            break;
+                        case EstadoOC.Facturada:
+                        // No hacer nada
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (odc.Estado)
+                    {
+                        case EstadoOC.Activa:
+                            break;
+                        case EstadoOC.Anulada:
+                            break;
+                        case EstadoOC.Facturada:
+                            break;
+                    }
+                }
+            </li>
+            <li>
+                <button id="" class="dropdown-item" onclick="mostrarBorrarOC()" style="background-color: red; color: white">Borrar Orden de Compra</button>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <div class="container-codigo">
     <div class="vistaCodigo">
         <h3>Codigo: @odc.Codigo</h3>
-        @if (odc.Estado != EstadoOC.Facturada)
-        {
-            <a class="btn btn-primary" onclick="mostrarModificarCodigo(this)">Modificar Codigo</a>
-        }
     </div>
     <div class="vistaModificarCodigo" style="display: none">
         <form asp-controller="OrdenesDeCompra" asp-action="OC_ModificarCodigo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
+            <h6>Nuevo Codigo:</h6>
             <input type="text" placeholder="@odc.Codigo" name="nuevoCodigo" />
-            <button class="btn btn-primary" onclick="return confirm('Confirmar nuevo codigo?')">Confirmar Nuevo Codigo</button>
+            <button class="btn btn-primary" onclick="return confirm('Confirmar nuevo codigo?')">Guardar</button>
             <a class="btn btn-secondary" onclick="ocultarModificarCodigo(this)">Cancelar</a>
         </form>
     </div>
@@ -60,16 +133,12 @@
 <div class="container-fecha">
     <div class="vistaFecha">
         <h3>Fecha: @odc.Fecha.ToString("dd/MM/yyyy")</h3>
-        @if (odc.Estado != EstadoOC.Facturada)
-        {
-            <a class="btn btn-primary" onclick="mostrarModificarFecha(this)">Modificar Fecha</a>
-        }
     </div>
     <div class="vistaModificarFecha" style="display: none">
-        <h3 style="color:#C1C1C1">Fecha Anterior: @odc.Fecha.ToString("dd/MM/yyyy")</h3>
+        <h6>Fecha Anterior: @odc.Fecha.ToString("dd/MM/yyyy")</h6>
         <form asp-controller="OrdenesDeCompra" asp-action="OC_ModificarFecha" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" method="post">
             <input type="date" name="nuevaFecha" value="@odc.Fecha.ToString("yyyy-MM-dd")" />
-            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva fecha?')">Confirmar nueva fecha</button>
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva fecha?')">Guardar</button>
             <a class="btn btn-secondary" onclick="ocultarModificarFecha(this)">Cancelar</a>
         </form>
     </div>
@@ -84,7 +153,7 @@ else
     <h5>ODC sin Recepciones</h5>
 }
 
-<h3>Presupuestos</h3>
+<h3>Presupuestos:</h3>
 <div>
     <table class="table table-striped text-center">
         <thead>
@@ -164,9 +233,6 @@ else
                 {
                     
                 }
-
-
-
                 double? montoTotal = 0;
                 int cantPresupuestos = presupuestosOC.Count();
                 if (presupuestosOC != null && presupuestosOC.Any())
@@ -209,7 +275,7 @@ else
                 else
                 {
                     <tr>
-                        <td colspan="6" style="text-align: center">ODC sin presupuestos</td>
+                        <td colspan="6" style="text-align: center">- ODC sin presupuestos -</td>
                     </tr>
                 }
                 <tr>
@@ -263,6 +329,7 @@ else
                         <th>Fecha</th>
                         <th>Items</th>
                         <th>Monto</th>
+                        <th>Detalles</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -389,20 +456,23 @@ else
                                             <p>@total1?.ToString("C2")</p>
                                         }
                                     </td>
+                                    <td>
+                                        <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-IdEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@p.IdPresupuesto" onclick="window.open(this.href, 'ventanaPresupuesto', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                                    </td>
                                 </tr>
                             }
                         }
                         if (cantConfirmados == 0)
                         {
                             <tr>
-                                <td colspan="7" style="text-align: center">- No hay presupuestos confirmados y sin asignar -</td>
+                                <td colspan="7" style="text-align: center">- No hay presupuestos confirmados y/o sin asignar -</td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="7" style="text-align: center"> No hay presupuestos sin asignar</td>
+                            <td colspan="7" style="text-align: center">- No hay presupuestos confirmados y/o sin asignar -</td>
                         </tr>
                     }
                 </tbody>
@@ -502,24 +572,24 @@ else
                                             case EstadoRecepcion.Activa:
                                                 <li>
                                                     <form asp-controller="OrdenesDeCompra" asp-action="CambiarEstadoRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcion="@r.IdRecepcion" asp-route-nuevoEstado="@EstadoRecepcion.Anulada" method="post">
-                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar anular recepcion?')">Anular</button>
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar anular recepcion?')">Anular Recepcion</button>
                                                     </form>
                                                 </li>
                                                 <li>
                                                     <form asp-controller="OrdenesDeCompra" asp-action="EliminarRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcionBorrar="@r.IdRecepcion" method="post">
-                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar recepcion?')">Borrar</button>
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar recepcion?')">Borrar Recepcion</button>
                                                     </form>
                                                 </li>
                                                 break;
                                             case EstadoRecepcion.Anulada:
                                                 <li>
                                                     <form asp-controller="OrdenesDeCompra" asp-action="CambiarEstadoRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcion="@r.IdRecepcion" asp-route-nuevoEstado="@EstadoRecepcion.Activa" method="post">
-                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar activar recepcion anulada?')">Reactivar</button>
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar activar recepcion anulada?')">Reactivar Recepcion</button>
                                                     </form>
                                                 </li>
                                                 <li>
                                                     <form asp-controller="OrdenesDeCompra" asp-action="EliminarRecepcion" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-idRecepcionBorrar="@r.IdRecepcion" method="post">
-                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar recepcion?')">Borrar</button>
+                                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar recepcion?')">Borrar Recepcion</button>
                                                     </form>
                                                 </li>
                                                 break;
@@ -583,43 +653,6 @@ else
                 <h3 style="background: red">Estado OC: Anulada</h3>
                 break;
         }
-
-        if (odc.Relacion == Relacion.SinRecepcion)
-        {
-            switch (odc.Estado)
-            {
-                case EstadoOC.Activa:
-                    <form asp-controller="OrdenesDeCompra" asp-action="OC_CambiarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-estadoNuevo="@EstadoRecepcion.Anulada">
-                        <button class="btn btn-danger" type="submit" onclick="return confirm('Seguro que desea anular esta OC?')">Anular</button>
-                    </form>
-                    break;
-                case EstadoOC.Anulada:
-                    if (sePuedeReactivar == true)
-                    {
-                        <form asp-controller="OrdenesDeCompra" asp-action="OC_CambiarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-estadoNuevo="@EstadoRecepcion.Activa">
-                            <button class="btn btn-primary" type="submit" onclick="return confirm('Seguro que desea corregir esta OC?')">Reactivar</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-primary" disabled>Reactivar</button>
-                        <label>No se puede reactivar ya que algunos itesm fueron reasignados</label>
-                    } 
-                    break;
-            }
-        }
-        else
-        {
-            switch (odc.Estado)
-            {
-                case EstadoOC.Activa:
-                    break;
-                case EstadoOC.Anulada:
-                    break;
-                case EstadoOC.Facturada:
-                    break;
-            }
-        }
     }
 </div>
 
@@ -632,16 +665,25 @@ else
         {
             index++;
             <div class="vistaNota-@index">
-                <h5>@n</h5>
-                <a class="btn btn-primary" onclick="mostrarModificarNota(this, @index)">Modificar Nota</a>
-                <form asp-controller="OrdenesDeCompra" asp-action="OC_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-notaBorrar="@n" method="post">
+                <label>
+                    @index: @n
+                </label>
+                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                    <li><a class="dropdown-item" onclick="mostrarModificarNota(this, @index)">Modificar Nota</a></li>
+                    <li>
+                        <form asp-controller="OrdenesDeCompra" asp-action="OC_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-notaBorrar="@n" method="post">
 
-                    <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
-                </form>
+                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
+                        </form>
+                    </li>
+                </ul>
             </div>
             <div class="vistaModificarNota-@index" style="display: none">
                 <form asp-controller="OrdenesDeCompra" asp-action="OC_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-notaModificar="@n" method="post">
-                    <input type="text" placeholder="@n" name="notaModificada" required/>
+                    <textarea type="text" placeholder="@n" name="notaModificada" style="width: 50%; height: 100px" required></textarea>
 
                     <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar nota?')">Guardar</button>
                     <a class="btn btn-secondary" onclick="ocultarModificarNota(this, @index)">Cancelar</a>
@@ -651,7 +693,7 @@ else
     }
     else
     {
-        <h5>No hay Notas</h5>
+        <h6>- No hay notas -</h6>
     }
     <div class="vistaBotonAgregarNota">
         <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
@@ -675,19 +717,28 @@ else
 
         if (extension == ".jpg" || extension == ".png" || extension == ".ico")
         {
-            <h6>@nombre</h6>
+            <label>@nombre</label>
             <img src="@archCoregido" alt="not found" style="max-width: 100px;" />
         }
         else
         {
-            <h6>@nombre</h6>
+            <label>@nombre</label>
             <img src="\iconoArchivoGenerico.png" alt="not found" style="max-width: 50px;" />
         }
-        <a class="btn btn-primary" asp-controller="OrdenesDeCompra" asp-action="OC_AbrirArchivoEnUbicacion" asp-route-ruta="@odc.UbicacionArchivo">Abrir en ubicacion</a>
 
-        <form asp-controller="OrdenesDeCompra" asp-action="OC_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-ruta="@odc.UbicacionArchivo" method="post" >
-            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
-        </form>
+        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                <a class="dropdown-item" asp-controller="OrdenesDeCompra" asp-action="OC_AbrirArchivoEnUbicacion" asp-route-ruta="@odc.UbicacionArchivo">Abrir en ubicacion</a>
+            </li>
+            <li>
+                <form asp-controller="OrdenesDeCompra" asp-action="OC_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOc="@odc.IdOC" asp-route-ruta="@odc.UbicacionArchivo" method="post" >
+                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
+                </form>
+            </li>
+        </ul>   
     }
     else
     {
@@ -702,7 +753,7 @@ else
                     <input id="cargarArchivo" type="file" name="archivo" />
                     <button type="button" id="btnLimpiarArchivo" class="btn btn-warning">Limpiar Archivo</button>
 
-                    <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar cargar archivo?')">Guardar</button>
+                    <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar cargar archivo?')">Subir Archivo</button>
                     <a class="btn btn-secondary" onclick="ocultarCargarArchivo(this)">Cancelar</a>
                 </form>
             </div>
@@ -711,100 +762,91 @@ else
 </div>
 
 <div class="container-seguimiento">
-    <h3>Seguimiento DESARROLLAR</h3>
-    @{
-
-        int cantPresupuestosAsociados = 0;
-        if (presupuestos != null && presupuestos.Any())
-        {
-            foreach (Presupuesto pr in presupuestos)
-            {
-                if (pr.OrdenDeCompraFK == odc.IdOC)
-                {
-                    cantPresupuestosAsociados++;
-                }
-            }
-        }
-
-        // AQUI 
-
+    <h3>Seguimiento:</h3>
+    @{ 
         int cantidadFacturasAsociadas = 0;
         if (relacionesOCF != null && relacionesOCF.Any())
         {
-            foreach (RelacionODCFactura rocf in relacionesOCF)
-            {
-                if (rocf.IdOdcFK == odc.IdOC)
+            <ul>
+                @foreach (RelacionODCFactura rocf in relacionesOCF)
                 {
-                    if (facturas != null && facturas.Any())
+                    if (rocf.IdOdcFK == odc.IdOC)
                     {
-                        foreach (Factura f in facturas)
+                        if (facturas != null && facturas.Any())
                         {
-                            if (f.IdFactura == rocf.IdFacturaFK)
+                            foreach (Factura f in facturas)
                             {
-                                cantidadFacturasAsociadas++;
-                                <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura">@f.Fecha.ToString("dd/MMyyyy"): @f.Codigo.Puesto-@f.Codigo.Numero</a>
+                                if (f.IdFactura == rocf.IdFacturaFK)
+                                {
+                                    cantidadFacturasAsociadas++;
+                                    <li>
+                                        <label>
+                                            @cantidadFacturasAsociadas: @f.Fecha.ToString("dd/MMyyyy") - @f.Codigo.Puesto-@f.Codigo.Numero
+                                        </label>
+
+                                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@f.IdFactura" onclick="window.open(this.href, 'ventanaFactura', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                                            </li>
+                                        </ul>
+                                    </li>   
+                                }
                             }
                         }
                     }
                 }
-            } 
+            </ul>
         }
     }
 </div>
 
-<div class="container-borrar">
+<div class="container-borrar" style="display: none">
+    <h3>Borrar Orden de Compra:</h3>
     @if (sePuedeBorrar.SePuede == true)
     {
-        <div class="vistaBotonBorrarOC">
-            <h5>@sePuedeBorrar.Mensajes[0]</h5>
-            <a class="btn btn-danger" onclick="mostrarBorrarOC(this)">Borrar OC</a>
-        </div>
-        <div class="vistaBorrarOC" style="display: none">
-            <form asp-controller="OrdenesDeCompra" asp-action="OC_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOcBorrar="@odc.IdOC" method="post">
+        <form asp-controller="OrdenesDeCompra" asp-action="OC_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOcBorrar="@odc.IdOC" method="post">
+            <div class="dropdown">
+                <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
 
-                <label>Socio:</label>
-                <div class="dropdown">
-                    <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
-
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
-                        Seleccionar Socio
-                    </button>
-                    <ul class="dropdown-menu">
-                        @{
-                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
-                            if (socios != null && socios.Any())
+                <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                    Seleccionar Socio
+                </button>
+                <ul class="dropdown-menu">
+                    @{
+                        <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                        if (socios != null && socios.Any())
+                        {
+                            foreach (Socio s in socios)
                             {
-                                foreach (Socio s in socios)
-                                {
-                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                    <li>
-                                        <a class="dropdown-item opcion-socio"
-                                               href="#"
-                                               data-id="@s.IdSocio"
-                                               data-nombre="@nombreApellido">
-                                            @nombreApellido
-                                        </a>
-                                    </li>
-                                }
+                                string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                <li>
+                                    <a class="dropdown-item opcion-socio"
+                                       href="#"
+                                       data-id="@s.IdSocio"
+                                       data-nombre="@nombreApellido">
+                                        @nombreApellido
+                                    </a>
+                                </li>
                             }
                         }
-                    </ul>
-                </div>
+                    }
+                </ul>
+            </div>
 
-                <label>Contraseña:</label>
-                <div>
-                    <input type="password" name="contraseñaSocio" id="passSocio" />
-                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
-                </div>
+            <label>Contraseña:</label>
+            <div>
+                <input type="password" name="contraseñaSocio" id="passSocio" />
+                <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+            </div>
 
-                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar orden de compra?')">Borrar OC</button>
-                <a class="btn btn-secondary" onclick="ocultarBorrarOC(this)">Cancelar</a>
-            </form>
-        </div>
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar orden de compra?')">Borrar Orden de Compra</button>
+        </form>
     }
     else
     {
-        <button class="btn btn-danger" disabled>Borrar OC</button>
         <label>No se puede borrar OC ya que:</label>
         <ul>
             @foreach (string mensaje in sePuedeBorrar.Mensajes)
@@ -813,6 +855,7 @@ else
             }
         </ul>
     }
+    <a class="btn btn-secondary" onclick="ocultarBorrarOC()">Cancelar</a>
 </div>
 
 <div class="d-flex justify-content-center">
@@ -826,251 +869,6 @@ else
 -->
 
 
-@section Scripts{
-    <script>
-        // MODIFICAR CODIGO
-        function mostrarModificarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-codigo');
-
-            contenedor.querySelector('.vistaCodigo').style.display = 'none';
-            contenedor.querySelector('.vistaModificarCodigo').style.display = 'block';
-        }
-
-        function ocultarModificarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-codigo');
-
-            contenedor.querySelector('.vistaCodigo').style.display = 'block';
-            contenedor.querySelector('.vistaModificarCodigo').style.display = 'none';
-        }
-
-        // MODIFICAR FECHA
-        function mostrarModificarFecha(elemento) {
-            const contenedor = elemento.closest('.container-fecha');
-
-            contenedor.querySelector('.vistaFecha').style.display = 'none';
-            contenedor.querySelector('.vistaModificarFecha').style.display = 'block';
-        }
-
-        function ocultarModificarFecha(elemento) {
-            const contenedor = elemento.closest('.container-fecha');
-
-            contenedor.querySelector('.vistaFecha').style.display = 'block';
-            contenedor.querySelector('.vistaModificarFecha').style.display = 'none';
-        }
-
-        // AGREGAR RECEPCION
-        function mostrarAgregarRecepcion(elemento){
-            const contenedor = elemento.closest('.container-recepciones');
-
-            contenedor.querySelector('.vistaBotonAgregarRecepcion').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarRecepcion').style.display = 'block';
-        }
-
-        function ocultarAgregarRecepcion(elemento) {
-            const contenedor = elemento.closest('.container-recepciones');
-
-            contenedor.querySelector('.vistaBotonAgregarRecepcion').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarRecepcion').style.display = 'none';
-        }
-
-        // AGREGAR NOTA
-        function mostrarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-        }
-
-        function ocultarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-        }
-
-        // AGREGAR PRESUPUESTOS
-        function mostrarAgregraPresupuesto(elemento) {
-            const contenedor = elemento.closest('.container-agregarPresupuesto');
-
-            contenedor.querySelector('.vistaBotonAgregarPresupuesto').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarPresupuesto').style.display = 'block';
-        }
-
-        function ocultarAgregraPresupuesto(elemento) {
-            const contenedor = elemento.closest('.container-agregarPresupuesto');
-
-            contenedor.querySelector('.vistaBotonAgregarPresupuesto').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarPresupuesto').style.display = 'none';
-        }
-
-        // MODIFICAR RECEPCION FACTURADA
-        function mostrarEstadoFacturadaMostrarBotones(elemento) {
-            const contenedor = elemento.closest('.container-opcionFacturada');
-
-            contenedor.querySelector('.vistaPregunta').style.display = 'none';
-            contenedor.querySelector('.vistaBotones').style.display = 'block';
-        }
-
-        function ocultarBotonesModificarEstado(elemento) {
-            const contenedor = elemento.closest('.container-opcionFacturada');
-
-            contenedor.querySelector('.vistaPregunta').style.display = 'block';
-            contenedor.querySelector('.vistaBotones').style.display = 'none';
-        }
-
-        // CARGAR ARCHIVO
-        function mostrarCargarArchivo(elemento){
-            const contenedor = elemento.closest('.container-cargarArchivo');
-
-            contenedor.querySelector('.vistaBotonCargarArchivo').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'block';
-        }
-        function ocultarCargarArchivo(elemento) {
-            const contenedor = elemento.closest('.container-cargarArchivo');
-
-            contenedor.querySelector('.vistaBotonCargarArchivo').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'none';
-
-            document.getElementById('cargarArchivo').value = '';
-        }
-
-        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("formAgregarPresupuestos");
-            const btnGuardar = document.getElementById("btnGuardarAgregarPresupuestos");
-
-            function validarFormulario() {
-                const checkboxes = form.querySelectorAll('input[id="presupuestoSeleccion"]:checked');
-                const presupuestosSeleccionados = checkboxes.length > 0;
-
-                btnGuardar.disabled = !(presupuestosSeleccionados);
-            }
-
-            form.addEventListener("change", function(e) {
-                    if (e.target.id === "presupuestoSeleccion") {
-                    validarFormulario();
-                }
-            });
-
-            validarFormulario();
-        });
-
-        // VER ITEMS EN PRESUPUESTO
-        function mostrarItemsPresupuesto(elemento){
-            const contenedor = elemento.closest('.container-itemsPresupuesto');
-
-            contenedor.querySelector('.vistaBotonVerItemsPresupuesto').style.display = 'none';
-            contenedor.querySelector('.vistaItemsPresupuesto').style.display = 'block';
-        }
-        function ocultarItemsPresupuesto(elemento){
-            const contenedor = elemento.closest('.container-itemsPresupuesto');
-
-            contenedor.querySelector('.vistaBotonVerItemsPresupuesto').style.display = 'block';
-            contenedor.querySelector('.vistaItemsPresupuesto').style.display = 'none';
-        }
-
-        // MODIFICAR NOTA
-        function mostrarModificarNota(elemento, index) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector(`.vistaNota-${index}`).style.display = 'none';
-            contenedor.querySelector(`.vistaModificarNota-${index}`).style.display = 'block';
-        }
-        function ocultarModificarNota(elemento, index) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector(`.vistaNota-${index}`).style.display = 'block';
-            contenedor.querySelector(`.vistaModificarNota-${index}`).style.display = 'none';
-        }
-
-        // LIMPIAR ARCHIVO SELECCIONADO
-        document.getElementById('btnLimpiarArchivo').addEventListener('click', function () {
-            document.getElementById('cargarArchivo').value = '';
-        });
-
-        // FILTRAR PRESUPUESTO AGREGAR POR NUMERO
-        
-        function filtrarTablaNumeroPresupuesto() {
-            let input = document.getElementById("filtroNumeroPresupuesto");
-            let filter = input.value.toLowerCase();
-            let filas = document.querySelectorAll(".fila-presupuesto");
-
-            filas.forEach(fila => {
-                let celdaDescripcion = fila.querySelector(".col-numero");
-                if (celdaDescripcion) {
-                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                    if (texto.toLowerCase().indexOf(filter) > -1) {
-                        fila.classList.remove('filtrado-oculto');
-                        fila.style.display = "";
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantPresupuestos');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-
-        Paginacion('tablaAgregarPresupuestos', 'prevPresupuestos', 'nextPresupuestos', 'numPresupuestos', 'cantPresupuestos', 'fila-presupuesto');
-
-        // MOSTRAR BUSCAR POR NUMERO PRESUPUESTO
-        function mostrarBuscarNumero(elemento) {
-            const contenedor = elemento.closest('.container-tituloNumeroPresupuesto');
-
-            contenedor.querySelector('.vistaBotonBuscarNumero').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarNumero').style.display = 'block';
-        }
-        function ocultarBuscarNumero(elemento) {
-            const contenedor = elemento.closest('.container-tituloNumeroPresupuesto');
-
-            contenedor.querySelector('.vistaBotonBuscarNumero').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarNumero').style.display = 'none';
-        }
-
-        // BORRAR ORDEN DE COMPRA
-        function mostrarBorrarOC(elemento, index) {
-        const contenedor = elemento.closest('.container-borrar');
-
-        contenedor.querySelector('.vistaBotonBorrarOC').style.display = 'none';
-        contenedor.querySelector('.vistaBorrarOC').style.display = 'block';
-        }
-        function ocultarBorrarOC(elemento, index) {
-        const contenedor = elemento.closest('.container-borrar');
-
-        contenedor.querySelector('.vistaBotonBorrarOC').style.display = 'block';
-        contenedor.querySelector('.vistaBorrarOC').style.display = 'none';
-        }
-
-        // SELECCIONAR SOCIO
-        document.querySelectorAll('.opcion-socio').forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                const id = this.getAttribute('data-id');
-                const nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('btnSocio').innerText = nombre;
-
-                document.getElementById('idSocioSeleccionado').value = id;
-            });
-        });
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            // Si es password lo pasa a text, y viceversa
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-
-    </script>
+@section Scripts {
+    <script src="~/js/OrdenesDeCompra/IndexVerOrdenDeCompra.js" asp-append-version="true"></script>
 }

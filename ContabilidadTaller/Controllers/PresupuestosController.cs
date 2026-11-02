@@ -2,6 +2,11 @@
 using ContabilidadTaller.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+// Publicar vista como .PDF
+using PuppeteerSharp;
+using PuppeteerSharp.Media;
 
 namespace ContabilidadTaller.Controllers
 {
@@ -109,17 +114,29 @@ namespace ContabilidadTaller.Controllers
 
             ViewBag.Remitos = _serJson.ObtenerRemitosJson(idEmpresa);
 
+            ViewBag.SePuedeConfirmar = _serJson.SePuedeConfirmarPresupuesto(idEmpresa, idPresupuesto);
+            ViewBag.SePuedeCancelar = _serJson.SePuedeCancelarPresupuesto(idEmpresa, idPresupuesto);
+            ViewBag.SePuedeReacivar = _serJson.SePuedeReactivarPresupuesto(idEmpresa, idPresupuesto);
+
             ViewBag.SePuedeBorrar = _serJson.SePuedeBorrarPresupuesto(idEmpresa, idPresupuesto);
 
             return View();
         }
 
-        public IActionResult IndexPresupuestoGenerado(int idEmpresa, string nombreEmpresa, int idPresupuesto)
+        public IActionResult IndexPresupuestoGenerado(int idEmpresa, int idPresupuesto)
         {
-            ViewBag.IdEmpresa = idEmpresa;
-            ViewBag.NombreEmpresa = nombreEmpresa;
+            ViewBag.Empresa = _serJson.ElegirEmpresa(idEmpresa);
 
-            ViewBag.Presupuesto = _serJson.ElegirPresupuesto(idEmpresa, idPresupuesto);
+            Presupuesto p = _serJson.ElegirPresupuesto(idEmpresa, idPresupuesto);
+            ViewBag.Presupuesto = p;
+
+            ViewBag.Pedidos = _serJson.ObtenerPedidosJson(idEmpresa);
+            ViewBag.Piezas = _serJson.ObtenerPiezasJson(idEmpresa);
+            ViewBag.Empleados = _serJson.ObtenerEmpleadosJson(idEmpresa);
+            ViewBag.Remitos = _serJson.ObtenerRemitosJson(idEmpresa);
+
+            ViewBag.Socio = _serJson.ElegirSocio(p.SocioFK);
+
 
             return View();
         }
@@ -201,6 +218,15 @@ namespace ContabilidadTaller.Controllers
             _serJson.PresupuestoEnviadoA(idEmpresa, idPresupuesto, fechaEnvio, empleados);
             return RedirectToAction("IndexVerPresupuesto", "Presupuestos", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPresupuesto = idPresupuesto });
         }
+
+        [HttpPost]
+        public IActionResult BorrarEnvio(int idEmpresa, string nombreEmpresa, int idPresupuesto, int idEnvioBorrar)
+        {
+            _serJson.BorrarEnvioPresupuesto(idEmpresa, idPresupuesto, idEnvioBorrar);
+            return RedirectToAction("IndexVerPresupuesto", "Presupuestos", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPresupuesto = idPresupuesto });
+        }
+
+
         [HttpPost]
         public IActionResult GuardarNuevaNotaPresupuesto(int idEmpresa, string nombreEmpresa, int idPresupuesto, string notaNueva)
         {
@@ -257,6 +283,7 @@ namespace ContabilidadTaller.Controllers
 
 
 
-        
+      
+
     }
 }

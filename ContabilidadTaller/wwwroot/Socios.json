@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "IdSocio": 0,
+    "Nombres": "Juan Pablo",
+    "Apellido": "Trinchero",
+    "Cuit": {
+      "InicioCuit": 20,
+      "MedioCuit": 35420148,
+      "FinCuit": 9
+    },
+    "Direccion": "Ruta 88 km 3",
+    "Emails": [
+      "jptrinche@gmail.com"
+    ],
+    "Telefono": "2234387694",
+    "Notas": [
+      "adfadfadfg",
+      "sdvVsdv"
+    ],
+    "ContraseñaConfirmacion": "11153090"
+  }
+]

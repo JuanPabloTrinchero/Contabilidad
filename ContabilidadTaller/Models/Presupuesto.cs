@@ -8,6 +8,7 @@
     }
     public class Envio()
     {
+        public int idEnvio;
         public DateOnly fechaEnvio;
         public List<int>? empleados;
     }

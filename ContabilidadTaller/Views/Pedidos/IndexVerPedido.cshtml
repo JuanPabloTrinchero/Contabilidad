@@ -57,7 +57,9 @@
 
 }
 
-<h1>Ver Pedido de @nombreEmpresa (@idEmpresa)</h1>
+<div class="text-center">
+    <h1>Pedido de @nombreEmpresa (@idEmpresa)</h1>
+</div>
 
 <div class="container-pedido" style="display: flex; width: 100%">
     <div style="width: 50%">
@@ -383,7 +385,14 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
                                     <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado">Hacer Entrega</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Cancelar</a></li>
+                                    @if (pedido.PresupuestoFK == null && pedido.FacturaFK == null)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido" onclick="return confirm('Confirmar cancelar pedido?')">Cancelar Pedido</a></li>
+                                    }
+                                    else
+                                    {
+                                        <li><button class="dropdown-item" disabled>Cancelar Pedido</button></li>
+                                    }
                                 </ul>
                             </td>
                             break;
@@ -404,7 +413,14 @@
                                 <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
                                     <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexNuevaEntrega" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido" asp-route-idEmpleado="@idEmpleado">Hacer Entrega</a></li>
                                     <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Ver Entregas</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Cancelar</a></li>
+                                    @if (pedido.PresupuestoFK == null && pedido.FacturaFK == null)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido" onclick="return confirm('Confirmar cancelar pedido?')">Cancelar Pedido</a></li>
+                                    }
+                                    else
+                                    {
+                                        <li><button class="dropdown-item" disabled>Cancelar Pedido</button></li>
+                                    }
                                 </ul>
                             </td>
                             break;
@@ -416,7 +432,14 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
                                     <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Ver Entregas</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Cancelar</a></li>
+                                    @if (pedido.PresupuestoFK == null && pedido.FacturaFK == null)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Pedidos" asp-action="Pedido_Cancelar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido" onclick="return confirm('Confirmar cancelar pedido?')">Cancelar Pedido</a></li>
+                                    }
+                                    else
+                                    {
+                                        <li><button class="dropdown-item" disabled>Cancelar Pedido</button></li>
+                                    }
                                 </ul>
                             </td>
                             break;
@@ -428,7 +451,7 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
                                     <li><a class="dropdown-item" asp-controller="Entregas" asp-action="IndexVerEntregasDePedido" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedido="@pedido.IdPedido">Ver Entregas</a></li>
-                                    <li><a class="btn" asp-controller="Pedidos" asp-action="Pedido_Reactivar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido">Reactivar</a></li>
+                                    <li><a class="btn" asp-controller="Pedidos" asp-action="Pedido_Reactivar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@idEmpleado" asp-route-idPedido="@pedido.IdPedido" onclick="return confirm('Confirmar reactivar pedido?')">Reactivar Pedido</a></li>
                                 </ul>
                             </td>
                             break;
@@ -737,9 +760,10 @@
                                 }
                             }
                         }
-                        if(cantRemitos == 0){
-                            <label>- Pedido sin remitir -</label>
-                        }
+                    }
+                    if (cantRemitos == 0)
+                    {
+                        <label>- Sin remitir -</label>
                     }
                 } 
             </td>
@@ -763,7 +787,7 @@
                     }
                     else
                     {
-                        <label>Sin Facturar</label>
+                        <label>- Sin Facturar -</label>
                     }
                 }
             </td>
@@ -779,6 +803,7 @@
 <div class="container-borrar mt-4">
     @if (sePuedeBorrar.SePuede == true)
     {
+        <h3>Borrar Pedido:</h3>
         <h5>@sePuedeBorrar.Mensajes[0]</h5>
         <div class="vistaBotonBorrarPedido">
             <a class="btn btn-danger" onclick="mostrarBorrarPedido(this)">Borrar Pedido</a>
@@ -787,7 +812,8 @@
         <div class="vistaBorrarPedido" style="display: none">
             <form asp-controller="Pedidos" asp-action="Pedido_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPedidoEliminar="@pedido.IdPedido" asp-route-idEmpleado="-1" method="post">
 
-                <label>Socio:</label>
+                <h5>Socio:</h5>
+                <!--
                 <div class="dropdown">
                     <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
 
@@ -815,6 +841,32 @@
                         }
                     </ul>
                 </div>
+                -->
+
+
+                <table id="tabla-selecSocioBorrarFactura" class="table table-striped text-center" style="width: 50%">
+                    <thead>
+                        <tr>
+                            <th>Seleccionar Socio</th>
+                            <th>Socio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if(socios != null && socios.Any())
+                        {
+                            foreach (Socio s in socios)
+                            {
+                                string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                <tr>
+                                    <td>
+                                        <input class="radio-desmarcable" type="radio" name="idSocio" value="@s.IdSocio" onclick="ToggleRadio(this)"/>
+                                    </td>
+                                    <td>@nombreApellido</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
 
                 <label>Contraseña:</label>
                 <div>
@@ -847,261 +899,13 @@
 </div>
 
 @section Scripts {
-    <script>
-        // Modificar FechaEncargo
-        function mostrarFechaEncargo(elemento) {
-        const contenedor = elemento.closest('.container-fechaEncargo');
-
-        contenedor.querySelector('.vistaFechaEncargo').style.display = 'block';
-        contenedor.querySelector('.vistaModificarFechaEncargo').style.display = 'none';
-        }
-        function mostrarModificarFechaEncargo(elemento) {
-            const contenedor = elemento.closest('.container-fechaEncargo');
-
-            contenedor.querySelector('.vistaFechaEncargo').style.display = 'none';
-            contenedor.querySelector('.vistaModificarFechaEncargo').style.display = 'block';
-        }
-
-        // Modificar Cantidad
-        function mostrarCantidad(elemento) {
-        const contenedor = elemento.closest('.container-cantidad');
-
-        contenedor.querySelector('.vistaCantidad').style.display = 'block';
-        contenedor.querySelector('.vistaModificarCantidad').style.display = 'none';
-        }
-        function mostrarModificarCantidad(elemento) {
-            const contenedor = elemento.closest('.container-cantidad');
-
-            contenedor.querySelector('.vistaCantidad').style.display = 'none';
-            contenedor.querySelector('.vistaModificarCantidad').style.display = 'block';
-        }
-
-        // Modificar Descripcion
-        function mostrarDescripcion(elemento) {
-        const contenedor = elemento.closest('.container-descripcion');
-
-        contenedor.querySelector('.vistaDescripcion').style.display = 'block';
-        contenedor.querySelector('.vistaModificarDescripcion').style.display = 'none';
-        }
-        function mostrarModificarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-descripcion');
-
-            contenedor.querySelector('.vistaDescripcion').style.display = 'none';
-            contenedor.querySelector('.vistaModificarDescripcion').style.display = 'block';
-        }
-
-        // Modificar Precio Unitario
-        function mostrarPrecioUnitario(elemento) {
-        const contenedor = elemento.closest('.container-precioUnitario');
-
-        contenedor.querySelector('.vistaPrecioUnitario').style.display = 'block';
-        contenedor.querySelector('.vistaModificarPrecioUnitario').style.display = 'none';
-        }
-        function mostrarModificarPrecioUnitario(elemento) {
-            const contenedor = elemento.closest('.container-precioUnitario');
-
-            contenedor.querySelector('.vistaPrecioUnitario').style.display = 'none';
-            contenedor.querySelector('.vistaModificarPrecioUnitario').style.display = 'block';
-        }
-
-        //MOSTRAR COSTOS
-        function mostrarCostos(elemento) {
-            const contenedor = elemento.closest('.container-costos');
-
-            contenedor.querySelector('.vistaBotonVerCostos').style.display = 'none';
-            contenedor.querySelector('.vistaCostos').style.display = 'block';
-        }
-        function ocultarCostos(elemento) {
-            const contenedor = elemento.closest('.container-costos');
-
-            contenedor.querySelector('.vistaBotonVerCostos').style.display = 'block';
-            contenedor.querySelector('.vistaCostos').style.display = 'none';
-        }
-
-        // Modificar Encargado
-        function mostrarEncargado(elemento) {
-        const contenedor = elemento.closest('.container-encargado');
-
-        contenedor.querySelector('.vistaEncargado').style.display = 'block';
-        contenedor.querySelector('.vistaModificarEncargado').style.display = 'none';
-        }
-        function mostrarModificarEncargado(elemento) {
-            const contenedor = elemento.closest('.container-encargado');
-
-            contenedor.querySelector('.vistaEncargado').style.display = 'none';
-            contenedor.querySelector('.vistaModificarEncargado').style.display = 'block';
-        }
-
-        // Subir Archivo a Pedido
-        function mostrarAgregarArchivoAPedido(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivoAPedido').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarArchivoAPedido').style.display = 'block';
-        }
-        function ocultarAgregarArchivoAPedido(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivoAPedido').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarArchivoAPedido').style.display = 'none';
-        }
-
-        // Subir Archivo a Pieza
-        function mostrarAgregarArchivoAPieza(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivoAPieza').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarArchivoAPieza').style.display = 'block';
-        }
-        function ocultarAgregarArchivoAPieza(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivoAPieza').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarArchivoAPieza').style.display = 'none';
-        }
-
-        // Limpiar Archivo Seleccionado
-        function limpiarArchivoPedido(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            const vista = contenedor.querySelector('.vistaAgregarArchivoAPedido');
-
-            const input = vista.querySelector('input[type="file"]');
-            input.value = '';
-        }
-
-        // Limpiar Archivo Seleccionado
-        function limpiarArchivoPieza(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            const vista = contenedor.querySelector('.vistaAgregarArchivoAPieza');
-
-            const input = vista.querySelector('input[type="file"]');
-            input.value = '';
-        }
-
-        // AGREGAR NOTA
-        function mostrarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaNotas').style.display = 'block';
-            contenedor.querySelector('.botonOcultarNotas').style.display = 'none';
-            contenedor.querySelector('.botonVerNotas').style.display = 'none';
-            
-
-        }
-        function ocultarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-
-
-            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'block';
-            contenedor.querySelector('.vistaNotas').style.display = 'none';
-            contenedor.querySelector('.botonOcultarNotas').style.display = 'block';
-            contenedor.querySelector('.botonVerNotas').style.display = 'block';
-        }
-
-
-        // MOSTRAR NOTAS
-        function mostrarNotas(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'none';
-            contenedor.querySelector('.vistaNotas').style.display = 'block';
-        }
-        function ocultarNotas(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonVerNotas').style.display = 'block';
-            contenedor.querySelector('.vistaNotas').style.display = 'none';
-        }
-
-        // MODIFICAR NOTA
-        function mostrarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-nota');
-
-            contenedor.querySelector('.vistaNota').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'block';
-        }
-        function ocultarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-nota');
-
-            contenedor.querySelector('.vistaNota').style.display = 'block';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'none';
-        }
-
-        // SELECCIONAR QUIEN HISO EN PEDIDO
-        document.querySelectorAll('.opcion-empleado').forEach(item => {
-        item.addEventListener('click', function (e) {
-        e.preventDefault();
-
-                const id = this.getAttribute('data-id');
-                const nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('btnEmpleado').innerText = nombre;
-
-                if (!id || id === "") {
-                    document.getElementById('idEmpleadoSeleccionado').value = "";
-                } else {
-                    document.getElementById('idEmpleadoSeleccionado').value = id;
-                }
-            });
-        });
-
-        // BORRAR PEDIDO
-        function mostrarBorrarPedido(elemento) {
-            const contenedor = elemento.closest('.container-borrar');
-
-            contenedor.querySelector('.vistaBotonBorrarPedido').style.display = 'none';
-            contenedor.querySelector('.vistaBorrarPedido').style.display = 'block';
-        }
-        function ocultarBorrarPedido(elemento) {
-            const contenedor = elemento.closest('.container-borrar');
-
-            contenedor.querySelector('.vistaBotonBorrarPedido').style.display = 'block';
-            contenedor.querySelector('.vistaBorrarPedido').style.display = 'none';
-        }
-
-        // SELECCIONAR SOCIO
-        document.querySelectorAll('.opcion-socio').forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                const id = this.getAttribute('data-id');
-                const nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('btnSocio').innerText = nombre;
-
-                document.getElementById('idSocioSeleccionado').value = id;
-            });
-        });
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            const icono = document.getElementById('iconoOjo');
-
-            if (input.type === "password") {
-                input.type = "text";
-
-                icono.classList.remove('bi-eye');
-                icono.classList.add('bi-eye-slash');
-            } else {
-                input.type = "password";
-
-                icono.classList.remove('bi-eye-slash');
-                icono.classList.add('bi-eye');
-            }
-        }
-
-    </script>
+    <script src="~/js/Pedidos/IndexVerPedido.js" asp-append-version="true"></script>
 }
+
 
 @section Styles{
-    <link rel="stylesheet" href="~/css/estilosPedidos.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Pedidos/IndexVerPedido.css" asp-append-version="true" />
 }
+
+
     

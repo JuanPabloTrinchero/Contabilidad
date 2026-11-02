@@ -3,9 +3,9 @@
 @{
     ViewData["Title"] = "Empleados";
     List<Empleado> Empleados = (List<Empleado>)ViewBag.Empleados;
-    string NombreEmpresa = (string)ViewBag.NombreEmpresa;
-    int IdEmpresa = (int)ViewBag.IdEmpresa;
-
+    int idEmpresa = (int)ViewBag.IdEmpresa;
+    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+   
     @if (TempData["Mensaje"] != null)
     {
         <script type="text/javascript">
@@ -19,12 +19,12 @@
     }
 }
 
-<div>
-    <h1>Empleados de @NombreEmpresa (@IdEmpresa)</h1>
+<div class="text-center">
+    <h1>Empleados de @nombreEmpresa (@idEmpresa)</h1>
 </div>
 
 <div>
-    <a class="btn btn-primary" asp-controller="Empleados" asp-action="IndexNuevoEmpleado" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpresa="@IdEmpresa">Nuevo Empleado</a>
+    <a class="btn btn-primary" asp-controller="Empleados" asp-action="IndexNuevoEmpleado" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpresa="@idEmpresa">+ Nuevo Empleado</a>
 </div>
 
 <div>
@@ -124,7 +124,7 @@
                             <td class="col-estado" data-estado="@EstadoEmpleado.Inactivo.ToString().ToLower()">Inactivo</td>
                         }   
                         <td>
-                            <a class="btn btn-primary" asp-controller="Empleados" asp-action="IndexVerEmpleado" asp-route-idEmpresa="@IdEmpresa" asp-route-nombreEmpresa="@NombreEmpresa" asp-route-idEmpleado="@e.IdEmpleado">Ver</a>
+                            <a class="btn btn-primary" asp-controller="Empleados" asp-action="IndexVerEmpleado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idEmpleado="@e.IdEmpleado">Ver</a>
                         </td>
                     </tr>
                 }
@@ -162,8 +162,8 @@
 </div>
 
 
-<div class="d-flex justify-content-center">
-    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+<div class="text-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexVerEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
 </div>
 
 <!--
@@ -172,89 +172,8 @@
 </div>
 -->
 
-
-
-
-
-@section Scripts{
-    <script>
-        // COPIAR EMAIL
-        function copiarEmail(email) {
-            navigator.clipboard.writeText(email).then(()  => { })
-                    .catch(err => {
-                            console.error('Error al copiar: ', err);
-                    });
-        }
-
-        // FILTRAR POR NOMBRE
-        function filtrarTabla() {
-            let input = document.getElementById("filtroNombreApellido");
-            let filter = input.value.toLowerCase();
-            let filas = document.querySelectorAll(".fila-empleado");
-
-            filas.forEach(fila => {
-                let celdaDescripcion = fila.querySelector(".col-nombreApellido");
-                if (celdaDescripcion) {
-                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                    if (texto.toLowerCase().indexOf(filter) > -1) {
-                        fila.classList.remove('filtrado-oculto');
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantEmpleados');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-
-        // FILTRO DESCRIPCION
-        
-        function filtrarTablaEstados(valorFiltro) {
-            let filter = valorFiltro.toLowerCase();
-            let filas = document.querySelectorAll(".fila-empleado");
-
-            filas.forEach(fila => {
-                let celdaEstado = fila.querySelector(".col-estado");
-
-                if (celdaEstado) {
-                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
-
-                    if (filter === 'todos' || estadoCelda === filter) {
-                        fila.classList.remove('filtrado-oculto');
-                        fila.style.display = "";
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-        }
-
-        Paginacion('tablaEmpleados', 'prevEmpleados', 'nextEmpleados', 'numEmpleados', 'cantEmpleados', 'fila-empleado');
-
-
-        // BUSCAR POR mostrarBuscarNombre Y APELLIDO
-        function mostrarBuscarNombreApellido(elemento) {
-            const contenedor = elemento.closest('.container-nombreApellido');
-
-            contenedor.querySelector('.vistaBotonBuscar').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarPorNombreApellido').style.display = 'block';
-        }
-        function ocultarBuscarNombreApellido(elemento) {
-            const contenedor = elemento.closest('.container-nombreApellido');
-
-            contenedor.querySelector('.vistaBotonBuscar').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarPorNombreApellido').style.display = 'none';
-        }
-
-
-
-    </script>
+@section Scripts {
+    <script src="~/js/Empleados/IndexEmpleados.js" asp-append-version="true"></script>
 }
 
 <style>

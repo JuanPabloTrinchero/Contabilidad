@@ -18,7 +18,7 @@
     }
 }
 
-<div>
+<div class="text-center">
     <h1>Notas de Credito de @nombreEmpresa (@idEmpresa)</h1>
 </div>
 
@@ -153,9 +153,7 @@
                                     if (f.NotaDeCredito == ndc.IdNotaCredito)
                                     {
                                         cantFacturas++;
-                                        <p>@long.Parse(f.Codigo.GetCodigo()).ToString(@"0000\-00000000")</p>
-                                        <p>@f.Fecha.ToString("dd/MM/yyyy")</p>
-                                        <a class="btn btn-primary">Ver Factura</a>
+                                        <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@f.IdFactura" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">@f.Fecha.ToString("dd/MM/yyyy"): @long.Parse(f.Codigo.GetCodigo()).ToString(@"0000\-00000000")</a>
                                     }
                                 }
                                 if (cantFacturas == 0)
@@ -207,8 +205,8 @@
 
 </div>
 
-<div class="d-flex justify-content-center">
-    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexEmpresas">Atras</a>
+<div class="text-center">
+    <a class="btn btn-secondary" asp-controller="Empresas" asp-action="IndexVerEmpresa" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
 </div>
 
 <!--
@@ -217,105 +215,6 @@
 </div>
 -->
 
-@section Scripts{
-    <script>
-        // FILTRAR POR CODIGO
-        function filtrarTabla() {
-            let input = document.getElementById("filtroCodigo");
-            let filter = input.value.toLowerCase();
-            let filas = document.querySelectorAll(".fila-notaDeCredito");
-
-            filas.forEach(fila => {
-                let celdaDescripcion = fila.querySelector(".col-codigo");
-                if (celdaDescripcion) {
-                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                    if (texto.toLowerCase().indexOf(filter) > -1) {
-                        fila.classList.remove('filtrado-oculto');
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantNotasDeCredito');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-        
-        Paginacion('tablaNotasDeCredito', 'prevNotasDeCredito', 'nextNotasDeCredito', 'numNotasDeCredito', 'cantNotasDeCredito', 'fila-notaDeCredito');
-
-        //FILTROS DE FECHAS
-        function mostrarBuscarPorIntervalo(elemento) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const contenedor = elemento.closest('th');
-
-            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
-        }
-        function mostrarBuscarFechaEspecifica(elemento) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const contenedor = elemento.closest('th');
-
-            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'block';
-        }
-        function ocultarFiltrosDeFechas(elemento) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const contenedor = elemento.closest('th');
-
-            contenedor.querySelector('.vistaBuscarFechaIntervalo').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarFechaEspecifica').style.display = 'none';
-        }
-
-        // FILTRO POR ESTADO
-        function filtrarTablaEstados(valorFiltro) {
-            let filter = valorFiltro.toLowerCase();
-            let filas = document.querySelectorAll(".fila-notaDeCredito");
-
-            filas.forEach(fila => {
-                let celdaEstado = fila.querySelector(".col-estado");
-
-                if (celdaEstado) {
-                    let estadoCelda = (celdaEstado.getAttribute("data-estado") || "").trim().toLowerCase();
-
-                    if (filter === 'todos' || estadoCelda === filter) {
-                        fila.classList.remove('filtrado-oculto');
-                        fila.style.display = "";
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantPresupuestos');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-
-        // MOSTRAR BUSCAR POR CODIGO
-        function mostrarBuscarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-tituloCodigo');
-
-            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'block';
-        }
-        function ocultarBuscarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-tituloCodigo');
-
-            contenedor.querySelector('.vistaBotonBuscarCodigo').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarCodigo').style.display = 'none';
-        }
-
-    </script>
+@section Scripts {
+    <script src="~/js/NotasDeCredito/IndexNotasDeCredito.js" asp-append-version="true"></script>
 }

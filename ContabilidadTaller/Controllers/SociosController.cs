@@ -24,7 +24,7 @@ namespace ContabilidadTaller.Controllers
 
         public IActionResult IndexVerSocio(int idSocio)
         {
-            Socio s = _serJson.ElegirSocio(idSocio);
+            Socio? s = _serJson.ElegirSocio(idSocio);
 
             ViewBag.Socio = s;
 

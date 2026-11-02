@@ -3,6 +3,7 @@ using Aspose.CAD.FileFormats.Tiff.Enums;
 using ContabilidadTaller.Controllers;
 using ContabilidadTaller.Interfaces;
 using ContabilidadTaller.Models;
+using ContabilidadTaller.Models.Genericos;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
@@ -27,9 +28,21 @@ namespace ContabilidadTaller.Services
     }
     */
 
+
+    // NOTAS AUXILIARES
+    #region NOTAS AUXILIARES
+    /*
+     
+
+    onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;"
+
+
+    */
+    #endregion
     public class ServiciosJson : IServiciosJson
     {
         // ----- EMPRESAS! -----
+        #region EMPRESAS
         public string EmpresasRutaJson()
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\Empresas.json";
@@ -166,33 +179,39 @@ namespace ContabilidadTaller.Services
         public void EliminarNotaEmpresa(int idEmpresa, string notaEliminar)
         {
             List<Empresa> empresas = ObtenerEmpresasJson();
-            Empresa e = empresas.FirstOrDefault(e => e.IdEmpresa == idEmpresa);
-
-            if (e.Notas != null && e.Notas.Any())
+            foreach (Empresa e in empresas)
             {
-                e.Notas.Remove(notaEliminar);
-            }
-            ActualizarJson_Empresas(empresas);
+                if (e.IdEmpresa == idEmpresa)
+                {
+                    if (e.Notas != null && e.Notas.Any())
+                    {
+                        e.Notas.RemoveAll(n => n == notaEliminar);
+
+                        ActualizarJson_Empresas(empresas);
+                    } 
+                }
+            }       
         }
         public void ModificarNotaEmpresa(int idEmpresa, string notaVieja, string notaModificada)
         {
             List<Empresa> empresas = ObtenerEmpresasJson();
-            Empresa empresa = empresas.FirstOrDefault(e => e.IdEmpresa == idEmpresa);
-
-            if (notaModificada != null)
+            foreach (Empresa e in empresas)
             {
-                if (empresa != null && empresa.Notas != null && empresa.Notas.Any())
+                if (e.IdEmpresa == idEmpresa)
                 {
-                    int indiceNota = empresa.Notas.IndexOf(notaVieja);
-
-                    if (indiceNota != -1)
+                    if (e.Notas != null && e.Notas.Any())
                     {
-                        empresa.Notas[indiceNota] = notaModificada;
+                        int indiceNota = e.Notas.IndexOf(notaVieja);
 
-                        ActualizarJson_Empresas(empresas);
+                        if (indiceNota != -1)
+                        {
+                            e.Notas[indiceNota] = notaModificada;
+
+                            ActualizarJson_Empresas(empresas);
+                        }
                     }
                 }
-            } 
+            }
         }
         public RespuestaBorrar SePuedeBorrarEmpresa(int idEmpresa)
         {
@@ -266,8 +285,9 @@ namespace ContabilidadTaller.Services
             empresas.RemoveAll(e => e.IdEmpresa == idEmpresaEliminar);
             ActualizarJson_Empresas(empresas);
         }
-
+        #endregion
         // ----- SOCIOS! -----
+        #region SOCIOS
         public string SociosRutaJson()
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Socios.json";
@@ -293,7 +313,7 @@ namespace ContabilidadTaller.Services
             List<Socio> Socios = ObtenerSociosJson();
             Socio nuevoSocio = new Socio();
 
-            nuevoSocio.IdSocio = Socios.Any() ? Socios.Max(x => x.IdSocio) + 1 : 1;
+            nuevoSocio.IdSocio = PrimerIdFaltanteSocios();
             nuevoSocio.Nombres = nombres;
             nuevoSocio.Apellido = apellido;
 
@@ -325,10 +345,22 @@ namespace ContabilidadTaller.Services
             string jsonActualizado = JsonConvert.SerializeObject(Socios, Formatting.Indented);
             File.WriteAllText(SociosRutaJson(), jsonActualizado);
         }
-        public Socio ElegirSocio(int idSocio)
+        public int PrimerIdFaltanteSocios()
+        {
+            List<int> ids = ObtenerSociosJson().Select(s => s.IdSocio).OrderBy(id => id).ToList();
+            for (int i = 0; i <= ids.Count(); i++)
+            {
+                if (!ids.Contains(i))
+                {
+                    return i;
+                }
+            }
+            return ids.Count;
+        }
+        public Socio? ElegirSocio(int? idSocio)
         {
             List<Socio> todos = ObtenerSociosJson();
-            Socio socio = new Socio();
+            Socio socio = null;
 
             foreach (Socio s in todos)
             {
@@ -600,10 +632,9 @@ namespace ContabilidadTaller.Services
                 ActualizarJson_Socios(socios);
             }
         }
-
-
-
+        #endregion
         // ----- EMPLEADOS! -----
+        #region EMPLEADOS
         public string EmpleadosRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Empleados.json";
@@ -671,7 +702,7 @@ namespace ContabilidadTaller.Services
             return empleado;
             //return todos.FirstOrDefault(e => e.IdEmpleado == idEmpleado);
         }
-        public Empleado SinEnmpleado()
+        public Empleado SinEmpleado()
         {
             return new Empleado { IdEmpleado = -1 };
         }
@@ -952,9 +983,9 @@ namespace ContabilidadTaller.Services
                 }
             }
         }
-
-
+        #endregion
         // ----- PIEZAS! -----
+        #region PIEZAS
         public string PiezasRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Piezas\" + idEmpresa.ToString() + @" - Piezas.json";
@@ -1081,19 +1112,6 @@ namespace ContabilidadTaller.Services
             string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
             File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
         }
-        public List<string>? NombresDeArchivosDePieza(int idEmpresa, int idPieza)
-        {
-            Pieza p = ElegirPieza(idEmpresa, idPieza);
-            List<string> nombres = new List<string>();
-            if (p.Archivos != null && p.Archivos.Any())
-            {
-                foreach (string arch in p.Archivos)
-                {
-                    nombres.Add(Path.GetFileName(arch));
-                }
-            }
-            return nombres;
-        }
         public int PrimerIdPiezaFaltante(int idEmpresa)
         {
             List<int> ids = ObtenerPiezasJson(idEmpresa).Select(p => p.IdPieza).OrderBy(id => id).ToList();
@@ -1176,6 +1194,57 @@ namespace ContabilidadTaller.Services
 
             return respuesta;
         }
+        public void EliminarArchivoPieza(int idEmpresa, int idPieza, string rutaArchivo)
+        {
+            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
+            Pieza p = piezas.FirstOrDefault(x => x.IdPieza == idPieza);
+
+            p.Archivos.Remove(rutaArchivo);
+
+            string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
+            File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+        }
+        public void Agregar_ModificarCodigo(int idEmpresa, int idPieza, string nuevoCodigo)
+        {
+            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
+            foreach (Pieza p in piezas)
+            {
+                if (p.IdPieza == idPieza)
+                {
+                    p.Codigo = nuevoCodigo;
+
+                    string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
+                    File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+                }
+            }
+        }
+        public void BorrarCodigoPieza(int idEmpresa, int idPieza)
+        {
+            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
+            foreach (Pieza p in piezas)
+            {
+                if (p.IdPieza == idPieza)
+                {
+                    p.Codigo = null;
+
+                    string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
+                    File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+                }
+            }
+        }
+        public List<Pieza> PiezasSinConjunto(int idEmpresa)
+        {
+            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
+            List<Pieza> piezasSinConjunto = new List<Pieza>();
+            foreach (Pieza p in piezas)
+            {
+                if (p.ConjuntoFK == null)
+                {
+                    piezasSinConjunto.Add(p);
+                }
+            }
+            return piezasSinConjunto;
+        }
         public void BorrarPieza(int idEmpresa, int idPiezaBorrar)
         {
             if (SePuedeBorrarPieza(idEmpresa, idPiezaBorrar).SePuede == true)
@@ -1203,62 +1272,235 @@ namespace ContabilidadTaller.Services
                 }
             }
         }
-        public void EliminarArchivoPieza(int idEmpresa, int idPieza, string rutaArchivo)
+        #endregion
+        // ----- UTILAJES! -----
+        #region UTILAJES
+        public string UtilajesRutaJson(int idEmpresa)
         {
-            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
-            Pieza p = piezas.FirstOrDefault(x => x.IdPieza == idPieza);
-
-            p.Archivos.Remove(rutaArchivo);
-
-            string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
-            File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+            return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Utilajes\" + idEmpresa.ToString() + @" - Utilajes.json";
         }
-        public void Agregar_ModificarCodigo(int idEmpresa, int idPieza, string nuevoCodigo)
+        public List<Utilaje> ObtenerUtilajesJson(int idEmpresa)
         {
-            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
-            foreach (Pieza p in piezas)
-            {
-                if (p.IdPieza == idPieza)
-                {
-                    p.Codigo = nuevoCodigo;
+            List<Utilaje> utilajes = new List<Utilaje>();
+            string RutaJsonUtilajes = UtilajesRutaJson(idEmpresa);
 
-                    string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
-                    File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+            if (System.IO.File.Exists(RutaJsonUtilajes))
+            {
+                if (System.IO.File.ReadAllText(RutaJsonUtilajes) != "" || System.IO.File.ReadAllText(RutaJsonUtilajes) != "[]")
+                {
+                    string jsonRecuperado = System.IO.File.ReadAllText(RutaJsonUtilajes);
+                    utilajes = JsonConvert.DeserializeObject<List<Utilaje>>(jsonRecuperado);
+                }
+            }
+            return utilajes;
+        }
+        public int PrimerIdUtilajeFaltante(int idEmpresa)
+        {
+            List<int> ids = ObtenerUtilajesJson(idEmpresa).Select(u => u.IdUtilaje).OrderBy(id => id).ToList();
+            for (int i = 0; i <= ids.Count(); i++)
+            {
+                if (!ids.Contains(i))
+                {
+                    return i;
+                }
+            }
+            return ids.Count;
+        }
+        public async Task NuevoUtilaje(int idEmpresa, string descripcion, List<string>? notas, List<IFormFile>? archivos, int? idPiezaAsociada)
+        {
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            Utilaje nuevo = new Utilaje();
+
+            int proxId = PrimerIdUtilajeFaltante(idEmpresa);
+            nuevo.IdUtilaje = proxId;
+            nuevo.Descripcion = descripcion;
+            nuevo.Notas = new List<string>();
+            if (notas != null && notas.Any())
+            {
+                nuevo.Notas = notas;
+            }
+            nuevo.Archivos = new List<string>();
+            if (archivos != null && archivos.Any())
+            {
+                await GuardarArchivos(idEmpresa, "Utilaje", proxId, archivos);
+            }
+            if (idPiezaAsociada != -1)
+            {
+                nuevo.IdPiezaFK = idPiezaAsociada;
+            }
+            else
+            {
+                nuevo.IdPiezaFK = null;
+            }
+
+            utilajes.Add(nuevo);
+
+            ActualizarJson_Utilajes(utilajes, idEmpresa);
+        }
+        public Utilaje ElegirUtilaje(int idEmpresa, int idUtilajeBuscado)
+        {
+            Utilaje utilaje = new Utilaje() { IdUtilaje = -1 };
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje ut in utilajes)
+            {
+                if (ut.IdUtilaje == idUtilajeBuscado)
+                {
+                    utilaje = ut;
+                    break;
+                }
+            }
+            return utilaje;
+        }
+
+        public void AsignarUtilajeAPieza(int idEmpresa, int idUtilaje, int idPieza)
+        {
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje u in utilajes)
+            {
+                if (u.IdUtilaje == idUtilaje)
+                {
+                    u.IdPiezaFK = idPieza;
+                    ActualizarJson_Utilajes(utilajes, idEmpresa);
+                    break;
                 }
             }
         }
-        public void BorrarCodigo(int idEmpresa, int idPieza)
+        public void QuitarPiezaDeUtilaje(int idEmpresa, int idUtilaje)
         {
-            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
-            foreach (Pieza p in piezas)
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje u in utilajes)
             {
-                if (p.IdPieza == idPieza)
+                if (u.IdUtilaje == idUtilaje)
                 {
-                    p.Codigo = null;
-
-                    string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
-                    File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+                    u.IdPiezaFK = null;
+                    ActualizarJson_Utilajes(utilajes, idEmpresa);
+                    break;
                 }
             }
         }
-        public List<Pieza> PiezasSinConjunto(int idEmpresa)
+        public void ModificarDescripcionUtilaje(int idEmpresa, int idUtilaje, string nuevaDescripcion)
         {
-            List<Pieza> piezas = ObtenerPiezasJson(idEmpresa);
-            List<Pieza> piezasSinConjunto = new List<Pieza>();
-            foreach (Pieza p in piezas)
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje u in utilajes)
             {
-                if (p.ConjuntoFK == null)
+                if (u.IdUtilaje == idUtilaje)
                 {
-                    piezasSinConjunto.Add(p);
+                    u.Descripcion = nuevaDescripcion;
+                    break;
                 }
             }
-            return piezasSinConjunto;
+            ActualizarJson_Utilajes(utilajes, idEmpresa);
         }
+        public void AgregarNotaUtilaje(int idEmpresa, int idUtilaje, string nuevaNota)
+        {
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje u in utilajes)
+            {
+                if (u.IdUtilaje == idUtilaje)
+                {
+                    if (u.Notas != null && u.Notas.Any())
+                    {
+                        u.Notas.Add(nuevaNota);
+                    }
+                    else
+                    {
+                        u.Notas = new List<string>() { nuevaNota };
+                    }
+                    break;
+                }
+            }
+            ActualizarJson_Utilajes(utilajes, idEmpresa);
+        }
+        public void ModificarNotaUtilaje(int idEmpresa, int idUtilaje, string notaVieja, string notaModificada)
+        {
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje u in utilajes)
+            {
+                if (u.IdUtilaje == idUtilaje)
+                {
+                    if (u.Notas != null && u.Notas.Any())
+                    {
+                        int indiceNota = u.Notas.IndexOf(notaVieja);
 
+                        if (indiceNota != -1)
+                        {
+                            u.Notas[indiceNota] = notaModificada;
+
+                            ActualizarJson_Utilajes(utilajes, idEmpresa);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        public void BorrarNotaUtilaje(int idEmpresa, int idUtilaje, string notaBorrar)
+        {
+            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+            foreach (Utilaje u in utilajes)
+            {
+                if (u.IdUtilaje == idUtilaje)
+                {
+                    if (u.Notas != null && u.Notas.Any())
+                    {
+                        int indiceNota = u.Notas.IndexOf(notaBorrar);
+
+                        if (indiceNota != -1)
+                        {
+                            u.Notas.Remove(notaBorrar);
+
+                            ActualizarJson_Utilajes(utilajes, idEmpresa);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        public RespuestaBorrar SePuedeBorrarUtilaje(int idEmpresa, int idUtilaje)
+        {
+            RespuestaBorrar respuesta = new RespuestaBorrar() { SePuede = true };
+            bool sePuede = true;
+            // SI EL UTILAJE ESTA ASOCIADO A UNA O MAS PIEZAS
+            Utilaje u = ElegirUtilaje(idEmpresa, idUtilaje);
+
+            if (u.IdPiezaFK != null)
+            {
+                respuesta.SePuede = false;
+                respuesta.Mensajes.Add("Tiene una pieza asociada.");
+            }
+
+            if (respuesta.SePuede == true)
+            {
+                respuesta.Mensajes.Add("- No tiene documentos asociados -.");
+            }
+
+            return respuesta;
+        }
+        public void BorrarUtilaje(int idEmpresa, int idUtilajeBorrar)
+        {
+            if (SePuedeBorrarUtilaje(idEmpresa, idUtilajeBorrar).SePuede == true)
+            {
+                List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+                Utilaje u = ElegirUtilaje(idEmpresa, idUtilajeBorrar);
+
+                if (u.Archivos != null && u.Archivos.Any())
+                {
+                    foreach (string arch in u.Archivos)
+                    {
+                        BorrarArchivo(idEmpresa, "Utilaje", idUtilajeBorrar, arch);
+                    }
+                }
+
+                utilajes.RemoveAll(u => u.IdUtilaje == idUtilajeBorrar);
+
+                ActualizarJson_Utilajes(utilajes, idEmpresa);
+            }
+        }
+        #endregion
         // ----- CONJUNTOS! -----
+        #region CONJUNTOS
         public string ConjuntosRutaJson(int idEmpresa)
         {
-            return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Piezas\" + idEmpresa.ToString() + @" - Conjuntos.json";
+            return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Conjuntos\" + idEmpresa.ToString() + @" - Conjuntos.json";
         }
         public List<Conjunto> ObtenerConjuntosJson(int idEmpresa)
         {
@@ -1569,6 +1811,14 @@ namespace ContabilidadTaller.Services
                 List<Conjunto> conjuntos = ObtenerConjuntosJson(idEmpresa);
                 Conjunto c = ElegirConjunto(idEmpresa, idConjuntoBorrar);
 
+                if (c.Archivos != null && c.Archivos.Any())
+                {
+                    foreach (string arch in c.Archivos)
+                    {
+                        BorrarArchivo(idEmpresa, "Conjunto", idConjuntoBorrar, arch);
+                    }
+                }
+
                 conjuntos.RemoveAll(c => c.IdConjunto == idConjuntoBorrar);
 
                 string jsonActualizado = JsonConvert.SerializeObject(conjuntos, Formatting.Indented);
@@ -1587,8 +1837,9 @@ namespace ContabilidadTaller.Services
                 File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado2);
             }  
         }
-
+        #endregion
         // ----- PEDIDOS! -----
+        #region PEDIDOS
         public string PedidosRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Pedidos.json";
@@ -1913,81 +2164,6 @@ namespace ContabilidadTaller.Services
             }
             return sinRemito;
         }
-        public RespuestaBorrar SePuedeBorrarPedido(int idEmpresa, int idPedidoBorrar)
-        {
-            RespuestaBorrar respuesta = new RespuestaBorrar() { SePuede = true };
-            Pedido p = ElegirPedido(idEmpresa, idPedidoBorrar);
-            // Si fue semi entregado
-            if (p.Estado == EstadoPedido.EntregadoParcial)
-            {
-                respuesta.SePuede = false;
-                respuesta.Mensajes.Add("Fue entregado parcialmente.");
-            }
-            // Si fue entregado por completo
-            if (p.Estado == EstadoPedido.Entregado)
-            {
-                respuesta.SePuede = false;
-                respuesta.Mensajes.Add("Fue entregado totalmente.");
-            }
-            // Si esta remitido
-            if (p.Entregas != null && p.Entregas.Any())
-            {
-                int cantEntregas = p.Entregas.Count();
-                int cantRemitidas = 0;
-
-                foreach (Entrega e in p.Entregas)
-                {
-                    if (e.idRemitoFK != null)
-                    {
-                        cantRemitidas++;
-                        respuesta.SePuede = false;
-                    }
-                }
-                if (cantEntregas == cantRemitidas)
-                {
-                    respuesta.Mensajes.Add("Ya esta remitido.");
-                }
-                else if(cantEntregas > cantRemitidas && cantRemitidas != 0)
-                {
-                    respuesta.Mensajes.Add("Ya esta parcialmente remitido.");
-                }
-            }
-            // Si esta presupuestado
-            if (p.PresupuestoFK != null)
-            {
-                respuesta.SePuede = false;
-                respuesta.Mensajes.Add("Ya esta presupuestado.");
-            }
-            // Si esta facturado
-            if (p.FacturaFK != null)
-            {
-                respuesta.SePuede = false;
-                respuesta.Mensajes.Add("Ya esta facturado.");
-            }
-            if (respuesta.SePuede == true)
-            {
-                respuesta.Mensajes.Add("- No tiene documentos asociados -");
-            }
-            return respuesta;
-        }
-        public void BorrarPedido(int idEmpresa, int idPedidoEliminar)
-        {
-            List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
-            Pedido pe = pedidos.FirstOrDefault(p => p.IdPedido == idPedidoEliminar);
-
-            if (pe.Archivos != null && pe.Archivos.Any())
-            {
-                foreach (string archivo in pe.Archivos)
-                {
-                    BorrarArchivo(idEmpresa, "Pedido", idPedidoEliminar, archivo);
-                }
-            }
-
-            pedidos.Remove(pe);
-
-            string jsonActualizado = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
-            File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado);
-        }
         public void AgregarNotaPedido(int idEmpresa, string notaNueva, int idPedido)
         {
             List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
@@ -2141,9 +2317,84 @@ namespace ContabilidadTaller.Services
             }
             return conjunto;
         }
-        
+        public RespuestaBorrar SePuedeBorrarPedido(int idEmpresa, int idPedidoBorrar)
+        {
+            RespuestaBorrar respuesta = new RespuestaBorrar() { SePuede = true };
+            Pedido p = ElegirPedido(idEmpresa, idPedidoBorrar);
+            // Si fue semi entregado
+            if (p.Estado == EstadoPedido.EntregadoParcial)
+            {
+                respuesta.SePuede = false;
+                respuesta.Mensajes.Add("Fue entregado parcialmente.");
+            }
+            // Si fue entregado por completo
+            if (p.Estado == EstadoPedido.Entregado)
+            {
+                respuesta.SePuede = false;
+                respuesta.Mensajes.Add("Fue entregado totalmente.");
+            }
+            // Si esta remitido
+            if (p.Entregas != null && p.Entregas.Any())
+            {
+                int cantEntregas = p.Entregas.Count();
+                int cantRemitidas = 0;
 
+                foreach (Entrega e in p.Entregas)
+                {
+                    if (e.idRemitoFK != null)
+                    {
+                        cantRemitidas++;
+                        respuesta.SePuede = false;
+                    }
+                }
+                if (cantEntregas == cantRemitidas)
+                {
+                    respuesta.Mensajes.Add("Ya esta remitido.");
+                }
+                else if (cantEntregas > cantRemitidas && cantRemitidas != 0)
+                {
+                    respuesta.Mensajes.Add("Ya esta parcialmente remitido.");
+                }
+            }
+            // Si esta presupuestado
+            if (p.PresupuestoFK != null)
+            {
+                respuesta.SePuede = false;
+                respuesta.Mensajes.Add("Ya esta presupuestado.");
+            }
+            // Si esta facturado
+            if (p.FacturaFK != null)
+            {
+                respuesta.SePuede = false;
+                respuesta.Mensajes.Add("Ya esta facturado.");
+            }
+            if (respuesta.SePuede == true)
+            {
+                respuesta.Mensajes.Add("- No tiene documentos asociados -");
+            }
+            return respuesta;
+        }
+        public void BorrarPedido(int idEmpresa, int idPedidoEliminar)
+        {
+            List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
+            Pedido pe = ElegirPedido(idEmpresa, idPedidoEliminar);
+
+            if (pe.Archivos != null && pe.Archivos.Any())
+            {
+                foreach (string archivo in pe.Archivos)
+                {
+                    BorrarArchivo(idEmpresa, "Pedido", idPedidoEliminar, archivo);
+                }
+            }
+
+            pedidos.RemoveAll(p => p.IdPedido == idPedidoEliminar);
+
+            string jsonActualizado = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
+            File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado);
+        }
+        #endregion
         // ----- ENTREGAS! -----
+        #region ENTREGAS
         public void NuevaEntregaPedido(int idEmpresa, int idPedido, DateOnly fechaEntrega, int cantidasEntrega, int? idRemito)
         {
             List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
@@ -2291,8 +2542,9 @@ namespace ContabilidadTaller.Services
                 }
             }
         }
-
+        #endregion
         // ----- COSTOS! -----
+        #region COSTOS
         public string CostosRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Costos\" + idEmpresa.ToString() + @" - Costos.json";
@@ -2429,8 +2681,9 @@ namespace ContabilidadTaller.Services
                 }
             }
         }
-
+        #endregion
         // ----- REMITOS! -----
+        #region REMITOS
         public string RemitosRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Remitos\"+ idEmpresa.ToString() + @" - Remitos.json";
@@ -2841,6 +3094,7 @@ namespace ContabilidadTaller.Services
                 respuesta.Mensajes.Add("Esta confirmado.");
             }
 
+            // Si fue entregado
             if (r.EntregadoA != null)
             {
                 respuesta.SePuede = false;
@@ -2866,6 +3120,12 @@ namespace ContabilidadTaller.Services
             if (SePuedeBorrarRemito(idEmpresa, idRemitoBorrar).SePuede == true)
             {
                 List<Remito> remitos = ObtenerRemitosJson(idEmpresa);
+                Remito r = ElegirRemito(idEmpresa, idRemitoBorrar);
+
+                if (r.UbicacionArchivo != null)
+                {
+                    BorrarArchivo(idEmpresa, "Remito", idRemitoBorrar, r.UbicacionArchivo);
+                }
 
                 if (remitos != null && remitos.Any())
                 {
@@ -2896,8 +3156,9 @@ namespace ContabilidadTaller.Services
                 File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizadoPedidos);
             }
         }
-
+        #endregion
         // ----- PRESUPUESTOS! -----
+        #region PRESUPUESTOS
         public string PresupuestosRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Presupuestos\" + idEmpresa.ToString() + @" - Presupuestos.json";
@@ -3062,99 +3323,165 @@ namespace ContabilidadTaller.Services
             string jsonActualizado = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
             File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado);
         }
-        public void EditarOConfirmar(int idEmpresa, int idPresupuesto, EstadoPresupuesto estado)
-        {
-            List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
-            foreach (Presupuesto p in presupuestos)
+            public bool SePuedeConfirmarPresupuesto(int idEmpresa, int idPresupuesto)
             {
-                if (p.IdPresupuesto == idPresupuesto)
+                List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
+                int cantItems = 0;
+                if (pedidos != null && pedidos.Any())
                 {
-                    p.Estado = estado;
+                    foreach (Pedido pe in pedidos)
+                    {
+                        if (pe.PresupuestoFK == idPresupuesto)
+                        {
+                            cantItems++;
+                        }
+                    }
+                }
+            
+                if (cantItems != 0)
+                {
+                    // Si tiene al menos un item asociado se puede confirmar
+                    return true;
+                }
+                else
+                {
+                    // Si esta vacio no se puede confirmar
+                    return false;
                 }
             }
-            string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
-            File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
-        }
-        public void BajaPresupuesto(int idEmpresa, int idPresupuesto)
-        {
-            List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
-            List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
-            List<Conjunto> conjuntos = ObtenerConjuntosJson(idEmpresa);
-
-            foreach (Presupuesto p in presupuestos)
-            {
-                if (p.IdPresupuesto == idPresupuesto)
+            public void EditarOConfirmar(int idEmpresa, int idPresupuesto, EstadoPresupuesto estado)
                 {
-                    p.Estado = EstadoPresupuesto.Cancelado;
-                    p.CopiaPedidos = new List<int>();
-
-                    foreach (Pedido pedido in pedidos)
+                    List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
+                    foreach (Presupuesto p in presupuestos)
                     {
-                        if (pedido.PresupuestoFK == idPresupuesto)
+                        if (p.IdPresupuesto == idPresupuesto)
                         {
-                            p.CopiaPedidos.Add(pedido.IdPedido);
+                            p.Estado = estado;
                         }
                     }
                     string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
                     File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
                 }
+            public bool SePuedeCancelarPresupuesto(int idEmpresa, int idPresupuesto)
+        {
+            Presupuesto p = ElegirPresupuesto(idEmpresa, idPresupuesto);
+            if (p.OrdenDeCompraFK == null && p.FacturaFK == null)
+            {
+                return true;
             }
+            else
+            {
+                return false;
+            }
+        }
+            public void BajaPresupuesto(int idEmpresa, int idPresupuesto)
+            {
+                List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
+                List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
+                List<Conjunto> conjuntos = ObtenerConjuntosJson(idEmpresa);
+
+                foreach (Presupuesto p in presupuestos)
+                {
+                    if (p.IdPresupuesto == idPresupuesto)
+                    {
+                        p.Estado = EstadoPresupuesto.Cancelado;
+                        p.CopiaPedidos = new List<int>();
+
+                        foreach (Pedido pedido in pedidos)
+                        {
+                            if (pedido.PresupuestoFK == idPresupuesto)
+                            {
+                                p.CopiaPedidos.Add(pedido.IdPedido);
+                            }
+                        }
+                        string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
+                        File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
+                    }
+                }
+
+                foreach (Pedido p in pedidos)
+                {
+                    if (p.PresupuestoFK == idPresupuesto)
+                    {
+                        p.PresupuestoFK = null;
+                    }
+                }
+                string jsonActualizado2 = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
+                File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado2);
+            }      
+        public bool SePuedeReactivarPresupuesto(int idEmpresa, int idPresupuesto)
+        {
+            Presupuesto pr = ElegirPresupuesto(idEmpresa, idPresupuesto);
+            List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
+
+            int pedidosGuardados = pr.CopiaPedidos.Count();
+            int pedidosLibres = 0;
 
             foreach (Pedido p in pedidos)
             {
-                if (p.PresupuestoFK == idPresupuesto)
+                foreach (int item in pr.CopiaPedidos)
                 {
-                    p.PresupuestoFK = null;
+                    if (p.IdPedido == item && p.PresupuestoFK == null)
+                    {
+                        pedidosLibres++;
+                    }
                 }
             }
-            string jsonActualizado2 = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
-            File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado2);
-        }
-        // SOLO SE REHABILITA SI TODOS LOS ITEMS NO FUERON REASIGNADOS
-        public void AltaPresupuesto(int idEmpresa, int idPresupuesto)
-        {
-            List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
-            foreach (Presupuesto p in presupuestos)
-            {
-                if (p.IdPresupuesto == idPresupuesto)
-                {
-                    int pedidosGuardados = p.CopiaPedidos.Count();
-                    int pedidosSinReasignar = 0;
-                    List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
-                    foreach (Pedido pedido in pedidos)
-                    {
-                        foreach (int item in p.CopiaPedidos)
-                        {
-                            if (item == pedido.IdPedido && pedido.PresupuestoFK == null)
-                            {
-                                pedidosSinReasignar++;
-                            }
-                        }
-                    }
 
-                    if (pedidosGuardados == pedidosSinReasignar)
-                    { 
-                        p.Estado = EstadoPresupuesto.Borrador;
+            if (pedidosGuardados == pedidosLibres)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+            public void AltaPresupuesto(int idEmpresa, int idPresupuesto)
+            {
+                // SOLO SE REHABILITA SI TODOS LOS ITEMS NO FUERON REASIGNADOS
+                List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
+                foreach (Presupuesto p in presupuestos)
+                {
+                    if (p.IdPresupuesto == idPresupuesto)
+                    {
+                        int pedidosGuardados = p.CopiaPedidos.Count();
+                        int pedidosSinReasignar = 0;
+                        List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
                         foreach (Pedido pedido in pedidos)
                         {
                             foreach (int item in p.CopiaPedidos)
                             {
-                                if (item == pedido.IdPedido)
+                                if (item == pedido.IdPedido && pedido.PresupuestoFK == null)
                                 {
-                                    pedido.PresupuestoFK = idPresupuesto;
+                                    pedidosSinReasignar++;
                                 }
                             }
                         }
-                        string jsonActualizado2 = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
-                        File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado2);
 
-                        p.CopiaPedidos = new List<int>();
+                        if (pedidosGuardados == pedidosSinReasignar)
+                        { 
+                            p.Estado = EstadoPresupuesto.Borrador;
+                            foreach (Pedido pedido in pedidos)
+                            {
+                                foreach (int item in p.CopiaPedidos)
+                                {
+                                    if (item == pedido.IdPedido)
+                                    {
+                                        pedido.PresupuestoFK = idPresupuesto;
+                                    }
+                                }
+                            }
+                            string jsonActualizado2 = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
+                            File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizado2);
+
+                            p.CopiaPedidos = new List<int>();
+                        }
                     }
                 }
+                string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
+                File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
             }
-            string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
-            File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
-        }
         public List<Presupuesto> PresupuestosSinAsignar(int idEmpresa)
         {
             List<Presupuesto> todos = ObtenerPresupuestosJson(idEmpresa);
@@ -3193,12 +3520,18 @@ namespace ContabilidadTaller.Services
                     {
                         p.EstadoEnvio.enviado = true;
 
-                        Envio e = new Envio() { fechaEnvio = fechaEnvio, empleados = empleados };
+                        Envio e = new Envio() {
+                            idEnvio = UltimoIdFaltanteEnvios(idEmpresa, idPresupuesto),
+                            fechaEnvio = fechaEnvio,
+                            empleados = empleados };
                         p.EstadoEnvio.envios.Add(e);
                     }
                     else
                     {
-                        Envio e = new Envio() { fechaEnvio = fechaEnvio, empleados = empleados };
+                        Envio e = new Envio() {
+                            idEnvio = UltimoIdFaltanteEnvios(idEmpresa, idPresupuesto),
+                            fechaEnvio = fechaEnvio, 
+                            empleados = empleados };
                         p.EstadoEnvio.envios.Add(e);
                     }
                 }
@@ -3206,6 +3539,54 @@ namespace ContabilidadTaller.Services
             string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
             File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
         }
+
+        public int UltimoIdFaltanteEnvios(int idEmpresa, int idPresupuesto)
+        {
+            List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
+            int id = 0;
+            foreach (Presupuesto p in presupuestos)
+            {
+                if (p.IdPresupuesto == idPresupuesto)
+                {
+                    if (p.EstadoEnvio.enviado == true)
+                    {
+                        if (p.EstadoEnvio.envios != null && p.EstadoEnvio.envios.Any())
+                        {
+                            id = p.EstadoEnvio.envios.Count();
+                            for (int i = 0; i <= p.EstadoEnvio.envios.Count(); i++)
+                            {
+                                if (!p.EstadoEnvio.envios.Any(e => e.idEnvio == i))
+                                {
+                                    id = i;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return id;
+        }
+
+        public void BorrarEnvioPresupuesto(int idEmpresa, int idPresupuesto, int idEnvioBorrar)
+        {
+            List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
+            foreach (Presupuesto p in presupuestos)
+            {
+                if (p.IdPresupuesto == idPresupuesto)
+                {
+                    if (p.EstadoEnvio.enviado == true)
+                    {
+                        if (p.EstadoEnvio.envios != null && p.EstadoEnvio.envios.Any())
+                        {
+                            p.EstadoEnvio.envios.RemoveAll(e => e.idEnvio == idEnvioBorrar);
+
+                            ActualizarJson_Presupuestos(presupuestos, idEmpresa);
+                        }
+                    }
+                }
+            }
+        }
+
         public double? PrecioTotalPresupuesto(int idEmpresa, int idPresupuesto)
         {
             List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
@@ -3381,7 +3762,7 @@ namespace ContabilidadTaller.Services
             if (SePuedeBorrarPresupuesto(idEmpresa, idPresupuestoEliminar).SePuede == true)
             {
                 List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
-                Presupuesto pr = presupuestos.FirstOrDefault(p => p.IdPresupuesto == idPresupuestoEliminar);
+                Presupuesto pr = ElegirPresupuesto(idEmpresa, idPresupuestoEliminar);
 
                 if (pr.Archivos != null && pr.Archivos.Any())
                 {
@@ -3391,7 +3772,7 @@ namespace ContabilidadTaller.Services
                     }
                 }
 
-                presupuestos.Remove(pr);
+                presupuestos.RemoveAll(p => p.IdPresupuesto == idPresupuestoEliminar);
 
                 string jsonActualizado = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
                 File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizado);
@@ -3433,8 +3814,9 @@ namespace ContabilidadTaller.Services
             }
             ActualizarJson_Presupuestos(presupuestos, idEmpresa);
         }
-
+        #endregion
         // ----- ORDENES DE COMPRA! -----
+        #region ORDENES DE COMPRA
         public string OrdenesDeCompraRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Ordenes de Compra\" + idEmpresa.ToString() + @" - Ordenes de Compra.json";
@@ -3892,9 +4274,14 @@ namespace ContabilidadTaller.Services
         public void BorrarOC(int idEmpresa, int idOCBorrar)
         {
             List<OrdenDeCompra> odcs = ObtenerOrdenesDeCompraJson(idEmpresa);
-            OrdenDeCompra odc = odcs.FirstOrDefault(o => o.IdOC == idOCBorrar);
+            OrdenDeCompra odc = ElegirOrdenDeCompra(idEmpresa, idOCBorrar);
 
             if (odc == null) return;
+
+            if (odc.UbicacionArchivo != null)
+            {
+                BorrarArchivo(idEmpresa, "OrdenDeCompra", idOCBorrar, odc.UbicacionArchivo);
+            }
 
             if (SePuedeBorrarOC(idEmpresa, idOCBorrar).SePuede == true)
             {
@@ -3918,14 +4305,14 @@ namespace ContabilidadTaller.Services
                 }
                 ActualizarJson_Presupuestos(presupuestos, idEmpresa);
                 
-                odcs.Remove(odc);
+                odcs.RemoveAll(oc => oc.IdOC == idOCBorrar);
 
-                string jsonActualizado = JsonConvert.SerializeObject(odcs, Formatting.Indented);
-                File.WriteAllText(OrdenesDeCompraRutaJson(idEmpresa), jsonActualizado);
+                ActualizarJson_OrdenesDeCompra(odcs, idEmpresa);
             }
         }
-
+        #endregion
         // ----- RECEPCIONES! -----
+        #region RECEPCIONES
         public string RecepcionesRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Ordenes de Compra\" + idEmpresa.ToString() + @" - Recepciones.json";
@@ -4152,8 +4539,9 @@ namespace ContabilidadTaller.Services
             }
             return activas;
         }
-
+        #endregion
         // ----- FACTURAS! -----
+        #region FACTURAS
         public string FacturasRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Facturas\" + idEmpresa.ToString() + @" - Facturas.json";
@@ -4521,11 +4909,6 @@ namespace ContabilidadTaller.Services
             string jsonActualizado = JsonConvert.SerializeObject(facturas, Formatting.Indented);
             File.WriteAllText(FacturasRutaJson(idEmpresa), jsonActualizado);
         }
-
-
-
-
-
         public void AgregarArchivoAFactura(int idEmpresa, int idFactura, string rutaArchivo)
         {
             List<Factura> facturas = ObtenerFacturasJson(idEmpresa);
@@ -4800,8 +5183,9 @@ namespace ContabilidadTaller.Services
             string jsonActualizadoFacturas = JsonConvert.SerializeObject(facturas, Formatting.Indented);
             File.WriteAllText(FacturasRutaJson(idEmpresa), jsonActualizadoFacturas);
         }
-        public void ReactivarFactura(int idEmpresa, int idFacturaRectivar)
+        public bool SePuedeReactivarFactura(int idEmpresa, int idFacturaRectivar)
         {
+            bool sePuede = true;
             List<Factura> facturas = ObtenerFacturasJson(idEmpresa);
             foreach (Factura f in facturas)
             {
@@ -4830,36 +5214,15 @@ namespace ContabilidadTaller.Services
                                         }
                                     }
                                 }
-                                if (pedidosRespaldo == pedidosSinReasignar)
+                                if (pedidosRespaldo != pedidosSinReasignar)
                                 {
-                                    // Permitir reactivar
-                                    f.Estado = EstadoFactura.Impaga;
-
-                                    foreach (Pedido pe in pedidos)
-                                    {
-                                        foreach (int i in f.ItemsRespaldo)
-                                        {
-                                            if (pe.IdPedido == i)
-                                            {
-                                                pe.FacturaFK = idFacturaRectivar;
-                                            }
-                                        }
-                                    }
-
-                                    f.ItemsRespaldo = new List<int>();
-
-                                    string jsonActualizadoPe = JsonConvert.SerializeObject(pedidos, Formatting.Indented);
-                                    File.WriteAllText(PedidosRutaJson_2(idEmpresa), jsonActualizadoPe);
+                                    // No se puede reactivar
+                                    sePuede = false;
                                 }
-                            }
-                            else
-                            {
-                                f.Estado = EstadoFactura.Impaga;
                             }
                             break;
                         case Contiene.Presupuestos:
                             List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
-                            List<Pedido> pedidos2 = ObtenerPedidosJson(idEmpresa); 
 
                             if (f.ItemsRespaldo != null && f.ItemsRespaldo.Any())
                             {
@@ -4879,31 +5242,74 @@ namespace ContabilidadTaller.Services
                                         }
                                     }
                                 }
-                                if (presupuestosRespaldo == presupuestosSinReasignar)
+                                if (presupuestosRespaldo != presupuestosSinReasignar)
                                 {
-                                    // Permitir reactivar
-                                    f.Estado = EstadoFactura.Impaga;
-
-                                    foreach (Presupuesto pr in presupuestos)
-                                    {
-                                        foreach (int i in f.ItemsRespaldo)
-                                        {
-                                            if (pr.IdPresupuesto == i)
-                                            {
-                                                pr.FacturaFK = idFacturaRectivar;
-                                            }
-                                        }
-                                    }
-
-                                    f.ItemsRespaldo = new List<int>();
-
-                                    string jsonActualizadoPr = JsonConvert.SerializeObject(presupuestos, Formatting.Indented);
-                                    File.WriteAllText(PresupuestosRutaJson(idEmpresa), jsonActualizadoPr);
+                                    // No se puede reactivar
+                                    sePuede = false;
                                 }
                             }
-                            else
+                            break;
+                        case Contiene.OrdenesDeCompra:
+                            // No se comprueba nada
+                            break;
+                        case Contiene.SinDefinir:
+                            // No se comprueba nada
+                            break;
+                    }
+                    // Si no tiene Nota de Credito Asociada
+                    if (f.NotaDeCredito != null)
+                    {
+                        sePuede = false;
+                    }
+                }
+            }
+            return sePuede;
+        }
+        public void ReactivarFactura(int idEmpresa, int idFacturaRectivar)
+        {
+            List<Factura> facturas = ObtenerFacturasJson(idEmpresa);
+            foreach (Factura f in facturas)
+            {
+                if (f.IdFactura == idFacturaRectivar)
+                {
+                    switch (f.Contiene)
+                    {
+                        case Contiene.Pedidos:
+                            if (SePuedeReactivarFactura(idEmpresa, idFacturaRectivar) == true)
                             {
                                 f.Estado = EstadoFactura.Impaga;
+
+                                List<Pedido> pedidos = ObtenerPedidosJson(idEmpresa);
+                                foreach (Pedido pe in pedidos)
+                                {
+                                    foreach (int i in f.ItemsRespaldo)
+                                    {
+                                        if (pe.IdPedido == i)
+                                        {
+                                            pe.FacturaFK = idFacturaRectivar;
+                                        }
+                                    }
+                                }
+                                ActualizarJson_Pedidos(pedidos, idEmpresa);
+                            }
+                            break;
+                        case Contiene.Presupuestos:
+                            if (SePuedeReactivarFactura(idEmpresa, idFacturaRectivar) == true)
+                            {
+                                f.Estado = EstadoFactura.Impaga;
+
+                                List<Presupuesto> presupuestos = ObtenerPresupuestosJson(idEmpresa);
+                                foreach (Presupuesto pr in presupuestos)
+                                {
+                                    foreach (int i in f.ItemsRespaldo)
+                                    {
+                                        if (pr.IdPresupuesto == i)
+                                        {
+                                            pr.FacturaFK = idFacturaRectivar;
+                                        }
+                                    }
+                                }
+                                ActualizarJson_Presupuestos(presupuestos, idEmpresa);
                             }
                             break;
                         case Contiene.OrdenesDeCompra:
@@ -4921,20 +5327,8 @@ namespace ContabilidadTaller.Services
                                 }
                             }
 
-                            /*
-                            List<OrdenDeCompra> odcs = ObtenerOrdenesDeCompraJson(idEmpresa);
-                            foreach (OrdenDeCompra odc in odcs)
-                            {
-                                if (odc.IdOC == rodcf.IdOdcFK)
-                                {
-                                    odc.Estado = EstadoOC.Activa;
-                                }
-                            }
-                            ActualizarJson_OrdenesDeCompra(odcs, idEmpresa);
-                            */
-
-                            string jsonActualizadoRelacionesODCF = JsonConvert.SerializeObject(relacionesODCF, Formatting.Indented);
-                            File.WriteAllText(RelacionODCFacturaRutaJson(idEmpresa), jsonActualizadoRelacionesODCF);
+                            ActualizarJson_Relaciones_ODC_Factura(relacionesODCF, idEmpresa
+                                );
 
                             List<Recepcion> recepciones = ObtenerRecepcionesJson(idEmpresa);
 
@@ -4957,21 +5351,21 @@ namespace ContabilidadTaller.Services
                             {
                                 f.Estado = EstadoFactura.Impaga;
                             }
-                            string jsonActualizadoRecepciones = JsonConvert.SerializeObject(recepciones, Formatting.Indented);
-                            File.WriteAllText(RecepcionesRutaJson(idEmpresa), jsonActualizadoRecepciones);
 
-                            f.ItemsRespaldo = new List<int>();
-                            f.RecepionesRespaldo = new List<Recepcion>();
+                            ActualizarJson_Recepciones(recepciones, idEmpresa);
 
                             break;
                         case Contiene.SinDefinir:
                             f.Estado = EstadoFactura.Impaga;
                             break;
                     }
+
+                    f.ItemsRespaldo = new List<int>();
+                    f.RecepionesRespaldo = new List<Recepcion>();
                 }
-            }
-            string jsonActualizadoF = JsonConvert.SerializeObject(facturas, Formatting.Indented);
-            File.WriteAllText(FacturasRutaJson(idEmpresa), jsonActualizadoF);
+            } 
+
+            ActualizarJson_Facturas(facturas, idEmpresa);
         }
         public List<Pedido> PedidosEnFactura(int idEmpresa, int idFactura)
         {
@@ -5244,6 +5638,12 @@ namespace ContabilidadTaller.Services
             if (SePuedeBorrarFactura(idEmpresa, idFacturaBorrar).SePuede == true)
             {
                 Factura f = ElegirFactura(idEmpresa, idFacturaBorrar);
+
+                if (f.UbicacionArchivo != null)
+                {
+                    BorrarArchivo(idEmpresa, "Factura", idFacturaBorrar, f.UbicacionArchivo);
+                }
+
                 switch (f.Contiene)
                 {
                     case Contiene.SinDefinir:
@@ -5289,9 +5689,9 @@ namespace ContabilidadTaller.Services
                 ActualizarJson_Facturas(facturas, idEmpresa);
             }
         }
-
-
-        // ----- RELACION ODC Y FACTURA -----
+        #endregion
+        // ----- RELACIONES ODC Y FACTURA -----
+        #region RELAIONES ODC Y FACTURAS
         public string RelacionODCFacturaRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Ordenes de Compra\" + idEmpresa.ToString() + @" - RelacionODCFactura.json";
@@ -5385,7 +5785,6 @@ namespace ContabilidadTaller.Services
 
             return odcsEnFactura;
         }
-
         // PROBAR
         public List<Factura> FacturasDeOrdenDeCompra(int idEmpresa, int idOdcBuscada)
             {
@@ -5416,10 +5815,9 @@ namespace ContabilidadTaller.Services
 
                 return facturasDeODC;
             }
-        
-        
-
+        #endregion
         // ----- NOTAS DE CREDITO! -----
+        #region NOTAS DE CREDITO
         public string NotasDeCreditoRutaJson(int idEmpresa)
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\Empresas\" + idEmpresa.ToString() + @"\" + idEmpresa.ToString() + @" - Notas de Credito\" + idEmpresa.ToString() + @" - Notas de Credito.json";
@@ -5652,6 +6050,20 @@ namespace ContabilidadTaller.Services
                 }
             }     
         }
+        public List<Factura> FacturasEnNotaDeCredito(int idEmpresa, int idNotaDeCredito)
+        {
+            List<Factura> facturas = ObtenerFacturasJson(idEmpresa);
+            List<Factura> facturasEnNdc = new List<Factura>();
+            foreach (Factura f in facturas)
+            {
+                if (f.NotaDeCredito == idNotaDeCredito)
+                {
+                    facturasEnNdc.Add(f);
+                }
+            }
+
+            return facturasEnNdc;
+        }
         public void QuitarFacturaDeNotaDeCredito(int idEmpresa, int idNotaDeCredito, int idFactura)
         {
             List<Factura> facturas = ObtenerFacturasJson(idEmpresa);
@@ -5753,6 +6165,45 @@ namespace ContabilidadTaller.Services
                 }
             }
         }
+        public bool SePuedeReactivarNotaDeCredito(int idEmpresa, int idNotaDeCreditoReactivar)
+        {
+            bool sePuede = true;
+            List<NotaDeCredito> ndcs = ObtenerNotasDeCreditoJson(idEmpresa);
+            foreach (NotaDeCredito ndc in ndcs)
+            {
+                if (ndc.IdNotaCredito == idNotaDeCreditoReactivar)
+                {
+                    if (ndc.FacturasRespaldo != null && ndc.FacturasRespaldo.Any())
+                    {
+                        int itemsSinReasignar = 0;
+                        List<Factura> facturas = ObtenerFacturasJson(idEmpresa);
+                        foreach (int i in ndc.FacturasRespaldo)
+                        {
+                            foreach (Factura f in facturas)
+                            {
+                                if (i == f.IdFactura && f.NotaDeCredito == null)
+                                {
+                                    itemsSinReasignar++;
+                                }
+                            }
+                        }
+                        if (itemsSinReasignar == ndc.FacturasRespaldo.Count())
+                        {
+                            sePuede = true;
+                        }
+                        else
+                        {
+                            sePuede = false;
+                        }
+                    }
+                    else
+                    {
+                        sePuede = true;
+                    }
+                }
+            }
+            return sePuede;
+        }
         public RespuestaBorrar SePuedeBorrarNotaDeCredito(int idEmpresa, int idNotaDeCredito)
         {
             RespuestaBorrar respuesta = new RespuestaBorrar() { SePuede = true };
@@ -5786,6 +6237,11 @@ namespace ContabilidadTaller.Services
             if (SePuedeBorrarNotaDeCredito(idEmpresa, idNotaDeCreditoBorrar).SePuede == true)
             {
                 List<NotaDeCredito> notasDeCredito = ObtenerNotasDeCreditoJson(idEmpresa);
+                NotaDeCredito ndc = ElegirNotaDeCredito(idEmpresa, idNotaDeCreditoBorrar);
+                if (ndc.UbicacionArchivo != null)
+                {
+                    BorrarArchivo(idEmpresa, "NotaDeCredito", idNotaDeCreditoBorrar, ndc.UbicacionArchivo);
+                }
 
                 notasDeCredito.RemoveAll(ndc => ndc.IdNotaCredito == idNotaDeCreditoBorrar);
 
@@ -5807,8 +6263,9 @@ namespace ContabilidadTaller.Services
                 }
             }
         }
-
-        // ----- ARCHIVOS GENERAL! ----
+        #endregion
+        // ----- ARCHIVOS! ----
+        #region ARCHIVOS
         public void AbrirArchivoEnSuUbicacion(string rutaArchivo)
         {
             string rutaCompleta = Directory.GetCurrentDirectory() + "\\wwwroot" + rutaArchivo;
@@ -5837,31 +6294,34 @@ namespace ContabilidadTaller.Services
                     switch (nombreElemento)
                     {
                         case "Costo":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Costos");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Costos", $"{idEmpresa} - Archivos Costos");
                             break;
                         case "Factura":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Facturas");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Facturas", $"{idEmpresa} - Archivos Facturas");
                             break;
                         case "NotaDeCredito":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Notas de Credito");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Notas de Credito", $"{idEmpresa} - Archivos Notas de Credito");
                             break;
                         case "OrdenDeCompra":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Ordenes de Compra");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Ordenes de Compra", $"{idEmpresa} - Archivos Ordenes de Compra");
                             break;
                         case "Pedido":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Pedidos");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Pedidos", $"{idEmpresa} - Archivos Pedidos");
                             break;
                         case "Pieza":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Piezas");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Piezas", $"{idEmpresa} - Archivos Piezas");
                             break;
                         case "Conjunto":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Piezas");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Conjuntos", $"{idEmpresa} - Archivos Conjuntos");
                             break;
                         case "Presupuesto":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Presupuestos");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Presupuestos", $"{idEmpresa} - Archivos Presupuestos");
                             break;
                         case "Remito":
-                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Remitos");
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Remitos", $"{idEmpresa} - Archivos Remitos");
+                            break;
+                        case "Utilaje":
+                            carpetaRelativa = Path.Combine("Empresas", idEmpresa.ToString(), $"{idEmpresa} - Utilajes", $"{idEmpresa} - Archivos Utilajes");
                             break;
                     }
 
@@ -5956,7 +6416,6 @@ namespace ContabilidadTaller.Services
                                     {
                                         p.Archivos = new List<string>();
                                         p.Archivos.Add(rutaParaJson);
-
                                     }
                                 }
                             }
@@ -5978,7 +6437,6 @@ namespace ContabilidadTaller.Services
                                     {
                                         p.Archivos = new List<string>();
                                         p.Archivos.Add(rutaParaJson);
-
                                     }
                                 }
                             }
@@ -6000,7 +6458,6 @@ namespace ContabilidadTaller.Services
                                     {
                                         c.Archivos = new List<string>();
                                         c.Archivos.Add(rutaParaJson);
-
                                     }
                                 }
                             }
@@ -6041,11 +6498,30 @@ namespace ContabilidadTaller.Services
                             string jsonActualizadoRemitos = JsonConvert.SerializeObject(remitos, Formatting.Indented);
                             File.WriteAllText(RemitosRutaJson(idEmpresa), jsonActualizadoRemitos);
                             break;
+                        case "Utilaje":
+                            // varios archivos
+                            List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+                            foreach (Utilaje u in utilajes)
+                            {
+                                if (u.IdUtilaje == idElemento)
+                                {
+                                    if (u.Archivos != null && u.Archivos.Any())
+                                    {
+                                        u.Archivos.Add(rutaParaJson);
+                                    }
+                                    else
+                                    {
+                                        u.Archivos = new List<string>();
+                                        u.Archivos.Add(rutaParaJson);
+                                    }
+                                }
+                            }
+                            ActualizarJson_Utilajes(utilajes, idEmpresa);
+                            break;
                     }
                 } 
             }
         }
-
         public void BorrarArchivo(int idEmpresa, string nombreElemento, int idElemento, string rutaArchivo)
         {
             // BORRAR ARCHIVO
@@ -6178,12 +6654,37 @@ namespace ContabilidadTaller.Services
                     string jsonActualizadoRemitos = JsonConvert.SerializeObject(remitos, Formatting.Indented);
                     File.WriteAllText(RemitosRutaJson(idEmpresa), jsonActualizadoRemitos);
                     break;
+                case "Utilaje":
+                    List<Utilaje> utilajes = ObtenerUtilajesJson(idEmpresa);
+                    foreach (Utilaje u in utilajes)
+                    {
+                        if (u.IdUtilaje == idElemento)
+                        {
+                            if (u.Archivos != null && u.Archivos.Any())
+                            {
+                                u.Archivos.Remove(rutaArchivo);
+                            }
+                        }
+                    }
+                    ActualizarJson_Utilajes(utilajes, idEmpresa);
+                    break;
             }
         }
-
-
+        public List<string>? NombresDeArchivos(List<string>? archivos)
+        {
+            List<string> nombres = new List<string>();
+            if (archivos != null && archivos.Any())
+            {
+                foreach (string arch in archivos)
+                {
+                    nombres.Add(Path.GetFileName(arch));
+                }
+            }
+            return nombres;
+        }
+        #endregion
         // ----- ACTUALIZAR JSONS! -----
-
+        #region ACTUALIZAR JSONS
         public void ActualizarJson_Empresas(List<Empresa> empresas)
         {
             string jsonActualizado = JsonConvert.SerializeObject(empresas, Formatting.Indented);
@@ -6203,6 +6704,11 @@ namespace ContabilidadTaller.Services
         {
             string jsonActualizado = JsonConvert.SerializeObject(piezas, Formatting.Indented);
             File.WriteAllText(PiezasRutaJson(idEmpresa), jsonActualizado);
+        }
+        public void ActualizarJson_Utilajes(List<Utilaje> utilajes, int idEmpresa)
+        {
+            string jsonActualizado = JsonConvert.SerializeObject(utilajes, Formatting.Indented);
+            File.WriteAllText(UtilajesRutaJson(idEmpresa), jsonActualizado);
         }
         public void ActualizarJson_Conjuntos(List<Conjunto> conjuntos, int idEmpresa)
         {
@@ -6254,12 +6760,12 @@ namespace ContabilidadTaller.Services
             string jsonActualizado = JsonConvert.SerializeObject(notasDeCredito, Formatting.Indented);
             File.WriteAllText(NotasDeCreditoRutaJson(idEmpresa), jsonActualizado);
         }
+        #endregion
 
 
 
-
-
-
+        // ----- SIN USAR! -----
+        #region SIN USAR
         // JSON AUXILIAR
 
         /*
@@ -6331,7 +6837,7 @@ namespace ContabilidadTaller.Services
             return rutaFinal;
         }
         */
-
+        #endregion
 
 
 

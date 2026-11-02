@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "IdEmpleado": 0,
+    "NombreEmpleado": "adfgadfgad",
+    "ApellidoEmpleado": null,
+    "Telefonos": [
+      "sdhfjkdjszdfadsfgn"
+    ],
+    "Emails": [
+      "DSVSDs@adfgadfg"
+    ],
+    "Notas": [
+      "advSDVasdv"
+    ],
+    "Estado": 1
+  }
+]

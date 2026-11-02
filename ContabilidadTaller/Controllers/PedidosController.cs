@@ -98,7 +98,7 @@ namespace ContabilidadTaller.Controllers
 
             return View();
         }
-        public IActionResult IndexVerPedido(int idEmpresa, string nombreEmpresa, int idPedido, int? idEmpleado)
+        public IActionResult IndexVerPedido(int idEmpresa, string nombreEmpresa, int idPedido)
         {
             ViewBag.IdEmpresa = idEmpresa;
             ViewBag.NombreEmpresa = nombreEmpresa;
@@ -116,11 +116,11 @@ namespace ContabilidadTaller.Controllers
 
             if (p.EncargadoPorFK != null)
             {
-                ViewBag.Empleado = _serJson.ElegirEmpleado(idEmpresa, idEmpleado);
+                ViewBag.Empleado = _serJson.ElegirEmpleado(idEmpresa, p.EncargadoPorFK);
             }
             else
             {
-                ViewBag.Empleado = _serJson.SinEnmpleado();
+                ViewBag.Empleado = _serJson.SinEmpleado();
             }
             
             ViewBag.Empleados = _serJson.ObtenerEmpleadosJson(idEmpresa);

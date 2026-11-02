@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "IdFactura": 0,
+    "Fecha": "2026-10-29",
+    "Codigo": {
+      "Puesto": "1111",
+      "Numero": "11111111"
+    },
+    "Contiene": 3,
+    "Descripcion": null,
+    "MontoManual": null,
+    "Estado": 1,
+    "Notas": [],
+    "UbicacionArchivo": null,
+    "ItemsRespaldo": [],
+    "RecepionesRespaldo": [],
+    "NotaDeCredito": null
+  }
+]

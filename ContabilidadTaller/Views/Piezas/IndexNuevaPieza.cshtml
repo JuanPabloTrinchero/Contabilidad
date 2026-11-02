@@ -4,7 +4,7 @@
     string nombreEmpresa = (string)ViewBag.NombreEmpresa;
 }
 
-<div>
+<div class="text-center">
     <h1>Nueva Pieza para @nombreEmpresa (@idEmpresa)</h1>
 </div>
 
@@ -22,12 +22,12 @@
             <div id="listaNotas">
                 <h6>Notas</h6>
                 <!-- Agregar Notas -->
-                <button class=" btn btn-primary" type="button" onclick="agregarNuevaNota()">Agregar Nota</button>
+                <button class=" btn btn-primary" type="button" onclick="agregarNuevaNota()">+ Agregar Nota</button>
             </div>
             <div id="listaArchivos">
                 <h6>Archivos</h6>
                 <!-- Agregar Archivos -->
-                <button class=" btn btn-primary" type="button" onclick="agregarNuevoArchivo()">Agregar Archivo</button>
+                <button class=" btn btn-primary" type="button" onclick="agregarNuevoArchivo()">+ Agregar Archivo</button>
             </div>
         </div>
         <button id="btnGuardar" class="btn btn-success" type="submit" onclick="return confirm('Confirmar pieza nueva>')" disabled>Guardar Nueva Pieza</button>
@@ -45,71 +45,6 @@
 </div>
 -->
 
-@section Scripts{
-    <script>
-        // AGREGAR NUEVO ARCHIVO
-        function agregarNuevoArchivo() {
-            const contenedor = document.getElementById('listaArchivos');
-
-            const fila = document.createElement('div');
-            fila.className = 'archivo-item d-flex align-items-center';
-
-            fila.innerHTML = `
-                        <input type="file" id="archivoCargado" name="archivos" class="form-control-sm">
-                        <button type="button" class="btn btn-warning btn-limpiar btn-sm px-3 text-nowrap">Limpiar archivo</button>
-                        <button type="button" class="btn btn-danger btn-eliminar btn-sm px-3 text-nowrap">Quitar fila</button>
-                    `;
-
-             fila.querySelector('.btn-limpiar').addEventListener('click', function() {
-             fila.querySelector('input[type="file"]').value = '';
-                    });
-
-            fila.querySelector('.btn-eliminar').addEventListener('click', function() {
-            fila.remove();
-            });
-            
-            contenedor.appendChild(fila);  
-        }
-
-        // AGREGAR NUEVA NOTA
-        function agregarNuevaNota() {
-            const contenedor = document.getElementById('listaNotas');
-
-            const fila = document.createElement('div');
-            fila.className = 'nota-item d-flex align-items-center';
-
-            fila.innerHTML = `
-                        <textarea type="text" id="archivoCargado" name="notas" class="form-control-sm" style="width: 50%; height: 100px" placeholder="Nueva nota..."></textarea>
-                        <button type="button" class="btn btn-danger btn-eliminarNotaNueva btn-sm px-3 text-nowrap">Quitar fila</button>
-                            `;
-
-            fila.querySelector('.btn-eliminarNotaNueva').addEventListener('click', function () {
-                fila.remove();
-            });
-
-            contenedor.appendChild(fila);
-        }
-
-        // HABILITAR BUTON GUARDAR SOLO CON CAMPOS REQUERIDOS
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("formPieza");
-            const btnGuardar = document.getElementById("btnGuardar");
-            const requiredFields = form.querySelectorAll("[required]");
-
-            function validarFormulario() {
-                let formValido = true;
-
-                requiredFields.forEach(function(field) {
-                    if (field.value.trim() === "") {
-                        formValido = false;
-                    }
-                });
-
-                btnGuardar.disabled = !formValido;
-            }
-
-            form.addEventListener("input", validarFormulario);
-            validarFormulario();
-        });
-    </script>
+@section Scripts {
+    <script src="~/js/Piezas/IndexNuevaPieza.js" asp-append-version="true"></script>
 }

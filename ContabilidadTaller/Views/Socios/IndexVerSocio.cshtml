@@ -19,7 +19,40 @@
     RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
 }
 
-<h1>Ver Socio</h1>
+<div class="text-center">
+    <h1>Ver Socio</h1>
+</div>
+
+<div class=" d-flex align-items-center">
+    <h3>Id: @socio.IdSocio</h3>
+
+    <div class="opciones ms-auto">
+        <button class="btn btn-primary" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            Opciones
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                <button class="dropdown-item" onclick="mostrarModificarNombres()">Modificar Nombre/s</button>
+            </li>
+            <li>
+                <button class="dropdown-item" onclick="mostrarModificarApellido()">Modificar Apellido</button>
+            </li>
+            <li>
+                <button class="dropdown-item" onclick="mostrarModificarCUIT()">Modificar C.U.I.T</button>
+            </li>
+            <li>
+                <button class="dropdown-item" onclick="mostrarModificarDireccion()">Modificar Direccion</button>
+            </li>
+            <li>
+                <button class="dropdown-item" onclick="mostrarModificarContraseña()">Modificar Contraseña</button>
+            </li>
+            <li>
+                <button class="dropdown-item" style="background-color: red; color: white" onclick="mostrarBorrarSocio()">Borrar Socio</button>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <div class="container-nombreApellido">
     <div class="vistaNombreApellido">
@@ -28,29 +61,23 @@
             <h3>Nombre y Apellido: @nombreApellido</h3>
         }
     </div>   
-    <div class="vistaBotonModificarNombres">
-        <a class="btn btn-primary" onclick="mostrarModificarNombres(this)">Modificar Nombres</a>
-    </div>
     <div class="vistaModificarNombres" style="display: none">
         <form asp-controller="Socios" asp-action="Socio_ModificarNombre" asp-route-idSocio="@socio.IdSocio" method="post">
             <input type="text" placeholder="@socio.Nombres" name="nuevosNombres" required />
             <label>@socio.Apellido</label>
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevos nombres?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarNombresApellido(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarNombresApellido()">Cancelar</a>
         </form>
     </div>
 
-    <div class="vistaBotonModificarApellido">
-        <a class="btn btn-primary" onclick="mostrarModificarApellido(this)">Modificar Apellido</a>
-    </div>
     <div class="vistaModificarApellido" style="display: none">
         <form asp-controller="Socios" asp-action="Socio_ModificarApellido" asp-route-idSocio="@socio.IdSocio" method="post">
             <label>@socio.Nombres</label>
             <input type="text" name="nuevoApellido" placeholder="@socio.Apellido" required />
             
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo apellido?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarNombresApellido(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarNombresApellido()">Cancelar</a>
         </form>
     </div>
 </div>
@@ -68,9 +95,6 @@
             <h3>C.U.I.T: - Sin C.U.I.T -</h3>
         }
     </div>
-    <div class="vistaBotonModificarCUIT">
-        <a class="btn btn-primary" onclick="mostrarModificarCUIT(this)">Modificar CUIT</a>
-    </div>
     <div class="vistaModificarCUIT" style="display: none">
         <form asp-controller="Socios" asp-action="Socio_ModificarCUIT" asp-route-idSocio="@socio.IdSocio" method="post">
             <h6>Nuevo C.U.I.T:</h6>
@@ -83,7 +107,7 @@
 
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo C.U.I.T.?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarCUIT(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarCUIT()">Cancelar</a>
         </form>
     </div>
 </div>
@@ -92,46 +116,53 @@
     <div class="vistaDireccion">
         <h3>Direccion: @socio.Direccion</h3>
     </div>
-    <div class="vistaBotonModificarDireccion">
-        <a class="btn btn-primary" onclick="mostrarModificarDireccion(this)">Modificar Direccion</a>
-    </div>
     <div class="vistaModificarDireccion" style="display: none">
         <form asp-controller="Socios" asp-action="Socio_ModificarDireccion" asp-route-idSocio="@socio.IdSocio" method="post">
-            <label>Nueva Direccion</label>
+            <h6>Nueva Direccion</h6>
             <input type="text" name="nuevaDireccion" placeholder="@socio.Direccion" required />
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva direccion?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarDireccion(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarDireccion()">Cancelar</a>
         </form>
     </div>
 </div>
 
 <div class="container-emails">
-    <h3>Emails:</h3>
+    <h3>E-mails:</h3>
     @if (socio.Emails != null && socio.Emails.Any())
     {
         int index = 0;
+        int cont = 1;
         <table>
             @foreach (string email in socio.Emails)
             {
                 <tr>
                     <td>
                         <div class="vistaEmail-@index">
-                            @email
+                            @cont: @email
 
                             <button class="btn btn-sm btn-outline-secondary" onclick="copiarEmail('@email')" title="Copiar Email">
                                 <i class="bi bi-clipboard"></i>
                             </button>
 
-                            <button type="button" class="btn btn-primary" onclick="mostrarModificarEmail(this, @index)">Modificar Email</button>
-                            <form style="display: inline" asp-controller="Socios" asp-action="Socio_BorrarEmail" asp-route-idSocio="@socio.IdSocio" asp-route-emailBorrar="@email" method="post">
-                                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar este email?')">Borrar Email</button>
-                            </form>
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <button class="dropdown-item" type="button" onclick="mostrarModificarEmail(this, @index)">Modificar E-mail</button>
+                                </li>
+                                <li>
+                                    <form style="display: inline" asp-controller="Socios" asp-action="Socio_BorrarEmail" asp-route-idSocio="@socio.IdSocio" asp-route-emailBorrar="@email" method="post">
+                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar email?')">Borrar E-mail</button>
+                                    </form>
+                                </li>
+                            </ul>
                         </div>
                         <div class="vistaModificarEmail-@index" style="display: none">
                             <form asp-controller="Socios" asp-action="Socio_ModificarEmail" asp-route-idSocio="@socio.IdSocio" asp-route-emailViejo="@email" method="post"> 
-                                <label>Nuevo Email</label>
-                                <input type="email" name="nuevoEmail" placeholder="@email" required />
+                                <h6>Nuevo Email</h6>
+                                <input type="email" name="nuevoEmail" placeholder="@email" style="width: 500px" required />
 
                                 <button class="btn btn-primary">Guardar</button>
                                 <button type="button" class="btn btn-secondary" onclick="ocultarModificarEmail(this, @index)">Cancelar</button>
@@ -140,12 +171,13 @@
                     </td>
                 </tr>
                 index++;
+                cont++;
             }
         </table> 
     }
     else
     {
-        <h5>- Sin emails -</h5>
+        <h6>- Sin emails -</h6>
     }
 
     <div class="vistaBotonAgregarEmail">
@@ -167,18 +199,38 @@
         <h3>Telefono:</h3>
         @if (socio.Telefono != null)
         {
-            <h6>@long.Parse(socio.Telefono)</h6>
-            <form asp-controller="Socios" asp-action="Socio_BorrarTelefono" asp-route-idSocio="@socio.IdSocio" method="post">
-                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar telefono?')">Borrar Telefono</button>
-            </form>
+            <label>
+                @long.Parse(socio.Telefono)
+            </label>
+
+            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                <li>
+                    <button class="dropdown-item" onclick="mostrarModificarTelefono()">Modificar Telefono</button>
+                </li>
+                <li>
+                    <form asp-controller="Socios" asp-action="Socio_BorrarTelefono" asp-route-idSocio="@socio.IdSocio" method="post">
+                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar telefono?')">Borrar Telefono</button>
+                    </form>
+                </li>
+            </ul>
         }
         else
         {
-            <h6>- Sin Telefono -</h6>
+            <h6>
+                - Sin Telefono -
+                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                    <li>
+                        <button class="dropdown-item" onclick="mostrarModificarTelefono()">Agregar Telefono</button>
+                    </li>
+                </ul>
+            </h6>
         }
-    </div>
-    <div class="vistaBotonModificarTelefono">
-        <a class="btn btn-primary" onclick="mostrarModificarTelefono(this)">Modificar Telefono</a>
     </div>
     <div class="vistaModificarTelefono" style="display: none">
         <form asp-controller="Socios" asp-action="Socio_ModificarTelefono" asp-route-idSocio="@socio.IdSocio" method="post">
@@ -190,8 +242,8 @@
             {
                 <input type="number" name="nuevoTelefono" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" placeholder="- Sin telefono -" required />
             }
-            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo telefono?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarTelefono(this)">Cancelar</a>
+            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo telefono?')">Guardar Cambios</button>
+            <a class="btn btn-secondary" onclick="ocultarModificarTelefono()">Cancelar</a>
         </form>
     </div>
 </div>
@@ -204,11 +256,23 @@
             @foreach (string nota in socio.Notas)
             {
                 <div class="vistaNota">
-                    @contador: @nota
-                    <a class="btn btn-primary" onclick="mostrarModificarNota(this)">Modificar Nota</a>
-                    <form asp-controller="Socios" asp-action="Socio_BorrarNota" asp-route-idSocio="@socio.IdSocio" asp-route-notaBorrar="@nota" method="post">
-                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar esta nota?')">Borrar Nota</button>
-                    </form>
+                    <label>
+                        @contador: @nota
+                    </label>
+
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li>
+                            <button class="dropdown-item" onclick="mostrarModificarNota(this)">Modificar Nota</button>
+                        </li>
+                        <li>
+                            <form asp-controller="Socios" asp-action="Socio_BorrarNota" asp-route-idSocio="@socio.IdSocio" asp-route-notaBorrar="@nota" method="post">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar esta nota?')">Borrar Nota</button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
                 <div class="vistaModificarNota" style="display: none">
                     <form asp-controller="Socios" asp-action="Socio_ModificarNota" asp-route-idSocio="@socio.IdSocio" asp-route-notaVieja="@nota" method="post">
@@ -240,12 +304,7 @@
 
 <div class="container-contraseña">
     <div class="vistaContraseña">
-
-    </div>
-
-
-    <div class="vistaBotonModificarContraseña">
-        <a class="btn btn-primary" onclick="mostrarModificarContraseña(this)">Modificar Contraseña</a>
+        <!-- MOSTRAR CONTRASEñA -->
     </div>
     <div class="form-container vistaModificarContraseña" style="display: none">
         <form asp-controller="Socios" asp-action="Socio_ModificarContraseña" asp-route-idSocio="@socio.IdSocio" method="post">
@@ -273,63 +332,56 @@
             </div>
             
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar contraseña?')">Guardar</button>
-            <a class="btn btn-secondary" onclick="ocultarModificarContraseña(this)">Cancelar</a>
+            <a class="btn btn-secondary" onclick="ocultarModificarContraseña()">Cancelar</a>
         </form>
     </div>
 </div>
 
-<div class="container-borrarSocio">
+<div class="container-borrarSocio" style="display: none">
     @if (sePuedeBorrar.SePuede == true)
     {
-        <div class="vistaBotonBorrarSocio">
-            <a class="btn btn-danger" onclick="mostrarBorrarSocio(this)">Borrar Socio</a>
-        </div>
-        <div class="vistaBorrarSocio" style="display: none">
-            <form asp-controller="Socios" asp-action="Socio_Borrar" asp-route-idSocioBorrar="@socio.IdSocio" method="post">
+        <form asp-controller="Socios" asp-action="Socio_Borrar" asp-route-idSocioBorrar="@socio.IdSocio" method="post">
 
-                <label>Socio:</label>
-                <div class="dropdown">
-                    <input type="hidden" name="idSocioUsuario" id="idSocioSeleccionado" value="">
+            <label>Socio:</label>
+            <div class="dropdown">
+                <input type="hidden" name="idSocioUsuario" id="idSocioSeleccionado" value="">
 
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
-                        Seleccionar Socio
-                    </button>
-                    <ul class="dropdown-menu">
-                        @{
-                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
-                            if (socios != null && socios.Any())
+                <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                    Seleccionar Socio
+                </button>
+                <ul class="dropdown-menu">
+                    @{
+                        <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                        if (socios != null && socios.Any())
+                        {
+                            foreach (Socio s in socios)
                             {
-                                foreach (Socio s in socios)
-                                {
-                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                    <li>
-                                        <a class="dropdown-item opcion-socio"
-                                           href="#"
-                                           data-id="@s.IdSocio"
-                                           data-nombre="@nombreApellido">
-                                            @nombreApellido
-                                        </a>
-                                    </li>
-                                }
+                                string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                <li>
+                                    <a class="dropdown-item opcion-socio"
+                                       href="#"
+                                       data-id="@s.IdSocio"
+                                       data-nombre="@nombreApellido">
+                                        @nombreApellido
+                                    </a>
+                                </li>
                             }
                         }
-                    </ul>
-                </div>
+                    }
+                </ul>
+            </div>
 
-                <label>Contraseña:</label>
-                <div>
-                    <input type="password" name="contraseñaSocioUsuario" id="passSocio" />
-                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
-                </div>
+            <label>Contraseña:</label>
+            <div>
+                <input type="password" name="contraseñaSocioUsuario" id="passSocio" />
+                <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+            </div>
 
-                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar socio?')">Borrar Socio</button>
-                <a class="btn btn-secondary" onclick="ocultarBorrarSocio(this)">Cancelar</a>
-            </form>
-        </div>
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar socio?')">Borrar Socio</button>
+        </form>
     }
     else
     {
-        <button class="btn btn-danger" disabled>Borrar Socio</button>
         <h5>No se puede borrar este socio, ya que:</h5>
         <ul>
             @foreach (string mensaje in sePuedeBorrar.Mensajes)
@@ -338,282 +390,13 @@
             }
         </ul>
     }
+    <a class="btn btn-secondary" onclick="ocultarBorrarSocio()">Cancelar</a>
 </div>
 
 <div class="d-flex justify-content-center">
     <a class="btn btn-secondary" asp-controller="Socios" asp-action="IndexSocios">Atras</a>
 </div>
 
-@section Scripts{
-    <script>
-        // MODIFICAR NOMBRE Y APELLIDO
-        function mostrarModificarNombres(elemento) {
-            const contenedor = elemento.closest('.container-nombreApellido');
-
-            contenedor.querySelector('.vistaNombreApellido').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarNombres').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNombres').style.display = 'block';
-
-            contenedor.querySelector('.vistaBotonModificarApellido').style.display = 'none';
-            contenedor.querySelector('.vistaModificarApellido').style.display = 'none';
-        }
-
-        function mostrarModificarApellido(elemento) {
-            const contenedor = elemento.closest('.container-nombreApellido');
-
-            contenedor.querySelector('.vistaNombreApellido').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarNombres').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNombres').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarApellido').style.display = 'none';
-            contenedor.querySelector('.vistaModificarApellido').style.display = 'block';
-        }
-        
-        function ocultarModificarNombresApellido(elemento) {
-            const contenedor = elemento.closest('.container-nombreApellido');
-
-            contenedor.querySelector('.vistaNombreApellido').style.display = 'block';
-
-            contenedor.querySelector('.vistaBotonModificarNombres').style.display = 'block';
-            contenedor.querySelector('.vistaModificarNombres').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarApellido').style.display = 'block';
-            contenedor.querySelector('.vistaModificarApellido').style.display = 'none';
-        }
-
-        // MODIFICAR CUIT
-        function mostrarModificarCUIT(elemento) {
-            const contenedor = elemento.closest('.container-cuit');
-
-            contenedor.querySelector('.vistaCUIT').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarCUIT').style.display = 'none';
-            contenedor.querySelector('.vistaModificarCUIT').style.display = 'block';
-        }
-        function ocultarModificarCUIT(elemento) {
-            const contenedor = elemento.closest('.container-cuit');
-
-            contenedor.querySelector('.vistaCUIT').style.display = 'block';
-
-            contenedor.querySelector('.vistaBotonModificarCUIT').style.display = 'block';
-            contenedor.querySelector('.vistaModificarCUIT').style.display = 'none';
-        }
-
-        // MODIFICAR DIRECCION
-        function mostrarModificarDireccion(elemento) {
-            const contenedor = elemento.closest('.container-direccion');
-
-            contenedor.querySelector('.vistaDireccion').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarDireccion').style.display = 'none';
-            contenedor.querySelector('.vistaModificarDireccion').style.display = 'block';
-        }
-        function ocultarModificarDireccion(elemento) {
-            const contenedor = elemento.closest('.container-direccion');
-
-            contenedor.querySelector('.vistaDireccion').style.display = 'block';
-
-            contenedor.querySelector('.vistaBotonModificarDireccion').style.display = 'block';
-            contenedor.querySelector('.vistaModificarDireccion').style.display = 'none';
-        }
-
-        // MODIFICAR TELEFONO
-        function mostrarModificarTelefono(elemento) {
-            const contenedor = elemento.closest('.container-telefono');
-
-            contenedor.querySelector('.vistaTelefono').style.display = 'none';
-
-            contenedor.querySelector('.vistaBotonModificarTelefono').style.display = 'none';
-            contenedor.querySelector('.vistaModificarTelefono').style.display = 'block';
-        }
-        function ocultarModificarTelefono(elemento) {
-            const contenedor = elemento.closest('.container-telefono');
-
-            contenedor.querySelector('.vistaTelefono').style.display = 'block';
-
-            contenedor.querySelector('.vistaBotonModificarTelefono').style.display = 'block';
-            contenedor.querySelector('.vistaModificarTelefono').style.display = 'none';
-        }
-
-        // AGREGAR EMAIL
-        function mostrarAgregarEmail(elemento) {
-            const contenedor = elemento.closest('.container-emails');
-
-            contenedor.querySelector('.vistaBotonAgregarEmail').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarEmail').style.display = 'block';
-        }
-        function ocultarAgregarEmail(elemento) {
-            const contenedor = elemento.closest('.container-emails');
-
-            contenedor.querySelector('.vistaBotonAgregarEmail').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarEmail').style.display = 'none';
-        }
-
-        // MODIFICAR EMAIL
-        function mostrarModificarEmail(elemento, index) {
-            const contenedor = elemento.closest('.container-emails');
-
-            contenedor.querySelector(`.vistaEmail-${index}`).style.display = 'none';
-            contenedor.querySelector(`.vistaModificarEmail-${index}`).style.display = 'block';
-        }
-        function ocultarModificarEmail(elemento, index) {
-            const contenedor = elemento.closest('.container-emails');
-
-            contenedor.querySelector(`.vistaEmail-${index}`).style.display = 'block';
-            contenedor.querySelector(`.vistaModificarEmail-${index}`).style.display = 'none';
-        }
-
-        // AGREGAR NOTA
-        function mostrarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-        }
-        function ocultarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-        }
-
-        // MODIFICAR NOTA
-        function mostrarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaNota').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'block';
-        }
-        function ocultarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaNota').style.display = 'block';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'none';
-        }
-
-        // MODIFICAR CONTRASEñA
-        function mostrarModificarContraseña(elemento) {
-            const contenedor = elemento.closest('.container-contraseña');
-
-            contenedor.querySelector('.vistaBotonModificarContraseña').style.display = 'none';
-            contenedor.querySelector('.vistaModificarContraseña').style.display = 'block';
-        }
-        function ocultarModificarContraseña(elemento) {
-            const contenedor = elemento.closest('.container-contraseña');
-
-            contenedor.querySelector('.vistaBotonModificarContraseña').style.display = 'block';
-            contenedor.querySelector('.vistaModificarContraseña').style.display = 'none';
-        }
-
-        // MOSTRAR/OCULTAR CONTRASEñA
-        function togglePasswordActual() {
-            var input = document.getElementById("passwordActual");
-            const icono = document.getElementById('passwordActual');
-
-            if (input.type === "password") {
-                input.type = "text";
-
-                icono.classList.remove('bi-eye');
-                icono.classList.add('bi-eye-slash');
-            } else {
-                input.type = "password";
-
-                icono.classList.remove('bi-eye-slash');
-                icono.classList.add('bi-eye');
-            }
-        }
-
-        function togglePasswordNueva() {
-            var input = document.getElementById("passwordNueva");
-            const icono = document.getElementById('iconoOjoNueva');
-
-            if (input.type === "password") {
-                input.type = "text";
-
-                icono.classList.remove('bi-eye');
-                icono.classList.add('bi-eye-slash');
-            } else {
-                input.type = "password";
-
-                icono.classList.remove('bi-eye-slash');
-                icono.classList.add('bi-eye');
-            }
-        }
-
-        function togglePasswordNuevaRepetida() {
-            var input = document.getElementById("passwordNuevaRepetida");
-            const icono = document.getElementById('iconoOjoNuevaRepetida');
-
-            if (input.type === "password") {
-                input.type = "text";
-
-                icono.classList.remove('bi-eye');
-                icono.classList.add('bi-eye-slash');
-            } else {
-                input.type = "password";
-
-                icono.classList.remove('bi-eye-slash');
-                icono.classList.add('bi-eye');
-            }
-        }
-
-        // BORRAR SOCIA
-        function mostrarBorrarSocio(elemento) {
-            const contenedor = elemento.closest('.container-borrarSocio');
-
-            contenedor.querySelector('.vistaBotonBorrarSocio').style.display = 'none';
-            contenedor.querySelector('.vistaBorrarSocio').style.display = 'block';
-        }
-        function ocultarBorrarSocio(elemento) {
-            const contenedor = elemento.closest('.container-borrarSocio');
-
-            contenedor.querySelector('.vistaBotonBorrarSocio').style.display = 'block';
-            contenedor.querySelector('.vistaBorrarSocio').style.display = 'none';
-        }
-
-        // SELECCIONAR SOCIO
-        document.querySelectorAll('.opcion-socio').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                const id = this.getAttribute('data-id');
-                const nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('btnSocio').innerText = nombre;
-
-                document.getElementById('idSocioSeleccionado').value = id;
-            });
-        });
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            // Si es password lo pasa a text, y viceversa
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-        // COPIAR CUIT
-        function copiarCuit(cuit) {
-            navigator.clipboard.writeText(cuit).then(() => {})
-            .catch(err => {
-            console.error('Error al copiar: ', err);
-            });
-        }
-
-        // COPIAR EMAIL
-        function copiarEmail(cuit) {
-            navigator.clipboard.writeText(cuit).then(() => {})
-            .catch(err => {
-            console.error('Error al copiar: ', err);
-            });
-        }
-
-
-    </script>
+@section Scripts {
+    <script src="~/js/Socios/IndexVerSocio.js" asp-append-version="true"></script>
 }

@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "IdPieza": 0,
+    "Descripcion": "SDsdfSDF",
+    "Codigo": null,
+    "ConjuntoFK": null,
+    "Notas": [
+      "adsasd",
+      "sadfsdfsdf"
+    ],
+    "ArchivosSubidos": null,
+    "Archivos": [
+      "\\Empresas\\0\\0 - Piezas\\0 - Archivos Piezas\\Ternas Pokemon.bat"
+    ]
+  },
+  {
+    "IdPieza": 1,
+    "Descripcion": "cvnm,cghxfdg",
+    "Codigo": null,
+    "ConjuntoFK": null,
+    "Notas": [],
+    "ArchivosSubidos": null,
+    "Archivos": null
+  },
+  {
+    "IdPieza": 2,
+    "Descripcion": "gsfgnsdfg",
+    "Codigo": null,
+    "ConjuntoFK": null,
+    "Notas": [],
+    "ArchivosSubidos": null,
+    "Archivos": null
+  },
+  {
+    "IdPieza": 3,
+    "Descripcion": "sfghsfgh",
+    "Codigo": null,
+    "ConjuntoFK": null,
+    "Notas": [],
+    "ArchivosSubidos": null,
+    "Archivos": null
+  }
+]

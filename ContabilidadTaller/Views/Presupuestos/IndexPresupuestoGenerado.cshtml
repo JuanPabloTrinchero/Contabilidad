@@ -1,22 +1,98 @@
 ﻿@{
-    ViewData["Title"] = "Presupuesto Generado";
-
-    int idEmpresa = (int)ViewBag.IdEmpresa;
-    string nombreEmpresa = (string)ViewBag.NombreEmpresa;
+    ViewData["Title"] = "Presupuesto Generado";     
+    
+    Empresa empresa = (Empresa)ViewBag.Empresa;
 
     Presupuesto prespuesto = (Presupuesto)ViewBag.Presupuesto;
+
+    List<Pedido> pedidos = (List<Pedido>)ViewBag.Pedidos;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+    List<Empleado> empleados = (List<Empleado>)ViewBag.Empleados;
+    List<Remito> remitos = (List<Remito>)ViewBag.Remitos;
+
+    Socio? socio = (Socio?)ViewBag.Socio;
+    string nombreSocio = "";
+    if (socio != null)
+    { 
+        nombreSocio = socio.Apellido + ". " + socio.Nombres;
+    }
 }
 
-<div class="text-center">
+<div class="text-center" style="display: none">
     <h1>Presupuesto Generado</h1>
 </div>
 
 
-
-
-
+<div class="FormatoPDF mt-5">
+    <div class="TituloLogo"></div>
+    <div class="Datos DatosEmisor"></div>
+    <div class="Datos DatosReceptor"></div>
+    <div class="Datos DatosItems"></div>
+    <div class="Datos DatosPie"></div>
+</div>
 
 
 <div class="d-flex justify-content-center">
-    <a class="btn btn-secondary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+    <a class="btn btn-secondary" asp-controller="Presupuestos" asp-action="IndexVerPresupuesto" asp-route-idEmpresa="@empresa.IdEmpresa" asp-route-nombreEmpresa="@empresa.NombreEmpresa">Atras</a>
 </div>
+
+@section Styles {
+    <style>
+        header, footer {
+            display: none !important;
+        }
+
+        /* Contenedor principal */
+        .FormatoPDF {
+            display: grid;
+            /* Creamos 2 columnas iguales para poder dividir los bloques del medio */
+            grid-template-columns: repeat(2, 1fr);
+            /* Definimos las filas: automáticas para que se adapten o crezcan según su propiedad */
+            grid-auto-rows: auto;
+            gap: 0; /* Espacio entre los bloques */
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 1. Bloque grande arriba: ocupa las 2 columnas */
+        .TituloLogo {
+            grid-column: span 2;
+            min-height: 150px;
+            background-color: #ADADAD;
+        }
+
+        .Datos {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+
+        /* 2 y 3. Los dos bloques de abajo: cada uno ocupa 1 columna automáticamente */
+        .DatosEmisor {
+            min-height: 120px;
+            background-color: #848484;
+        }
+
+        .DatosReceptor {
+            min-height: 120px;
+            background-color: #555555;
+        }
+
+        /* 4. Bloque variable: ocupa las 2 columnas y su altura dependerá del contenido */
+        .DatosItems {
+            grid-column: span 2;
+            height: auto; /* Se expande orgánicamente */
+            background-color: #AFAFAF;
+        }
+
+        /* 5. Bloque fijo al fondo: ocupa las 2 columnas y tiene una altura fija estricta */
+        .DatosPie {
+            grid-column: span 2;
+            height: 80px; /* Altura rígida controlada */
+            background-color: #555555;
+        }
+
+    </style>
+}

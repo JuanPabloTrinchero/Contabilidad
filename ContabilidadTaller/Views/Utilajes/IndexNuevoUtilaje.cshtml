@@ -1,0 +1,163 @@
+﻿@{
+    ViewData["Title"] = "Nuevo Utilaje";
+
+    int idEmpresa = ViewBag.IdEmpresa;
+    string nombreEmpresa = ViewBag.NombreEmpresa;
+
+    int idPieza = (int)ViewBag.Pieza;
+    List<Pieza> piezas = (List<Pieza>)ViewBag.Piezas;
+}
+
+<div class="text-center">
+    <h1>Nuevo Utilaje para @nombreEmpresa</h1>
+</div>
+
+<div>
+    <form id="formNuevoUtilaje" asp-controller="Utilajes" asp-action="Utilaje_GuardarNuevo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" enctype="multipart/form-data">
+        @{
+            string descripcion = "- Sin descripcion -";
+            if (idPieza != -1)
+            {
+                foreach (Pieza p in piezas)
+                {
+                    if (p.IdPieza == idPieza)
+                    {
+                        descripcion = p.Descripcion;
+                    }
+                }
+                <h6>Utilaje para Pieza: @descripcion</h6>
+            }
+            else
+            {
+                <h6>Utilje nuevo sin Pieza</h6>
+            }
+        }
+
+        <h6>Descripcion:</h6>
+        <input type="text" name="descripcion" style="width: 35%" placeholder="(Requerido)" required />
+
+        <div id="listaNotas">
+            <h6>Notas</h6>
+            <!-- Agregar Notas -->
+            <button class=" btn btn-primary" type="button" onclick="agregarNuevaNota()">+ Agregar Nota</button>
+        </div>
+
+        <div id="listaArchivos">
+            <h6>Archivos</h6>
+            <!-- Agregar Archivos -->
+            <button class=" btn btn-primary" type="button" onclick="agregarNuevoArchivo()">+ Agregar Archivo</button>
+        </div>
+
+        <div class="container-piezas">
+            <div class="vistaBotonAsignarPieza">
+                <a class="btn btn-primary" onclick="mostrarAsignarPieza(this)">Asignar a Pieza</a>
+            </div>
+            <div class="vistaAsignarPieza" style="display: none">
+                <h6>Asignar a Pieza:</h6>
+                <table id="tablaPiezas" class="table table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th>ASIGNAR?</th>
+                            <th>Id</th>
+                            <th>
+                                <div class="container-tituloDescripcion">
+                                    <div class="vistaBotonBuscarDescripcion">
+                                        Descripcion
+                                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                            <li>
+                                                <a class="dropdown-item" onclick="mostrarBuscarDescripcion(this)">Buscar por Descripcion</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="vistaBuscarDescripcion" style="display: none">
+                                        <div class="d-flex align-items-center">
+                                            <input type="text" id="filtroDescripcion" class="form-control" placeholder="Filtrar por descripcion..." onkeyup="filtrarTablaConjunto()">
+                                            <a class="btn btn-danger" onclick="ocultarBuscarDescripcion(this)">X</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th>Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (piezas != null && piezas.Any())
+                        {
+                            foreach (Pieza p in piezas)
+                            {
+                                <tr class="fila-pieza">
+                                    <td>
+                                        <input type="radio" name="idPiezaAsociada" value="@p.IdPieza"/>
+                                    </td>
+                                    <td>@p.IdPieza</td>
+                                    @{
+                                        string descripcionPieza = "- Sin descripcion -";
+                                        if (p.Descripcion != null)
+                                        {
+                                            descripcionPieza = p.Descripcion;
+                                        }
+                                        <td class="col-descripcion">@descripcionPieza</td>
+                                    }
+                                    <td>
+                                        <a class="btn btn-primary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPieza="@p.IdPieza" onclick="window.open(this.href, 'ventanaConjunti', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                                    </td>
+                                </tr>  
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" style="text-align: center">- No hay Piezas guardadas -</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="d-flex align-items-center">
+                        <label for="cantPiezas" class="me-2 mb-0">Mostrar de a</label>
+                        <select id="cantPiezas" class="form-select form-select-sm" style="width: auto;">
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <label>Piezas</label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="paginacion mt-3 d-flex align-items-center">
+                        <button id="prevPiezas" class="btn btn-sm btn-secondary">Anterior</button>
+                        <span id="numPiezas" class="mx-2"></span>
+                        <button id="nextPiezas" class="btn btn-sm btn-secondary">Siguiente</button>
+                    </div>
+                </div>
+
+                <a class="btn btn-secondary" onclick="ocultarAsignarPieza(this)">Cancelar</a>
+            </div>
+        </div>
+
+        <button id="btnGuardar" class="btn btn-success" type="submit" onclick="return confirm('Confirmar guardar nuevo utilaje?')">Guardar Nuevo Utilaje</button>
+    </form>
+</div>
+
+<div class="d-flex justify-content-center">
+    @if (idPieza == -1)
+    {
+        <a class="btn btn-secondary" asp-controller="Utilajes" asp-action="IndexUtilajes" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa">Atras</a>
+    }
+    else
+    {
+        <a class="btn btn-secondary" asp-controller="Piezas" asp-action="IndexVerPieza" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPieza="@idPieza">Atras</a>
+    }
+</div>
+
+
+@section Scripts {
+    <script src="~/js/Utilajes/IndexNuevoUtilaje.js" asp-append-version="true"></script>
+}

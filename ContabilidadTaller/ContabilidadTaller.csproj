@@ -9,6 +9,12 @@
   <ItemGroup>
     <PackageReference Include="Aspose.CAD" Version="26.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="PuppeteerSharp" Version="25.15.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\Empresas\0\0 - Piezas\Archivos_Utilajes\" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>

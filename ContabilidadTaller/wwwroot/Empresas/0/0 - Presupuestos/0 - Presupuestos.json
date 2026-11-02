@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "IdPresupuesto": 0,
+    "Numero": 1,
+    "Fecha": "2026-10-22",
+    "Monto": null,
+    "Notas": [
+      "primera nota",
+      "tercera nota"
+    ],
+    "Archivos": [
+      "\\Empresas\\0\\0 - Presupuestos\\0 - Archivos Presupuestos\\sonata lunar 2.png",
+      "\\Empresas\\0\\0 - Presupuestos\\0 - Archivos Presupuestos\\Ternas Pokemon.bat",
+      "\\Empresas\\0\\0 - Presupuestos\\0 - Archivos Presupuestos\\comentario redit.txt"
+    ],
+    "Estado": 1,
+    "CopiaPedidos": [],
+    "EstadoEnvio": {
+      "enviado": true,
+      "envios": []
+    },
+    "OrdenDeCompraFK": 1,
+    "FacturaFK": null,
+    "SocioFK": 0
+  },
+  {
+    "IdPresupuesto": 1,
+    "Numero": 3,
+    "Fecha": "2026-10-29",
+    "Monto": null,
+    "Notas": [],
+    "Archivos": [],
+    "Estado": 0,
+    "CopiaPedidos": [],
+    "EstadoEnvio": {
+      "enviado": false,
+      "envios": []
+    },
+    "OrdenDeCompraFK": null,
+    "FacturaFK": null,
+    "SocioFK": 0
+  }
+]

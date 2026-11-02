@@ -5,10 +5,13 @@
     string nombreEmpresa = (string)ViewBag.NombreEmpresa;
 
     NotaDeCredito notaDeCredito = (NotaDeCredito)ViewBag.NotaDeCredito;
+
+    List<Factura> facturasEnNDC = (List<Factura>)ViewBag.FacturasEnNDC;
     List<Factura> facturas = (List<Factura>)ViewBag.Facturas;
 
     List<Socio> socios = (List<Socio>)ViewBag.Socios;
 
+    bool sePuedeReactivar = (bool)ViewBag.SePuedeReactivar;
     RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
 
     @if (TempData["Mensaje"] != null)
@@ -24,25 +27,104 @@
     }
 }
 
-<h1>Ver Nota de Credito de @nombreEmpresa (@idEmpresa)</h1>
+<div class="text-center">
+    <h1>Nota de Credito de @nombreEmpresa (@idEmpresa)</h1>
+</div>
 
 <div>
-    <h3>Id: @notaDeCredito.IdNotaCredito</h3>
+    <div class="d-flex align-items-center">
+        <h3>Id: @notaDeCredito.IdNotaCredito</h3>
+
+        <div class="opciones ms-auto">
+            <button class="btn btn-primary" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                Opciones
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                <li>
+                    @if (notaDeCredito.Estado != EstadoNotaDeCredito.Confirmada)
+                    {
+                        <button id="" class="dropdown-item" onclick="mostrarModificarCodigo()">Modificar Codigo</button>
+                    }
+                    else
+                    {
+                        <button class="dropdown-item" disabled>Modificar Codigo</button>
+                    }
+                </li>
+                <li>
+                    @if (notaDeCredito.Estado != EstadoNotaDeCredito.Confirmada)
+                    {
+                        <button id="" class="dropdown-item" onclick="mostrarModificarFecha()">Modificar Fecha</button>
+                    }
+                    else
+                    {
+                        <button class="dropdown-item" disabled>Modificar Fecha</button>
+                    }  
+                </li>
+                @switch(notaDeCredito.Estado)
+                {
+                    case EstadoNotaDeCredito.Activa:
+                        <li>
+                            @if(facturasEnNDC.Count() != 0)
+                            {
+                                <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="1">
+                                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Confirmar</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="dropdown-item" disabled>Confirmar</button>
+                            }
+                        </li>
+                        <li>
+                            <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="2">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Anular</button>
+                            </form>
+                        </li>
+                        break;
+                    case EstadoNotaDeCredito.Confirmada:
+                        <li>
+                            <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="0">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar editar nota de credito?')">Editar</button>
+                            </form>
+                        </li>
+                        break;
+                    case EstadoNotaDeCredito.Anulada:
+                        <li>
+                            @if (sePuedeReactivar == true)
+                            {
+                                <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="0">
+                                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Reactivar</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="dropdown-item" disabled>Reactivar</button>
+                            }
+                        </li>
+                        break;
+                }
+                <li>
+                    <button id="" class="dropdown-item" onclick="mostrarBorrarNotaDeCredito()" style="background-color: red; color: white">Borrar Nota de Credito</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <div class="container-codigo">
         <div class="vistaCodigo">
             <h3>Codigo: @notaDeCredito.Codigo.PuestoNDC-@notaDeCredito.Codigo.NumeroNDC</h3>
-            @if (notaDeCredito.Estado != EstadoNotaDeCredito.Confirmada)
-            {
-                <a class="btn btn-primary" onclick="mostrarModificarCodigo(this)">Modificar Codigo</a>
-            }
         </div>
         <div class="vistaModificarCodigo" style="display: none">
             <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarCodigo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post">
-                <h3>Nuevo Codigo:</h3>
-                <h5>Nuevo Puesto</h5>
-                <input type="text" name="nuevoPuesto" placeholder="@notaDeCredito.Codigo.PuestoNDC" minlength="4" maxlength="4" required />
-                <h5>Nuevo Numero</h5>
-                <input type="text" name="nuevoNumero" placeholder="@notaDeCredito.Codigo.NumeroNDC" minlength="8" maxlength="8" required />
+                <h5>Nuevo Codigo:</h5>
+                <h6>Nuevo Puesto:
+                    <input type="text" name="nuevoPuesto" placeholder="@notaDeCredito.Codigo.PuestoNDC" minlength="4" maxlength="4" required />
+                </h6>
+                
+                <h6>Nuevo Numero:
+                    <input type="text" name="nuevoNumero" placeholder="@notaDeCredito.Codigo.NumeroNDC" minlength="8" maxlength="8" required />
+                </h6>
 
                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nuevo codigo?')">Guardar</button>
                 <a class="btn btn-secondary" onclick="ocultarModificarCodigo(this)">Cancelar</a>
@@ -53,15 +135,12 @@
     <div class="container-fecha">
         <div class="vistaFecha">
             <h3>Fecha: @notaDeCredito.Fecha.ToString("dd/MM/yyyy")</h3>
-            @if (notaDeCredito.Estado != EstadoNotaDeCredito.Confirmada)
-            {
-                <a class="btn btn-primary" onclick="mostrarModificarFecha(this)">Modificar Fecha</a>
-            }
         </div>
         <div class="vistaModificarFecha" style="display: none">
             <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarFecha" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post">
-                <h3>Nueva Fecha:</h3>
-                <input type="date" name="nuevaFecha" value="@notaDeCredito.Fecha.ToString("yyyy-MM-dd")" required/>
+                <h6>Nueva Fecha:
+                    <input type="date" name="nuevaFecha" value="@notaDeCredito.Fecha.ToString("yyyy-MM-dd")" required />
+                </h6>
 
                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar guardar nueva fecha?')">Guardar</button>
                 <a class="btn btn-secondary" onclick="ocultarModificarFecha(this)">Cancelar</a>
@@ -69,77 +148,29 @@
         </div>
     </div>
 
-    <div>
+    <div class="container-estado">
         @switch (notaDeCredito.Estado)
         {
             case EstadoNotaDeCredito.Activa:
-                <h5 style="background-color: yellow">Estado: Activa</h5>
-                int facturasAsignadas = 0;
-                foreach (Factura f in facturas)
-                {
-                    if (f.NotaDeCredito == notaDeCredito.IdNotaCredito)
-                    {
-                        facturasAsignadas++;
-                    }
-                }
-                if (facturasAsignadas > 0)
-                {
-                    <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="1">
-                        <button class="btn btn-success" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Confirmar</button>
-                    </form>
-                }
-                <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="2">
-                    <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Anular</button>
-                </form>
+                <h3 style="background-color: yellow">Estado: Activa</h3>
                 break;
             case EstadoNotaDeCredito.Confirmada:
-                <h5 style="background-color: green; color: white">Confirmada</h5>
-                <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="0">
-                    <button class="btn btn-warning" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Editar</button>
-                </form>
-                <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="2">
-                    <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar Nota de Credito?')" disabled>Anular</button>
-                </form>
+                <h3 style="background-color: green; color: white">Confirmada</h3>
                 break;
             case EstadoNotaDeCredito.Anulada:
-                <h5 style="background-color: red; color: white">Anulada</h5>
-                
-                int itemsSinReasignar = 0;
-                if (notaDeCredito.FacturasRespaldo != null && notaDeCredito.FacturasRespaldo.Any())
-                {
-                    foreach (int i in notaDeCredito.FacturasRespaldo)
-                    {
-                        foreach (Factura f in facturas)
-                        {
-                            if (f.IdFactura == i && f.NotaDeCredito == null)
-                            {
-                                itemsSinReasignar++;
-                            }
-                        }
-                    }
-                    if (itemsSinReasignar == notaDeCredito.FacturasRespaldo.Count())
-                    {
-                        <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarEstado" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-nuevoEstado="0">
-                            <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar Nota de Credito?')">Reactivar</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-primary" disabled>Reactivar</button>
-                        <h5>No se puede reactivar porque algun/os items han sido reasignados</h5>
-                    }
-                }
+                <h3 style="background-color: red; color: white">Anulada</h3>
                 break;
         }
     </div>
 
-    <h3>Facturas Asociadas</h3>
+    <h3>Facturas Asociadas:</h3>
     <table class="table table-striped text-center">
         <thead>
             <tr>
                 <th>Id</th>
                 <th>Fecha</th>
                 <th>Codigo</th>
+                <th>Detalles</th>
                 @if (notaDeCredito.Estado == EstadoNotaDeCredito.Anulada)
                 {
                     <th>Reasignada</th>
@@ -181,40 +212,32 @@
             }
             else
             {
-                if (facturas != null && facturas.Any())
+                if (facturasEnNDC != null && facturasEnNDC.Any())
                 {
-                    int facturasAsociadas = 0;
-                    @foreach (Factura f in facturas)
-                    {
-                        if (f.NotaDeCredito == notaDeCredito.IdNotaCredito)
-                        {
-                            facturasAsociadas++;
-                            <tr>
-                                <td>@f.IdFactura</td>
-                                <td>@f.Fecha.ToString("dd/MM/yyyy")</td>
-                                <td>@f.Codigo.Puesto-@f.Codigo.Numero</td>
-                                <td>
-                                    @if (notaDeCredito.Estado != EstadoNotaDeCredito.Confirmada)
-                                    {
-                                        <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_QuitarFacturaDeNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-idNotaDeCredito="@notaDeCredito.IdNotaCredito" asp-route-idFactura="@f.IdFactura">
-                                            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar quitar factura?')">X</button>
-                                        </form>
-                                    } 
-                                </td>
-                            </tr>
-                        }   
-                    }
-                    if (facturasAsociadas == 0)
+                    foreach (Factura f in facturasEnNDC)
                     {
                         <tr>
-                            <td colspan="4" style="text-align: center">Sin Facturas asignadas</td>
+                            <td>@f.IdFactura</td>
+                            <td>@f.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>@f.Codigo.Puesto-@f.Codigo.Numero</td>
+                            <td>
+                                <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@f.IdFactura" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                            </td>
+                            <td>
+                                @if (notaDeCredito.Estado != EstadoNotaDeCredito.Confirmada)
+                                {
+                                    <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_QuitarFacturaDeNotaDeCredito" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" method="post" asp-route-idNotaDeCredito="@notaDeCredito.IdNotaCredito" asp-route-idFactura="@f.IdFactura">
+                                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar quitar factura?')">X</button>
+                                    </form>
+                                }
+                            </td>
                         </tr>
                     }
                 }
                 else
                 {
                     <tr>
-                        <td colspan="4" style="text-align: center">No hay facturas guardadas</td>
+                        <td colspan="4" style="text-align: center">- Sin facturas asociadas -</td>
                     </tr>
                 }
             }
@@ -225,11 +248,11 @@
         <div class="vistaBotonAgregarFactura">
             @if (notaDeCredito.Estado == EstadoNotaDeCredito.Activa)
             {
-                <a class="btn btn-primary" onclick="mostrarAgregarFactura(this)">+ Agregar Factura</a>
+                <a class="btn btn-primary" onclick="mostrarAgregarFactura(this)">+ Agregar Factura/s</a>
             }
             else
             {
-                <button class="btn btn-primary" disabled>+ Agregar Factura</button>
+                <button class="btn btn-primary" disabled>+ Agregar Factura/s</button>
             }
         </div>
         <div class="vistaAgregarFactura" style="display: none">
@@ -282,7 +305,7 @@
                                             <td>@f.Fecha.ToString("dd/MM/yyyy")</td>
                                             <td class="col-codigo">@f.Codigo.Puesto-@f.Codigo.Numero</td>
                                             <td>
-                                                <a class="btn btn-primary">Ver DESARROLLAR</a>
+                                                <a class="btn btn-primary" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@f.IdFactura" onclick="window.open(this.href, 'ventanaPieza', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
                                             </td>
                                         </tr>
                                     }
@@ -319,7 +342,7 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar agregar Facturas a Nota de Credito?')">Guardar</button>
+                <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar agregar Facturas a Nota de Credito?')">Agregar Factura/s</button>
                 <a class="btn btn-secondary" onclick="ocultarAgregarFactura(this)">Cancelar</a>
             </form>
         </div>
@@ -330,20 +353,30 @@
     <h3>Notas:</h3>
     @if (notaDeCredito.Notas != null && notaDeCredito.Notas.Any())
     {
+        int contadorNotas = 0;
         foreach (string nota in notaDeCredito.Notas)
         {
+            contadorNotas++;
             <div class="container-nota">
                 <div class="vistaNota">
-                    <h5>@nota</h5>
-                    <a class="btn btn-primary" onclick="mostrarModificarNota(this)">Modificar Nota</a>
-                    <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@notaDeCredito.IdNotaCredito" asp-route-notaBorrar="@nota" method="post">
-                        <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
-                    </form>
+                    <label>
+                        @contadorNotas: @nota
+                    </label>
+                    <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                        <li><a class="dropdown-item" onclick="mostrarModificarNota(this)">Modificar Nota</a></li>
+                        <li>
+                            <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_BorrarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@notaDeCredito.IdNotaCredito" asp-route-notaBorrar="@nota" method="post">
+                                <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
                 <div class="vistaModificarNota" style="display: none">
                     <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_ModificarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@notaDeCredito.IdNotaCredito" asp-route-notaAModificar="@nota" method="post">
-                        <h5>Modificar Nota:</h5>
-                        <textarea type="text" name="notaModificada" placeholder="@nota" required></textarea>
+                        <textarea type="text" name="notaModificada" placeholder="@nota" style="width: 50%; height: 100px" required></textarea>
 
                         <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar nota?')">Guardar</button>
                         <a class="btn btn-secondary" onclick="ocultarModificarNota(this)">Cancelar</a>
@@ -354,14 +387,13 @@
     }
     else
     {
-        <h6>- No hay notas en esta Nota de Credito -</h6>
+        <h6>- Sin notas -</h6>
     }
     <div class="vistaBotonAgregarNota">
         <a class="btn btn-primary" onclick="mostrarAgregarNota(this)">+ Agregar Nota</a>
     </div>
     <div class="vistaAgregarNota" style="display: none">
         <form asp-cntroller="NotasDeCredito" asp-action="NotaDeCredito_AgregarNota" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCredito="@notaDeCredito.IdNotaCredito" method="post">
-            <h5>Agregar Nota:</h5>
             <textarea type="text" placeholder="Nueva nota..." name="nuevaNota" style="width: 50%; height: 100px" required></textarea>
 
             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva nota?')">Guardar Nota</button>
@@ -374,12 +406,38 @@
     <h3>Archivo</h3>
     @if (notaDeCredito.UbicacionArchivo != null)
     {
-        <h6>@notaDeCredito.UbicacionArchivo</h6>
-        <a class="btn btn-primary" asp-controller="NotasDeCredito" asp-action="NotaDeCretido_AbrirArchivoEnUbicacion" asp-route-ruta="@notaDeCredito.UbicacionArchivo">Abrir en Ubicacion</a>
-        <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNDC="@notaDeCredito.IdNotaCredito" method="post">
+        string nombre = System.IO.Path.GetFileName(notaDeCredito.UbicacionArchivo);
+        string extension = notaDeCredito.UbicacionArchivo.Substring(notaDeCredito.UbicacionArchivo.Length - 4);
+        string archCoregido = notaDeCredito.UbicacionArchivo.Replace(@"\\", @"/");
 
-            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Quitar Archivo</button>
-        </form>
+        if (extension == ".jpg" || extension == ".png" || extension == ".ico")
+        {
+            <label>
+                @nombre
+                <img src="@archCoregido" alt="not found" style="max-width: 100px;" />
+            </label>
+        }
+        else
+        {
+            <label>
+                @nombre
+                <img src="\iconoArchivoGenerico.png" alt="not found" style="max-width: 50px;" />
+            </label>
+        }
+
+        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+            <li>
+                <a class="dropdown-item" asp-controller="NotasDeCredito" asp-action="NotaDeCretido_AbrirArchivoEnUbicacion" asp-route-ruta="@notaDeCredito.UbicacionArchivo">Abrir en Ubicacion</a>
+            </li>
+            <li>
+                <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_BorrarArchivo" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNDC="@notaDeCredito.IdNotaCredito" method="post">
+                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar archivo?')">Borrar Archivo</button>
+                </form>
+            </li>
+        </ul>  
     }
     else
     {
@@ -399,55 +457,46 @@
     }
 </div>
 
-<div class="container-borrarNDC">
+<div class="container-borrarNDC" style="display: none">
+    <h3>Borrar Nota de Credito:</h3>
     @if (sePuedeBorrar.SePuede == true)
     {
-        <div class="vistaBotonBorrarNDC">
-            <h5>@sePuedeBorrar.Mensajes[0]</h5>
-            <a class="btn btn-danger" onclick="mostrarBorrarNotaDeCredito(this)">Borrar Nota de Credito</a>
-        </div>
-        <div class="vistaBorrarNDC" style="display: none">
-            <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCreditoBorrar="@notaDeCredito.IdNotaCredito" method="post">
-
-                <label>Socios:</label>
-                <table class="table table-striped text-center" style="width: 25%;">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Socio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (socios != null && socios.Any())
+        <form asp-controller="NotasDeCredito" asp-action="NotaDeCredito_Borrar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idNotaDeCreditoBorrar="@notaDeCredito.IdNotaCredito" method="post">
+            <table class="table table-striped text-center" style="width: 25%;">
+                <thead>
+                    <tr>
+                        <th>Seleccionar</th>
+                        <th>Socio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (socios != null && socios.Any())
+                    {
+                        foreach (Socio s in socios)
                         {
-                            foreach (Socio s in socios)
-                            {
-                                string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                <tr>
-                                    <td>
-                                        <input class="radio-desmarcable" type="radio" name="idSocio" value="@s.IdSocio" onclick="ToggleRadio(this)" />
-                                    </td>
-                                    <td>@nombreApellido</td>
-                                </tr>
-                            }
+                            string nombreApellido = s.Nombres + ". " + s.Apellido;
+                            <tr>
+                                <td>
+                                    <input class="radio-desmarcable" type="radio" name="idSocio" value="@s.IdSocio" onclick="ToggleRadio(this)" />
+                                </td>
+                                <td>@nombreApellido</td>
+                            </tr>
                         }
-                    </tbody>
-                </table>
+                    }
+                </tbody>
+            </table>
 
-                <label>Contraseña:</label>
-                <div>
-                    <input type="password" name="contraseñaSocio" id="passSocio" />
-                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
-                </div>
+            <label>Contraseña:</label>
+            <div>
+                <input type="password" name="contraseñaSocio" id="passSocio" />
+                <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+            </div>
 
-                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota de credito?')">Borrar Nota de Credito</button>
-                <a class="btn btn-secondary" onclick="ocultarBorrarNotaDeCredito(this)">Cancelar</a>
-            </form>
-        </div>
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota de credito?')">Borrar Nota de Credito</button>
+        </form>
     }
     else
     {
-        <button class="btn btn-danger" disabled>Borrar Nota de Credito</button>
         <label>No se puede borrar esta Nota de Credito ya que:</label>
         <ul>
             @foreach (string mensaje in sePuedeBorrar.Mensajes)
@@ -456,6 +505,7 @@
             }
         </ul>
     }
+    <a class="btn btn-secondary" onclick="ocultarBorrarNotaDeCredito()">Cancelar</a>
 </div>
 
 <div class="d-flex justify-content-center">
@@ -467,178 +517,8 @@
     <a class="btn btn-secondary" href="javascript:history.back()">Atras</a>
 </div>
 -->
-@section Scripts{
-    <script>
-        // MODIFICAR CODIGO
-        function mostrarModificarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-codigo');
 
-            contenedor.querySelector('.vistaCodigo').style.display = 'none';
-            contenedor.querySelector('.vistaModificarCodigo').style.display = 'block';
-        }
-        function ocultarModificarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-codigo');
 
-            contenedor.querySelector('.vistaCodigo').style.display = 'block';
-            contenedor.querySelector('.vistaModificarCodigo').style.display = 'none';
-        }
-
-        // MODIFICAR FECHA
-        function mostrarModificarFecha(elemento) {
-            const contenedor = elemento.closest('.container-fecha');
-
-            contenedor.querySelector('.vistaFecha').style.display = 'none';
-            contenedor.querySelector('.vistaModificarFecha').style.display = 'block';
-        }
-        function ocultarModificarFecha(elemento) {
-            const contenedor = elemento.closest('.container-fecha');
-
-            contenedor.querySelector('.vistaFecha').style.display = 'block';
-            contenedor.querySelector('.vistaModificarFecha').style.display = 'none';
-        }
-
-        // AGREGAR FACTURA
-        function mostrarAgregarFactura(elemento) {
-            const contenedor = elemento.closest('.container-agregarFactura');
-
-            contenedor.querySelector('.vistaBotonAgregarFactura').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarFactura').style.display = 'block';
-        }
-        function ocultarAgregarFactura(elemento) {
-            const contenedor = elemento.closest('.container-agregarFactura');
-
-            contenedor.querySelector('.vistaBotonAgregarFactura').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarFactura').style.display = 'none';
-        }
-
-        // AGREGAR NOTA
-        function mostrarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-        }
-        function ocultarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-notas');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-        }
-
-        // MODIFICAR NOTA
-        function mostrarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-nota');
-
-            contenedor.querySelector('.vistaNota').style.display = 'none';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'block';
-        }
-        function ocultarModificarNota(elemento) {
-            const contenedor = elemento.closest('.container-nota');
-
-            contenedor.querySelector('.vistaNota').style.display = 'block';
-            contenedor.querySelector('.vistaModificarNota').style.display = 'none';
-        }
-
-        // BORRAR NOTA DE CREDITO
-        function mostrarBorrarNotaDeCredito(elemento) {
-            const contenedor = elemento.closest('.container-borrarNDC');
-
-            contenedor.querySelector('.vistaBotonBorrarNDC').style.display = 'none';
-            contenedor.querySelector('.vistaBorrarNDC').style.display = 'block';
-        }
-        function ocultarBorrarNotaDeCredito(elemento) {
-            const contenedor = elemento.closest('.container-borrarNDC');
-
-            contenedor.querySelector('.vistaBotonBorrarNDC').style.display = 'block';
-            contenedor.querySelector('.vistaBorrarNDC').style.display = 'none';
-        }
-
-        // DESMARCAR INPUT RADIO
-        function ToggleRadio(radio) {
-            if (radio.getAttribute('data-checked') === 'true') {
-                radio.checked = false;
-                radio.removeAttribute('data-checked');
-            } else {
-                document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => {
-                    r.removeAttribute('data-checked');
-                });
-                radio.checked = true;
-                radio.setAttribute('data-checked', 'true');
-            }
-        }
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            // Si es password lo pasa a text, y viceversa
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-        // LIMPIAR ARCHIVO A CARGAR
-        document.getElementById('btnLimpiarArchivo').addEventListener('click', function() {
-            document.getElementById('cargarArchivo').value = '';
-        });
-
-        // AGREGAR ARCHIVO
-        function mostrarAgregarArchivo(elemento) {
-            const contenedor = elemento.closest('.container-archivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'block';
-        }
-        function ocultarAgregarArchivo(elemento) {
-            const contenedor = elemento.closest('.container-archivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'none';
-        }
-
-        // FILTRAR FACTURA POR CODIGO
-        function filtrarTabla() {
-            let input = document.getElementById("filtroCodigoFactura");
-            let filter = input.value.toLowerCase();
-            let filas = document.querySelectorAll(".fila-factura");
-
-            filas.forEach(fila => {
-                let celdaDescripcion = fila.querySelector(".col-codigo");
-                if (celdaDescripcion) {
-                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                    if (texto.toLowerCase().indexOf(filter) > -1) {
-                        fila.classList.remove('filtrado-oculto');
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantFacturas');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-
-        Paginacion('tablaFacturas', 'prevFacturas', 'nextFacturas', 'numFacturas', 'cantFacturas', 'fila-factura');
-
-        
-        // BUSCAR FACTURA POR CODIGO
-        function mostrarBuscarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-tituloCodigo');
-
-            contenedor.querySelector('.vistaBotonBuscarPorCodigo').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarPorCodigo').style.display = 'block';
-        }
-        function ocultarBuscarCodigo(elemento) {
-            const contenedor = elemento.closest('.container-tituloCodigo');
-
-            contenedor.querySelector('.vistaBotonBuscarPorCodigo').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarPorCodigo').style.display = 'none';
-        }
-
-    </script>
+@section Scripts {
+    <script src="~/js/NotasDeCredito/IndexVerNotaDeCredito.js" asp-append-version="true"></script>
 }

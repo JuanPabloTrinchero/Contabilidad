@@ -102,6 +102,7 @@ namespace ContabilidadTaller.Controllers
             ViewBag.Recepciones = _serJson.ObtenerRecepcionesJson(idEmpresa);
             ViewBag.Socios = _serJson.ObtenerSociosJson();
 
+            ViewBag.SePuedeReactivar = _serJson.SePuedeReactivarFactura(idEmpresa, idFactura);
             ViewBag.SePuedeBorrar = _serJson.SePuedeBorrarFactura(idEmpresa, f.IdFactura);
 
             switch (f.Contiene)

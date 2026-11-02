@@ -42,12 +42,14 @@ namespace ContabilidadTaller.Controllers
             ViewBag.IdEmpresa = idEmpresa;
             ViewBag.NombreEmpresa = nombreEmpresa;
 
-            ViewBag.NombresArchivos = _serJson.NombresDeArchivosDePieza(idEmpresa, idPieza);
+            ViewBag.NombresArchivos = _serJson.NombresDeArchivos(p.Archivos);
             ViewBag.Socios = _serJson.ObtenerSociosJson();
 
             ViewBag.SePuedeBorrar = _serJson.SePuedeBorrarPieza(idEmpresa, idPieza);
 
             ViewBag.Conjuntos = _serJson.ObtenerConjuntosJson(idEmpresa);
+
+            ViewBag.Utilajes = _serJson.ObtenerUtilajesJson(idEmpresa);
 
             return View();
         }
@@ -89,17 +91,9 @@ namespace ContabilidadTaller.Controllers
         public async Task<IActionResult> EliminarPieza(int idEmpresa, string nombreEmpresa, int idPieza, int idSocio, string contraseñaSocio)
         {
             Socio s = _serJson.ElegirSocio(idSocio);
-            Pieza p = _serJson.ElegirPieza(idPieza, idEmpresa);
 
             if (s.ContraseñaConfirmacion.ToLower().Equals(contraseñaSocio.ToLower()))
             {
-                if (p.Archivos != null && p.Archivos.Any())
-                {
-                    foreach (string arch in p.Archivos)
-                    {
-                        _serJson.BorrarArchivo(idEmpresa, "Pieza", idPieza, arch);
-                    }
-                }
                 _serJson.BorrarPieza(idEmpresa, idPieza);
                 TempData["Mensaje"] = "Pieza Eliminada";
                 return RedirectToAction("IndexPiezas", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa });
@@ -116,10 +110,11 @@ namespace ContabilidadTaller.Controllers
             _serJson.Agregar_ModificarCodigo(idEmpresa, idPieza, nuevoCodigo);
             return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPieza });
         }
+
         [HttpPost]
         public IActionResult Pieza_BorrarCodigo(int idEmpresa, string nombreEmpresa, int idPieza)
         {
-            _serJson.BorrarCodigo(idEmpresa, idPieza);
+            _serJson.BorrarCodigoPieza(idEmpresa, idPieza);
             return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPieza });
         }
         [HttpPost]
@@ -135,11 +130,42 @@ namespace ContabilidadTaller.Controllers
             return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPiezaQuitar });
         }
 
-
-
         //--- ARCHIVOS ---
+
+        public async Task<IActionResult> SubirArchivoPieza(List<IFormFile> archivo, int idEmpresa, int idPieza, string nombreEmpresa)
+        {
+            await _serJson.GuardarArchivos(idEmpresa, "Pieza", idPieza, archivo);
+
+            return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPieza });
+        }
+        [HttpGet]
+        public IActionResult AbrirPiezaUbicacion(string ruta)
+        {
+            _serJson.AbrirArchivoEnSuUbicacion(ruta);
+            return NoContent();
+        }
         [HttpPost]
-        public async Task<IActionResult> SubirArchivoPieza(IFormFile archivo, int idEmpresa, int idPieza, string nombreEmpresa, bool desdePedido, int idPedido, int? idEmpleado)
+        public IActionResult Pieza_EliminarArchivo(int idEmpresa, string nombreEmpresa, int idPieza, string rutaArchivo)
+        {
+            _serJson.BorrarArchivo(idEmpresa, "Pieza", idPieza, rutaArchivo);
+            _serJson.EliminarArchivoPieza(idEmpresa, idPieza, rutaArchivo);
+            return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPieza });
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        /* OBSOLETA
+        [HttpPost]
+        public async Task<IActionResult> SubirArchivoPieza_2(IFormFile archivo, int idEmpresa, int idPieza, string nombreEmpresa, bool desdePedido, int idPedido, int? idEmpleado)
         {
             if (archivo == null || archivo.Length == 0)
                 return BadRequest("Archivo no válido");
@@ -184,20 +210,7 @@ namespace ContabilidadTaller.Controllers
                 return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPieza });
             }
         }
-        [HttpGet]
-        public IActionResult AbrirPiezaUbicacion(string ruta)
-        {
-            _serJson.AbrirArchivoEnSuUbicacion(ruta);
-            return NoContent();
-        }
-        [HttpPost]
-        public IActionResult Pieza_EliminarArchivo(int idEmpresa, string nombreEmpresa, int idPieza, string rutaArchivo)
-        {
-            _serJson.BorrarArchivo(idEmpresa, "Pieza", idPieza, rutaArchivo);
-            _serJson.EliminarArchivoPieza(idEmpresa, idPieza, rutaArchivo);
-            return RedirectToAction("IndexVerPieza", "Piezas", new { idEmpresa = idEmpresa, nombreEmpresa = nombreEmpresa, idPieza = idPieza });
-        }
-
+        */
 
     }
 }

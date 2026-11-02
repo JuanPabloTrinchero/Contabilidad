@@ -20,6 +20,10 @@
 
     List<Remito> remitos = (List<Remito>)ViewBag.Remitos;
 
+    bool sePuedeConfirmar = (bool)ViewBag.SePuedeConfirmar;
+    bool sePuedeCancelar = (bool)ViewBag.SePuedeCancelar;
+    bool sePuedeReactivar = (bool)ViewBag.SePuedeReacivar;
+
     double precioTotal = (double)ViewBag.PrecioTotal;
 
     RespuestaBorrar sePuedeBorrar = (RespuestaBorrar)ViewBag.SePuedeBorrar;
@@ -39,20 +43,132 @@
 }
 
 <div class="text-center">
-    <h1>Un Presupuesto de @nombreEmpresa (@idEmpresa)</h1>
+    <h1>Presupuesto de @nombreEmpresa (@idEmpresa)</h1>
 </div>
 
 <div>
-    <h3>Id: @presupuesto.IdPresupuesto</h3>
+    <div class="d-flex align-items-center">
+        <h3>Id: @presupuesto.IdPresupuesto</h3>
 
+        <div class="dropdown opciones ms-auto">
+            <button class="btn btn-primary" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                Opciones
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                @if(presupuesto.Estado != EstadoPresupuesto.Confirmado){
+                    <li>
+                        <button id="" class="dropdown-item" onclick="mostrarModificarNumero()">Modificar Numero</button>
+                    </li>
+                    <li>
+                        <button id="" class="dropdown-item" onclick="mostrarModificarFecha()">Modificar Fecha</button>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <button class="dropdown-item" disabled>Modificar Numero</button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item" disabled>Modificar Fecha</button>
+                    </li>
+                }
+
+                <li class="dropdown-submenu">
+                    <button class="dropdown-item dropdown-toggle" type="button">Modificar Estado</button>
+                    <ul class="dropdown-menu">
+                        @switch (presupuesto.Estado)
+                        {
+                            case EstadoPresupuesto.Borrador:
+                                if (sePuedeConfirmar == true)
+                                {
+                                    <li>
+                                        <form asp-controller="Presupuestos" asp-action="ConfirmarOEditar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-estado="@EstadoPresupuesto.Confirmado">
+                                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar presupuesto?')">Confirmar</button>
+                                        </form>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li>
+                                        <button class="dropdown-item" disabled>Confirmar</button>
+                                    </li>
+                                }
+
+                                if (sePuedeCancelar == true)
+                                {
+                                    <li>
+                                        <form asp-controller="Presupuestos" asp-action="CancelarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto">
+                                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar cancelar presupuesto?')">Cancelar</button>
+                                        </form>
+                                    </li> 
+                                }
+                                else
+                                {
+                                    <li>
+                                        <button class="dropdown-item" disabled>Cancelar</button>
+                                    </li>
+                                }
+                                break;
+                            case EstadoPresupuesto.Confirmado:
+                                if (sePuedeCancelar == true)
+                                {
+                                    <li>
+                                        <form asp-controller="Presupuestos" asp-action="ConfirmarOEditar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-estado="@EstadoPresupuesto.Borrador">
+                                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar editar presupuesto?')">Editar</button>
+                                        </form>
+                                    </li>
+
+                                    <li>
+                                        <form asp-controller="Presupuestos" asp-action="CancelarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto">
+                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar cancelar presupuesto?')">Cancelar</button>
+                                    </form>
+                                    </li> 
+                                }
+                                else
+                                {
+                                    <li>
+                                        <button class="dropdown-item" disabled>Editar</button>
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item" disabled>Cancelar</button>
+                                    </li>
+                                }
+                                break;
+                            case EstadoPresupuesto.Cancelado:
+                                if (sePuedeReactivar == true)
+                                {
+                                    <li>
+                                        <form asp-controller="Presupuestos" asp-action="RehabilitarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-nombreEmpresa="@nombreEmpresa">
+                                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar reactivar presupuesto?')">Rehabilitar</button>
+                                        </form>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li>
+                                        <button class="dropdown-item" disabled>Rehabilitar</button>
+                                    </li>
+                                }
+                                break;
+                        }
+                    </ul>
+                </li>
+
+                <li>
+                    <button id="" class="dropdown-item" onclick="mostrarBorrarPresupuesto()" style="background-color: red; color: white">Borrar Presupuesto</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
     <div class="container-numero">
         <div class="vistaNumero">
             <h3>Numero: @presupuesto.Numero</h3>
-            <a class="btn btn-primary" onclick="mostrarModificarNumero(this)">Modificar Numero</a>
         </div>
         <div class="vistaModificarNumero" style="display: none">
             <form asp-controller="Presupuestos" asp-action="ModificarNumeroPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto">
-                <h3>Nuevo Numero:</h3>
+                <h6>Nuevo Numero:</h6>
                 <input type="number" placeholder="@presupuesto.Numero" name="nuevoNumero" required/>
 
                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nuevo numero de presupuesto?')">Guardar</button>
@@ -64,11 +180,10 @@
     <div class="container-fecha">
         <div class="vistaFecha">
             <h3>Fecha: @presupuesto.Fecha</h3>
-            <a class="btn btn-primary" onclick="mostrarModificarFecha(this)">Modificar Fecha</a>
         </div>
         <div class="vistaModificarFecha" style="display: none">
             <form asp-controller="Presupuestos" asp-action="ModificarFechaPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto">      
-                <h3>Nueva Fecha: (Fecha Anterior: @presupuesto.Fecha.ToString("dd/MM/yyyy"))</h3>
+                <h6>Nueva Fecha: (Fecha Anterior: @presupuesto.Fecha.ToString("dd/MM/yyyy"))</h6>
                 <input type="date" name="nuevaFecha" required/>
 
                 <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva fecha de presupuesto?')">Guardar</button>
@@ -442,99 +557,28 @@
             {
                 case EstadoPresupuesto.Borrador:
                     <h3 style="background-color: yellow">Estado: @presupuesto.Estado</h3>
-                    int cantItems = 0;
-                    if (pedidos != null && pedidos.Any())
-                    {
-                        foreach (Pedido pe in pedidos)
-                        {
-                            if (pe.PresupuestoFK == presupuesto.IdPresupuesto)
-                            {
-                                cantItems++;
-                            }
-                        }
-                    }
-                    if (cantItems != 0)
-                    {
-                        <form asp-controller="Presupuestos" asp-action="ConfirmarOEditar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-estado="@EstadoPresupuesto.Confirmado">
-                            <button class="btn btn-success" type="submit" onclick="return confirm('¿Estás seguro de que deseas confirmar este presupuesto?')">Confirmar</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-success" disabled>Confirmar</button>
-                    }
-                    
-                    if (presupuesto.OrdenDeCompraFK == null && presupuesto.FacturaFK == null)
-                    {
-                        <form asp-controller="Presupuestos" asp-action="CancelarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto">
-                            <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas cancelar este presupuesto?')">Anular</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-danger" disabled>Cancelar</button>
-                    }
-
                     break;
                 case EstadoPresupuesto.Confirmado:
                     <h3 style="background-color: green">Estado: @presupuesto.Estado</h3>
-                    if (presupuesto.OrdenDeCompraFK == null && presupuesto.FacturaFK == null)
-                    {
-                        <form asp-controller="Presupuestos" asp-action="ConfirmarOEditar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-estado="@EstadoPresupuesto.Borrador">
-                            <button class="btn btn-warning" type="submit" onclick="return confirm('¿Estás seguro de que deseas volver a editar este presupuesto?')">Editar</button>
-                        </form>
-
-                        <form asp-controller="Presupuestos" asp-action="CancelarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto">
-                            <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas cancelar este presupuesto?')">Anular</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-warning" disabled>Editar</button>
-                        <button class="btn btn-danger" disabled>Cancelar</button>
-                    }
                     break;
                 case EstadoPresupuesto.Cancelado:
                     <h3 style="background-color: red">Estado: @presupuesto.Estado</h3>
-                    int pedidosGuardados = presupuesto.CopiaPedidos.Count();
-                    int pedidosLibres = 0;
-                    foreach (Pedido p in pedidos)
-                    {
-                        foreach (int item in presupuesto.CopiaPedidos)
-                        {
-                            if (p.IdPedido == item && p.PresupuestoFK == null)
-                            {
-                                pedidosLibres++;
-                            }
-                        }
-                    }
-                    if (pedidosGuardados == pedidosLibres)
-                    {
-                        <form asp-controller="Presupuestos" asp-action="RehabilitarPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-nombreEmpresa="@nombreEmpresa">
-                            <button class="btn btn-warning" type="submit" onclick="return confirm('¿Estás seguro de que deseas reactivar este presupuesto?')">Rehabilitar</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button class="btn btn-warning" disabled>Rehabilitar</button>
-                        <h5>No se puede rehabilitar este presupuesto ya que algunos pedidos ya han sido reasignados</h5>
-                    }
                     break;
             }
         }
     </div>
 
-
-   <h3>Enviado:</h3>
-    @{
+   
+    @if (presupuesto.Estado == EstadoPresupuesto.Confirmado)
+    {
+        <h3>Enviado:</h3>
         if (presupuesto.EstadoEnvio.enviado == true)
         {
-            int contEnvios = 1;
             if (presupuesto.EstadoEnvio.envios != null && presupuesto.EstadoEnvio.envios.Any())
             {
                 foreach (Envio envio in presupuesto.EstadoEnvio.envios)
                 {
-                    <h5>@contEnvios: @envio.fechaEnvio.ToString("dd/MM/yyyy")</h5>
+                    string nombreEmpleado = "";
                     foreach (Empleado empleado in empleados)
                     {
                         if (envio.empleados != null && envio.empleados.Any())
@@ -543,14 +587,29 @@
                             {
                                 if (empleado.IdEmpleado == e)
                                 {
-                                    <h6>@empleado.NombreEmpleado. @empleado.ApellidoEmpleado</h6>
+                                    nombreEmpleado = empleado.NombreEmpleado + ". " + empleado.ApellidoEmpleado;
                                 }
                             }
                         }
                     }
-                    contEnvios++;
+                    <div>
+                        <label>
+                            @envio.idEnvio: @envio.fechaEnvio.ToString("dd/MM/yyyy") enviado a @nombreEmpleado
+                        </label>
+
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <form asp-controller="Presupuestos" asp-action="BorrarEnvio" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-idEnvioBorrar="@envio.idEnvio" method="post">
+                                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar envio?')">Borrar Envio</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div> 
                 }
-            } 
+            }
         }
         else
         {
@@ -564,7 +623,7 @@
                 </div>
                 <div class="vistaEnviar" style="display: none">
                     <form asp-controller="Presupuestos" asp-action="GuardarEnvio" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post" onsubmit="return validarFormularioEnvio()">
-                        <input type="date" name="fechaEnvio" required />
+                        <input type="date" name="fechaEnvio" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
                         <table class="table table-striped text-center" style="width: 25%">
                             <thead>
                                 <tr>
@@ -603,7 +662,7 @@
                                     */
                                 }
                             </tbody>
-                        </table>    
+                        </table>
 
                         <button class="btn btn-primary" type="submit">Guardar Envio</button>
                         <a class="btn btn-secondary" onclick="ocultarEnviar(this)">Cancelar</a>
@@ -611,19 +670,15 @@
                 </div>
             }
         </div>
-    } 
+    }
 
     <h2>Archivos</h2>
     @if (presupuesto.Archivos != null && presupuesto.Archivos.Any())
     {
         <table class="table text-center">
             <tr>
-                @{
-                    int contador = 0;
-                }
-                @{
-                    int contadorArchivos = 1;
-                }
+                @{ int contador = 0; }
+                @{ int contadorArchivos = 1; }
                 @foreach (string arch in presupuesto.Archivos)
                 {
                     if (contador > 0 && contador % 3 == 0)
@@ -641,22 +696,29 @@
 
                                 if (extension == ".jpg" || extension == ".png" || extension == ".ico")
                                 {
-                                    <h6>@nombre</h6>
+                                    <span>@contadorArchivos: @nombre</span>
                                     <img src="@archCoregido" alt="not found" style="max-width: 100px;" />
                                 }
                                 else
                                 {
-                                    <h6>@nombre</h6>
+                                    <span>@contadorArchivos: @nombre</span>
                                     <img src="\iconoArchivoGenerico.png" alt="not found" style="max-width: 50px;" />
                                 }
                             }
-                            <!--
-                                <a href="@arch" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Ver</a>
-                                -->
-                            <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="AbrirArchivoPresupuestoEnSuUbicacion" asp-route-rutaArchivo="@arch">Abrir en ubicacion</a>
-                            <form asp-controller="Presupuestos" asp-action="BorrarArchivoDePresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-rutaArchivoBorrar="@arch" method="post">
-                                <button class="btn btn-danger" type="submit" onclick="return confirm('Estas seguro que quieres borrar este archivo?')">Borrar</button>
-                            </form>
+
+                            <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Presupuestos" asp-action="AbrirArchivoPresupuestoEnSuUbicacion" asp-route-rutaArchivo="@arch">Abrir en ubicacion</a>
+                                </li>
+                                <li>
+                                    <form asp-controller="Presupuestos" asp-action="BorrarArchivoDePresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-rutaArchivoBorrar="@arch" method="post">
+                                        <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar este archivo?')">Borrar Archivo</button>
+                                    </form>
+                                </li>
+                            </ul>
                         </div>
                     </td>
                     contadorArchivos++;
@@ -681,7 +743,7 @@
 
                     <button type="button" class="btn btn-warning" onclick="LimpiarArchivo(this)">Limpiar Archivo</button>
 
-                    <button class="btn btn-primary" type="submit" onclick="return confirm('Estas seguro de que quiere guardar este archivo?')">Guardar</button>
+                    <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar subir archivo??')">Subir Archivo</button>
                     <a class="btn btn-secondary" onclick="ocultarAgregarArchivo(this)">Cancelar</a>
                 </form>
             </div>
@@ -692,20 +754,33 @@
         <h3>Notas</h3>
         @if (presupuesto.Notas != null && presupuesto.Notas.Any())
         {
+            int contNota = 0;
             foreach (string nota in presupuesto.Notas)
             {
+                contNota++;
                 <div class="container-nota">
                     <div class="vistaNota">
-                        <h5>@nota</h5>
-                        <form asp-controller="Presupuestos" asp-action="BorrarNotaPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-notaABorrar="@nota">
-                            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar</button>
-                        </form>
-                        <a class="btn btn-primary" onclick="mostrarModificarNota(this)">Modificar Nota</a>
+                        <label>
+                            @contNota: @nota
+                        </label>
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <a class="dropdown-item" onclick="mostrarModificarNota(this)">Modificar Nota</a>
+                            </li>
+                            <li>
+                                <form asp-controller="Presupuestos" asp-action="BorrarNotaPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-notaABorrar="@nota">
+                                    <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar borrar nota?')">Borrar Nota</button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
                     <div class="vistaModificarNota" style="display: none">
                         <form asp-controller="Presupuestos" asp-action="ModificarNotaPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" asp-route-notaAModificar="@nota">
 
-                            <textarea type="text" name="notaModificada" placeholder="@nota" required></textarea>
+                            <textarea type="text" name="notaModificada" placeholder="@nota" style="width: 50%; height: 100px" required></textarea>
 
                             <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar modificar nota?')">Guardar</button>
                             <a class="btn btn-secondary" onclick="ocultarModificarNota(this)">Cancelar</a>
@@ -716,7 +791,7 @@
         }
         else
         {
-            <label>No hay notas en este presupuesto</label>
+            <h6>- Sin notas -</h6>
         }
         <div class="container-agregarNota">
             <div class="vistaBotonAgregarNota">
@@ -724,7 +799,7 @@
             </div>
             <div class="vistaAgregarNota" style="display: none">
                 <form asp-controller="Presupuestos" asp-action="GuardarNuevaNotaPresupuesto" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post">
-                    <textarea typeof="text" name="notaNueva"></textarea>
+                    <textarea typeof="text" name="notaNueva" style="width: 50%; height: 100px" placeholder="Nueva nota..." required></textarea>
 
                     <button class="btn btn-primary" type="submit" onclick="return confirm('Confirmar nueva nota?')">Guardar Nota</button>
                     <a class="btn btn-secondary" onclick="ocultarAgregarNota(this)">Cancelar</a>
@@ -745,7 +820,19 @@
                     if (odc.IdOC == presupuesto.OrdenDeCompraFK)
                     {
                         <h5>Orden de Compra Asignada:</h5>
-                        <a class="btn btn-primary">@odc.Fecha.ToString("dd/MM/yyyy") - @odc.Codigo</a>
+                        // AQUI
+                        <label>
+                            @odc.Fecha.ToString("dd/MM/yyyy") - @odc.Codigo
+                        </label>
+
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <a class="dropdown-item" asp-controller="OrdenesDeCompra" asp-action="IndexVerOrdenDeCompra" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idOrdenDeCompra="@odc.IdOC" onclick="window.open(this.href, 'ventanaODC', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                            </li>
+                        </ul>
                     }
                 }
             }
@@ -758,14 +845,25 @@
                     if (f.IdFactura == presupuesto.FacturaFK)
                     {
                         <h5>Factura Asignada:</h5>
-                        <a class="btn btn-primary">@f.Fecha.ToString("dd/MM/yyyy") - @f.Codigo.Puesto-@f.Codigo.Numero</a>
+                        <label>
+                            @f.Fecha.ToString("dd/MM/yyyy") - @f.Codigo.Puesto-@f.Codigo.Numero
+                        </label>
+
+                        <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Facturas" asp-action="IndexVerFactura" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idFactura="@f.IdFactura" onclick="window.open(this.href, 'ventanaFactura', 'width=800,height=600,scrollbars=yes'); return false;">Ver</a>
+                            </li>
+                        </ul>   
                     }
                 }
             }
         }
         else
         {
-            <h5>- Sin Asignar -</h5>
+            <h6>- Sin Asignar -</h6>
         }
     }
 
@@ -780,26 +878,41 @@
                     {
                         if (s.IdSocio == presupuesto.SocioFK)
                         {
-                            <h5>@s.Apellido. @s.Nombres</h5>
-                            <form asp-controller="Presupuestos" asp-action="Presupuesto_QuitarSocio" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post">
-                                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar quitar socio?')">Quitar Socio</button>
-                            </form>
+                            <h4>
+                                @s.Apellido. @s.Nombres
+                                <button class="btn btn-light" type="button" id="menuTresPuntos" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="menuTresPuntos">
+                                    <li>
+                                        @if (presupuesto.SocioFK != null)
+                                        {
+                                            <a class="dropdown-item" onclick="mostrarAsignarSocio(this)">Cambiar Socio Asignado</a>
+                                        }
+                                    </li>
+                                    <li>
+                                        <form asp-controller="Presupuestos" asp-action="Presupuesto_QuitarSocio" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post">
+                                            <button class="dropdown-item" type="submit" onclick="return confirm('Confirmar quitar socio?')">Quitar Socio</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </h4>
                         }
                     }
                 }
             }
             else
             {
-                <h5>- Sin Socio asignado -</h5>
+                <h6>- Sin socio asignado -</h6>
+                <a class="btn btn-primary" onclick="mostrarAsignarSocio(this)">Asignar Socio</a>
             }
-            <a class="btn btn-primary" onclick="mostrarAsignarSocio(this)">Asignar Socio</a>
         </div>
         <div class="vistaAsignarSocio" style="display: none">
             <form asp-controller="Presupuestos" asp-action="Presupuesto_AsignarSocio" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post">
                 <table class="table table-striped text-center" style="width: 30%">
                     <thead>
                         <tr>
-                            <th></th>
+                            <th>Seleccionar</th>
                             <th>Socio</th>
                         </tr>
                     </thead>
@@ -827,71 +940,67 @@
 
     <div class="text-center">
         <h3>Generar Presupuesto</h3>
-        <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexPresupuestoGenerado">Generar Presupuesto</a>
+        @if(presupuesto.Estado != EstadoPresupuesto.Confirmado){
+            <button class="btn btn-primary" disabled>Generar Presupuesto</button>
+        }else{
+            <a class="btn btn-primary" asp-controller="Presupuestos" asp-action="IndexPresupuestoGenerado">Generar Presupuesto</a>
+        }
     </div>
 
-    <div class="container-borrar">
-        <h5>Borrar Presupuesto</h5>
+    <div class="container-borrar" style="display: none">
+        <h5>Borrar Presupuesto:</h5>
         @if (sePuedeBorrar.SePuede == true)
         {
-            <div class="vistaBotonBorrarPresupuesto">
-                <label>@sePuedeBorrar.Mensajes[0]</label>
-                <a class="btn btn-danger" onclick="mostrarBorrarPresupuesto(this)">Borrar Presupuesto</a>
-            </div>
+            <form asp-controller="Presupuestos" asp-action="Presupuesto_Emiminar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post">
 
-            <div class="vistaBorrarPresupuesto" style="display: none">
-                <form asp-controller="Presupuestos" asp-action="Presupuesto_Emiminar" asp-route-idEmpresa="@idEmpresa" asp-route-nombreEmpresa="@nombreEmpresa" asp-route-idPresupuesto="@presupuesto.IdPresupuesto" method="post">
+                <label>Socio:</label>
+                <div class="dropdown">
+                    <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
 
-                    <label>Socio:</label>
-                    <div class="dropdown">
-                        <input type="hidden" name="idSocio" id="idSocioSeleccionado" value="">
-
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
-                            Seleccionar Socio
-                        </button>
-                        <ul class="dropdown-menu">
-                            @{
-                                <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
-                                if (socios != null && socios.Any())
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="btnSocio" data-bs-toggle="dropdown" aria-expanded="false">
+                        Seleccionar Socio
+                    </button>
+                    <ul class="dropdown-menu">
+                        @{
+                            <li><a class="dropdown-item opcion-socio" href="#" data-nombre="(Sin asignar)">...</a></li>
+                            if (socios != null && socios.Any())
+                            {
+                                foreach (Socio s in socios)
                                 {
-                                    foreach (Socio s in socios)
-                                    {
-                                        string nombreApellido = s.Nombres + ". " + s.Apellido;
-                                        <li>
-                                            <a class="dropdown-item opcion-socio"
-                                               href="#"
-                                               data-id="@s.IdSocio"
-                                               data-nombre="@nombreApellido">
-                                                @nombreApellido
-                                            </a>
-                                        </li>
-                                    }
+                                    string nombreApellido = s.Nombres + ". " + s.Apellido;
+                                    <li>
+                                        <a class="dropdown-item opcion-socio"
+                                            href="#"
+                                            data-id="@s.IdSocio"
+                                            data-nombre="@nombreApellido">
+                                            @nombreApellido
+                                        </a>
+                                    </li>
                                 }
                             }
-                        </ul>
-                    </div>
+                        }
+                    </ul>
+                </div>
 
-                    <label>Contraseña:</label>
-                    <div>
-                        <input type="password" name="contraseñaSocio" id="passSocio" />
-                        <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
-                    </div>
+                <label>Contraseña:</label>
+                <div>
+                    <input type="password" name="contraseñaSocio" id="passSocio" />
+                    <button type="button" onclick="togglePassword()">Ver/Ocultar</button>
+                </div>
 
-                    <button class="btn btn-danger" type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este presupuesto?')">Eliminar Presupuesto</button>
-                    <a class="btn btn-secondary" onclick="ocultarBorrarPresupuesto(this)">Cancelar</a>
-                </form>
-            </div>
+                <button class="btn btn-danger" type="submit" onclick="return confirm('Confirmar borrar presupuesto?')">Eliminar Presupuesto</button>
+            </form>
         }
         else
         {
-            <button class="btn btn-danger" disabled>Borrar Presupuesto</button>
-            <label>No se puede borrar este presupuesto ya que:</label>
+            <h6>No se puede borrar este presupuesto ya que:</h6>
             <ul>
                 @foreach(string mensaje in sePuedeBorrar.Mensajes){
                     <li>@mensaje</li>
                 }
             </ul>
         }
+        <a class="btn btn-secondary" onclick="ocultarBorrarPresupuesto()">Cancelar</a>
     </div>
 </div>
 
@@ -906,229 +1015,10 @@
 -->
 
 
-@section Scripts{
-    <script>
-        // MODIFICAR NUMERO
-        function mostrarModificarNumero(elemento) {
-        const contenedor = elemento.closest('.container-numero');
+@section Scripts {
+    <script src="~/js/Presupuestos/IndexVerPresupuesto.js" asp-append-version="true"></script>
+}
 
-        contenedor.querySelector('.vistaNumero').style.display = 'none';
-        contenedor.querySelector('.vistaModificarNumero').style.display = 'block';
-        }
-        function ocultarModificarNumero(elemento) {
-        const contenedor = elemento.closest('.container-numero');
-
-        contenedor.querySelector('.vistaNumero').style.display = 'block';
-        contenedor.querySelector('.vistaModificarNumero').style.display = 'none';
-        }
-
-        // MODIFICAR FECHA
-        function mostrarModificarFecha(elemento) {
-        const contenedor = elemento.closest('.container-fecha');
-
-        contenedor.querySelector('.vistaFecha').style.display = 'none';
-        contenedor.querySelector('.vistaModificarFecha').style.display = 'block';
-        }
-        function ocultarModificarFecha(elemento) {
-        const contenedor = elemento.closest('.container-fecha');
-
-        contenedor.querySelector('.vistaFecha').style.display = 'block';
-        contenedor.querySelector('.vistaModificarFecha').style.display = 'none';
-        }
-
-        // AGREGAR ITEMS
-        function mostrarAgregarItems(elemento) {
-        const contenedor = elemento.closest('.container-agregarItems');
-
-        contenedor.querySelector('.vistaBotonAgregarItems').style.display = 'none';
-        contenedor.querySelector('.vistaAgregarItems').style.display = 'block';
-        }
-        function ocultarAgregarItems(elemento) {
-        const contenedor = elemento.closest('.container-agregarItems');
-
-        contenedor.querySelector('.vistaBotonAgregarItems').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarItems').style.display = 'none';
-        }
-
-        // AGREGAR UN ARCHIVO
-        function mostrarAgregarArchivo(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'block';
-        }
-        function ocultarAgregarArchivo(elemento) {
-            const contenedor = elemento.closest('.container-agregarArchivo');
-
-            contenedor.querySelector('.vistaBotonAgregarArchivo').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarArchivo').style.display = 'none';
-        }
-
-        // AGREGAR UNA NOTA
-        function mostrarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-agregarNota');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'none';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'block';
-        }
-
-        function ocultarAgregarNota(elemento) {
-            const contenedor = elemento.closest('.container-agregarNota');
-
-            contenedor.querySelector('.vistaBotonAgregarNota').style.display = 'block';
-            contenedor.querySelector('.vistaAgregarNota').style.display = 'none';
-        }
-
-        // MODIFICAR NOTA
-        function mostrarModificarNota(elemento) {
-        const contenedor = elemento.closest('.container-nota');
-
-        contenedor.querySelector('.vistaModificarNota').style.display = 'block';
-        contenedor.querySelector('.vistaNota').style.display = 'none';
-        }
-
-        function ocultarModificarNota(elemento) {
-        const contenedor = elemento.closest('.container-nota');
-
-        contenedor.querySelector('.vistaModificarNota').style.display = 'none';
-        contenedor.querySelector('.vistaNota').style.display = 'block';
-        }
-
-
-        // BORRAR PRESUPUESTO
-        function mostrarBorrarPresupuesto(elemento) {
-            const contenedor = elemento.closest('.container-borrar');
-
-            contenedor.querySelector('.vistaBotonBorrarPresupuesto').style.display = 'none';
-            contenedor.querySelector('.vistaBorrarPresupuesto').style.display = 'block';
-        }
-        function ocultarBorrarPresupuesto(elemento) {
-            const contenedor = elemento.closest('.container-borrar');
-
-            contenedor.querySelector('.vistaBotonBorrarPresupuesto').style.display = 'block';
-            contenedor.querySelector('.vistaBorrarPresupuesto').style.display = 'none';
-        }
-
-        // SELECCIONAR SOCIO
-        document.querySelectorAll('.opcion-socio').forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                const id = this.getAttribute('data-id');
-                const nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('btnSocio').innerText = nombre;
-
-                document.getElementById('idSocioSeleccionado').value = id;
-            });
-        });
-
-        // VER/OCULTAR CONTRASEñA
-        function togglePassword() {
-            var input = document.getElementById("passSocio");
-            // Si es password lo pasa a text, y viceversa
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-        // OPCION ENVIAR
-        function mostrarEnviar(elemento) {
-            const contenedor = elemento.closest('.container-enviar');
-
-            contenedor.querySelector('.vistaBotonEnviar').style.display = 'none';
-            contenedor.querySelector('.vistaEnviar').style.display = 'block';
-        }
-
-        function ocultarEnviar(elemento) {
-            const contenedor = elemento.closest('.container-enviar');
-
-            contenedor.querySelector('.vistaBotonEnviar').style.display = 'block';
-            contenedor.querySelector('.vistaEnviar').style.display = 'none';
-        }
-
-
-        // FILTRAR POR DESCRIPCION
-        function filtrarTablaDescripcion() {
-            let input = document.getElementById("filtroDescripcion");
-            let filter = input.value.toLowerCase();
-            let filas = document.querySelectorAll(".claseFila");
-
-            filas.forEach(fila => {
-                let celdaDescripcion = fila.querySelector(".col-descripcion");
-                if (celdaDescripcion) {
-                    let texto = celdaDescripcion.textContent || celdaDescripcion.innerText;
-
-                    if (texto.toLowerCase().indexOf(filter) > -1) {
-                        fila.classList.remove('filtrado-oculto');
-                        fila.style.display = "";
-                    } else {
-                        fila.classList.add('filtrado-oculto');
-                        fila.style.display = "none";
-                    }
-                }
-            });
-
-            const selectCant = document.getElementById('cantPedidos');
-            if (selectCant) {
-                selectCant.dispatchEvent(new Event('change'));
-            }
-        }
-
-        Paginacion('tablaAgregarPedidos', 'prevPedidos', 'nextPedidos', 'numPedidos', 'cantPedidos', 'claseFila');
-
-        function validarFormularioEnvio() {
-            const checkboxes = document.querySelectorAll('.chk-empleado:checked');
-
-            if (checkboxes.length === 0) {
-                alert('Debe seleccionar al menos un empleado para continuar.');
-                return false;
-            }
-            return confirm('Confirmar envio?');
-        }
-
-        // MOSTRAR BUSCAR POR DESCRIPCION
-        function mostrarBuscarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-tituloDescripcion');
-
-            contenedor.querySelector('.vistaBotonBuscarPorDescripcion').style.display = 'none';
-            contenedor.querySelector('.vistaBuscarPorDescripcion').style.display = 'block';
-        }
-        function ocultarBuscarDescripcion(elemento) {
-            const contenedor = elemento.closest('.container-tituloDescripcion');
-
-            contenedor.querySelector('.vistaBotonBuscarPorDescripcion').style.display = 'block';
-            contenedor.querySelector('.vistaBuscarPorDescripcion').style.display = 'none';
-        }
-
-        // ASIGNAR SOCIO
-        function mostrarAsignarSocio (elemento) {
-            const contenedor = elemento.closest('.container-socio');
-
-                    contenedor.querySelector('.vistaSocio').style.display = 'none';
-            contenedor.querySelector('.vistaAsignarSocio').style.display = 'block';
-        }
-        function ocultarAsignarSocio (elemento) {
-            const contenedor = elemento.closest('.container-socio');
-
-            contenedor.querySelector('.vistaSocio').style.display = 'block';
-            contenedor.querySelector('.vistaAsignarSocio').style.display = 'none';
-        }
-
-
-
-        // LIMPIAR INPUT ARCHIVO
-        function LimpiarArchivo(elemento){
-            const contenedor = elemento.closest('.vistaAgregarArchivo');
-            const inputArchivo = contenedor.querySelector('input[id="archivoPresupuesto"]');
-
-            if (inputArchivo) {
-                inputArchivo.value = '';
-                inputArchivo.files = new DataTransfer().files;
-            }
-        }
-
-    </script>
+@section Styles {
+    <link rel="stylesheet" href="~/css/Presupuestos/IndexVerPresupuesto.css" asp-append-version="true" />
 }
