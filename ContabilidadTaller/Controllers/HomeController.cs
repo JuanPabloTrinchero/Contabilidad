@@ -122,6 +122,7 @@ namespace ContabilidadTaller.Controllers
 
         // ----- PRUEBAS SUELTAS -----
 
+        /*
         [HttpPost]
         public IActionResult ConvertirArchivoAJson(IFormFile archivo)
         {
@@ -143,7 +144,7 @@ namespace ContabilidadTaller.Controllers
             _serJson.AbrirArchivoEnSuUbicacion(texto);
             return NoContent();
         }
-
+        */
 
     }
 }

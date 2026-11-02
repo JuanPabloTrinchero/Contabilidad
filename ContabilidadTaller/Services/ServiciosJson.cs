@@ -18,13 +18,14 @@ using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace ContabilidadTaller.Services
 {
-
+    /* SIN USAR
     public class ArchivoJson
     {
         public string NombreArchivo { get; set; }
         public string Extension { get; set; }
         public string ContenidoBase64 { get; set; }
     }
+    */
 
     public class ServiciosJson : IServiciosJson
     {
@@ -6261,7 +6262,7 @@ namespace ContabilidadTaller.Services
 
         // JSON AUXILIAR
 
-
+        /*
         public string AuxiliarRutaJson()
         {
             return Directory.GetCurrentDirectory() + @"\wwwroot\data\Auxiliar.json";
@@ -6329,6 +6330,8 @@ namespace ContabilidadTaller.Services
 
             return rutaFinal;
         }
+        */
+
 
 
 
