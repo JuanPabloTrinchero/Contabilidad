@@ -1,17 +1,1 @@
-[
-  {
-    "IdNotaCredito": 0,
-    "Fecha": "2026-10-25",
-    "Codigo": {
-      "PuestoNDC": "1111",
-      "NumeroNDC": "11111111"
-    },
-    "Notas": [
-      "zfbFDBadf",
-      "vd"
-    ],
-    "UbicacionArchivo": "\\Empresas\\0\\0 - Notas de Credito\\0 - Archivos Notas de Credito\\comentario redit.txt",
-    "Estado": 0,
-    "FacturasRespaldo": []
-  }
-]
+[]
