@@ -1,7 +1,7 @@
 [
   {
-    "IdEmpresa": 1,
-    "NombreEmpresa": "nor",
+    "IdEmpresa": 0,
+    "NombreEmpresa": "Prueba1",
     "Cuit": {
       "InicioCuit": 11,
       "MedioCuit": 11111111,
@@ -9,18 +9,5 @@
     },
     "Direccion": null,
     "Notas": []
-  },
-  {
-    "IdEmpresa": 0,
-    "NombreEmpresa": "From Software",
-    "Cuit": {
-      "InicioCuit": 11,
-      "MedioCuit": 11111111,
-      "FinCuit": 1
-    },
-    "Direccion": "Japon 667",
-    "Notas": [
-      "sdfDSADSF"
-    ]
   }
 ]
