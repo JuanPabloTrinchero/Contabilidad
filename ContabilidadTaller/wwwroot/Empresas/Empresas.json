@@ -1,13 +1,1 @@
-[
-  {
-    "IdEmpresa": 0,
-    "NombreEmpresa": "Prueba1",
-    "Cuit": {
-      "InicioCuit": 11,
-      "MedioCuit": 11111111,
-      "FinCuit": 1
-    },
-    "Direccion": null,
-    "Notas": []
-  }
-]
+[]
