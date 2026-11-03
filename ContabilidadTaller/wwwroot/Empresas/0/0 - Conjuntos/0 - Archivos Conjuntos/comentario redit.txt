@@ -1,5 +1,0 @@
-Hice un pequeño y basico programa de consola para averiguar las ternas de tipos superefectivos, dejo el ejecutable en formato .jpg, para usarlo solo hay que cambiarle el formato a .bat.
-Solo calcula por superefectividades.
-Si quieren hecharle un ojo al codigo solo cambienle el formato a .txt (bloc de notas), hay podran revisar los datos de los tipos elementales y sus efectividades.
-Puede que salte el antivirus pero es totalmente seguro e inofensivo, solo abre la consola.
-Espero que les sea util o al menos curioso. Saludos gente.
